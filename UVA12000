@@ -1,0 +1,80 @@
+/*
+题意：n个数的全排列中所有数偏离自己的位置不超过k<=3的有多少
+类似骨牌覆盖
+用k+k+1个二进制位表示当前数前后k个位置加上自己原来的位置的放置情况，
+然后枚举当前位置该放在哪里，
+由于第一个二进制必须为1，因为当前数离这个位置距离是k+1，所以用6个二进制也行
+转移矩阵中(i,j)值代表i状态到j状态的方案数，
+矩阵相乘的含义就是i到j的方案数可以由i到k的方案数和k到j的方案数相乘得到
+*/
+#include<cstdio>
+#include<iostream>
+#include<cstring>
+#include<algorithm>
+#include<cmath>
+#include<queue>
+#include<map>
+#include<vector>
+#include<string>
+#include<set>
+using namespace std;
+typedef long long ll;
+#define eps 1e-8
+const int inf=0x3f3f3f3f;
+const int maxn=1<<7;
+const int mod=73405;
+
+struct Mat {
+    int n,m;
+    ll x[maxn][maxn];
+    Mat(int _n,int _m,bool s=0) {
+        n=_n,m=_m;
+        for(int i=0; i<n; i++)
+            for(int j=0; j<m; j++)
+                x[i][j]=((i==j)&s);
+    }
+    Mat operator*(Mat a) {
+        Mat ret(n,a.m);
+        for(int i=0; i<n; i++)
+            for(int j=0; j<a.m; j++)
+                for(int k=0; k<m; k++) {
+                    ret.x[i][j]+=(x[i][k]*a.x[k][j])%mod;
+                    ret.x[i][j]%=mod;
+                }
+        return ret;
+    }
+    Mat pow_mod(int cnt,Mat e) {
+        Mat ret(e.n,e.m,1);
+        while(cnt) {
+            if(cnt&1)ret=ret*e;
+            e=e*e;
+            cnt>>=1;
+        }
+        return ret;
+    }
+};
+
+
+int main() {
+    //freopen("in.cpp","r",stdin);
+    int T,n,k,ncase=0;
+    scanf("%d",&T);
+    while(T--) {
+        scanf("%d%d",&n,&k);
+        int m=1<<(k+k+1),rs=(1<<(k+1))-1;
+        Mat ret(1,m);
+        ret.x[0][rs]=1;
+        Mat a(m,m);
+        for(int i=0; i<m; i++) {
+            if(!(i&1))continue;
+            a.x[i][(i>>1)|(1<<(k+k))]++;
+            for(int j=0; j<(k+k+1); j++) {
+                if(i&(1<<j))continue;
+                a.x[i][(i|(1<<j))>>1]++;
+                //printf("**\n");
+            }
+        }
+        printf("Case %d: %lld\n",++ncase,(ret*a.pow_mod(n,a)).x[0][rs]);
+    }
+    return 0;
+}
