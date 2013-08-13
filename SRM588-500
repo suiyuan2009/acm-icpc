@@ -1,0 +1,60 @@
+/*
+记状态的时候有一维可以不记，由其他位推出
+*/
+#include<cstdio>
+#include<vector>
+#include<cstring>
+#include<cmath>
+#include<algorithm>
+#include<map>
+#include<iostream>
+#include<queue>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+#define eps 1e-8
+const int maxn=12;
+
+int n;
+int f[1<<12][131];
+
+class KeyDungeonDiv1
+{
+public:
+    int maxKeys(vector<int>dR,vector<int>dG,vector<int>rR,vector<int>rG,vector<int>rW,vector<int>key)
+    {
+        memset(f,-1,sizeof(f));
+        int ret=0;
+        n=dR.size();
+        f[0][key[0]]=key[2];
+        for(int i=0; i<(1<<n); i++)
+            for(int j=0; j<131; j++)
+            {
+                if(f[i][j]==-1)continue;
+               // if(i==0)printf("** %d %d\n",j,f[i][j]);
+                //if(i==1)printf("** %d %d\n",j,f[i][j]);
+                int cur=key[0]+key[1]+key[2];
+                for(int k=0; k<n; k++)
+                    if(i&(1<<k))cur+=rR[k]+rG[k]+rW[k]-dR[k]-dG[k];
+                ret=max(cur,ret);
+                for(int k=0; k<n; k++)
+                {
+                    if(i&(1<<k))continue;
+                    for(int p=0; p<=min(j,dR[k]); p++)
+                    {
+                        //if(i==0)printf("** %d %d %d\n",j,f[i][j],cur-j-f[i][j]);
+                        int r=j-p;
+                        int g=cur-j-f[i][j]-dG[k];
+                        int w=f[i][j];
+                        w-=(dR[k]-p);
+                        if(g<0)w+=g;
+                        if(w<0)continue;
+                        f[i|(1<<k)][r+rR[k]]=max(f[i|(1<<k)][r+rR[k]],w+rW[k]);
+                    }
+                }
+            }
+        // printf("** %d\n",f[1][2]);
+        return ret;
+    }
+};
