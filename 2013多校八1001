@@ -1,0 +1,138 @@
+/*
+题意：给出n的一个排列，多次询问[L,R]中所有两两数的最大公约数和
+分块排序第一次碰到，把复杂度降到n*logn，另外乘以add和del操作所需的sqrt(n)
+然后就是用容斥计算结果，每次只加上最大公约数等于x的那部分结果，所以是欧拉函数，因为不互质的除了x之外其他的都已经加过了
+*/
+#include<cstdio>
+#include<vector>
+#include<cstring>
+#include<cmath>
+#include<algorithm>
+#include<map>
+#include<iostream>
+#include<queue>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+#define eps 1e-6
+const int maxn=20005;
+
+int n,m;
+int a[maxn];
+ll ans[maxn];
+vector<int>yue[maxn];
+int f[maxn],c[maxn];
+ll ret;
+
+int sy;
+
+struct Q
+{
+    int l,r,id;
+    bool operator<(const Q&a)const
+    {
+        int x=l/sy,y=a.l/sy;
+        if(x!=y)return x<y;
+        return r<a.r;
+    }
+} query[maxn];
+
+int notp[maxn];
+
+void init_1()
+{
+    for(int i=1; i<maxn; i++)
+    {
+        for(int j=1; j*j<=i; j++)
+        {
+            if(i%j!=0)continue;
+            yue[i].push_back(j);
+            if(j*j<i)yue[i].push_back(i/j);
+        }
+    }
+    notp[1]=notp[0]=1;
+    for(int i=2; i<maxn; i++)
+        if(!notp[i])
+        {
+            for(int j=i+i; j<maxn; j+=i)
+                notp[j]=1;
+        }
+    for(int i=1; i<maxn; i++)f[i]=i;
+    for(int i=2; i<maxn; i++)
+        if(!notp[i])
+        {
+            for(int j=i; j<maxn; j+=i)
+                f[j]=f[j]/i*(i-1);
+        }
+}
+
+void init_2()
+{
+    ret=0;
+    memset(c,0,sizeof(c));
+}
+
+void add(int x)
+{
+    for(int i=0; i<yue[x].size(); i++)
+    {
+        int tt=yue[x][i];
+        ret+=c[tt]*f[tt];
+        c[tt]++;
+    }
+}
+
+void del(int x)
+{
+    for(int i=0; i<yue[x].size(); i++)
+    {
+        int tt=yue[x][i];
+        c[tt]--;
+        ret-=c[tt]*f[tt];
+    }
+}
+
+int main()
+{
+    init_1();
+    //printf("** %d\n",f[8]);
+    //freopen("in.txt","r",stdin);
+    //freopen("out.txt","w",stdout);
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--)
+    {
+        init_2();
+        ncase++;
+        scanf("%d",&n);
+        sy=(int)sqrt((double)n);
+        for(int i=1; i<=n; i++)scanf("%d",&a[i]);
+        scanf("%d",&m);
+        for(int i=1; i<=m; i++)
+        {
+            scanf("%d%d",&query[i].l,&query[i].r);
+            query[i].id=i;
+        }
+        sort(query+1,query+m+1);
+        int l=1,r=0;
+        for(int i=1; i<=m; i++)
+        {
+            while(r<query[i].r)add(a[++r]);
+            while(r>query[i].r)del(a[r--]);
+            while(l<query[i].l)del(a[l++]);
+            while(l>query[i].l)add(a[--l]);
+            // printf("** %d %d %d %d\n",l,r,query[i].l,query[i].r);
+            ans[query[i].id]=ret;
+
+            /* printf("* %d %d\n",l,r);
+             for(int j=1; j<=5; j++)
+                 printf("** %d: %d\n",j,c[j]);
+             printf("*******\n");*/
+
+        }
+        printf("Case #%d:\n",ncase);
+        for(int i=1; i<=m; i++)printf("%lld\n",ans[i]);
+    }
+    return 0;
+}
