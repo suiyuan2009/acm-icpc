@@ -1,0 +1,53 @@
+/*
+从a加到b，用二进制加法，问进位了多少次
+统计a到b每一位上1的数目
+*/
+#include<cstdio>
+#include<vector>
+#include<cstring>
+#include<cmath>
+#include<algorithm>
+#include<map>
+#include<iostream>
+#include<queue>
+#include<stack>
+using namespace std;
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+#define eps 1e-6
+const int maxn=105;
+
+int a,b;
+
+ll cal(int x,int i)
+{
+    if(x<=0)return 0;
+    ll ret=0;
+    ll tmp=(x+1)/(1<<(i+1))*(1<<i);
+    ret+=tmp;
+    ll tmp2=(x+1)%(1<<(i+1));
+    if(tmp2>(1<<i))ret+=tmp2-(1<<i);
+    return ret;
+}
+
+int main()
+{
+    //printf("%lld\n",cal(6,1));
+    while(~scanf("%d%d",&a,&b))
+    {
+        ll tmp=0,ret=0;
+        for(int i=0; i<31; i++)
+        {
+            tmp+=cal(b,i)-cal(a-1,i);
+            tmp>>=1;
+            ret+=tmp;
+        }
+        while(tmp)
+        {
+            tmp>>=1;
+            ret+=tmp;
+        }
+        printf("%I64d\n",ret);
+    }
+    return 0;
+}
