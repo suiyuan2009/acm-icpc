@@ -1,0 +1,55 @@
+/*
+是否存在ID，使得y1<=ID%x1<=z1且y2<=ID%x2<=z2
+*/
+#include<cstdio>
+#include<vector>
+#include<cstring>
+#include<cmath>
+#include<algorithm>
+#include<map>
+#include<iostream>
+#include<queue>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+#define eps 1e-6
+const int maxn=1005;
+
+struct P
+{
+    int x,y,z;
+} p[maxn];
+int n;
+
+int gcd(int x,int y)
+{
+    if(y==0)return x;
+    return gcd(y,x%y);
+}
+
+bool test()
+{
+    for(int i=0; i<n; i++)
+        for(int j=i+1; j<n; j++)
+        {
+            int tmp=gcd(p[i].x,p[j].x);
+            int l=p[j].y-p[i].z+tmp-1;
+            int r=p[j].z-p[i].y;
+            if(l/tmp<=r/tmp)return 0;
+        }
+    return 1;
+}
+
+int main()
+{
+    //printf("%lld\n",cal(6,1));
+    while(~scanf("%d",&n))
+    {
+        for(int i=0; i<n; i++)
+            scanf("%d%d%d",&p[i].x,&p[i].y,&p[i].z);
+        if(test())printf("Can Take off\n");
+        else printf("Cannot Take off\n");
+    }
+    return 0;
+}
