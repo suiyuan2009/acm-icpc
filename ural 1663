@@ -1,0 +1,154 @@
+/*
+题意：n个城市，从城市1走最后回到1，从城市i到城市j的花费是1000/p[i]*p[j]，
+要求pa1'*pa2+pa2'*pa3+...+pak'*pa1最小，
+小的和大的乘比小的和小的乘更好，
+sort之后，
+f[i][0/1][j]代表第i个城市在城市1的右边时，城市1左边最后一个城市是j的最优值
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<stdio.h>
+#include<string.h>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+using namespace std;
+#define eps 1e-7
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=1005;
+const ll mod=1000000007;
+
+int n;
+struct P
+{
+    ll x,y;
+    int id;
+    bool operator<(const P&a)const
+    {
+        return x<a.x;
+    }
+} b[maxn];
+ll f[maxn][2][maxn];
+int pnt[maxn][2][maxn][2];
+vector<int>L,R,ans;
+
+int main()
+{
+    scanf("%d",&n);
+    for(int i=1; i<=n; i++)
+    {
+        scanf("%lld",&b[i].x);
+        b[i].y=1000/b[i].x;
+        b[i].id=i;
+    }
+    sort(b+1,b+n+1);
+
+    // for(int i=1;i<=n;i++)
+    //printf("** %d: %lld\n",b[i].id,b[i].x);
+
+    b[0]=b[1];
+    memset(f,-1,sizeof(f));
+    f[1][0][0]=f[1][1][0]=0;
+    f[1][0][1]=f[1][1][1]=0;
+    for(int i=2; i<=n; i++)
+        for(int j=1; j<i; j++)
+        {
+            if(j==i-1)
+            {
+                for(int k=0; k<=j; k++)
+                {
+                    if(f[i-1][1][k]==-1)continue;
+                    ll tmp=f[i-1][1][k]+b[k].y*b[i].x;
+                    if(f[i][0][j]==-1||f[i][0][j]>tmp)
+                    {
+                        f[i][0][j]=tmp;
+                        pnt[i][0][j][0]=1;
+                        pnt[i][0][j][1]=k;
+                    }
+                }
+                for(int k=0; k<=j; k++)
+                {
+                    if(f[i-1][0][k]==-1)continue;
+                    ll tmp=f[i-1][0][k]+b[i].y*b[k].x;
+                    if(f[i][1][j]==-1||f[i][1][j]>tmp)
+                    {
+                        f[i][1][j]=tmp;
+                        pnt[i][1][j][0]=0;
+                        pnt[i][1][j][1]=k;
+                    }
+                }
+            }
+            else
+            {
+                if(f[i-1][0][j]!=-1)
+                {
+                    f[i][0][j]=f[i-1][0][j]+b[i-1].y*b[i].x;
+                    pnt[i][0][j][0]=0;
+                    pnt[i][0][j][1]=j;
+                }
+                if(f[i-1][1][j]!=-1)
+                {
+                    f[i][1][j]=f[i-1][1][j]+b[i].y*b[i-1].x;
+                    pnt[i][1][j][0]=1;
+                    pnt[i][1][j][1]=j;
+                }
+            }
+        }
+    ll ret=-1;
+    int p0,p1;
+    for(int i=0; i<=n-1; i++)
+    {
+        if(f[n][0][i]!=-1)
+        {
+            ll tmp=f[n][0][i]+b[n].y*b[i].x;
+            if(ret==-1||ret>tmp)
+            {
+                p0=0;
+                p1=i;
+                ret=tmp;
+            }
+        }
+        if(f[n][1][i]!=-1)
+        {
+            ll tmp=f[n][1][i]+b[n].x*b[i].y;
+            if(ret==-1||ret>tmp)
+            {
+                p0=1;
+                p1=i;
+                ret=tmp;
+            }
+        }
+    }
+    L.clear(),R.clear();
+    int pos=n;
+    while(pos>=1)
+    {
+        if(p0==0)R.push_back(pos);
+        else L.push_back(pos);
+        int tp0=pnt[pos][p0][p1][0];
+        int tp1=pnt[pos][p0][p1][1];
+        p0=tp0,p1=tp1;
+        pos--;
+    }
+    for(int i=R.size()-1; i>=0; i--)
+        ans.push_back(b[R[i]].id);
+    // printf(" %d",b[R[i]].id);
+    for(int i=0; i<L.size(); i++)
+        ans.push_back(b[L[i]].id);
+    // printf(" %d",b[L[i]].id);
+    int st;
+    for(int i=0; i<ans.size(); i++)
+        if(ans[i]==1)
+        {
+            st=i;
+            break;
+        }
+    printf("1");
+    for(int i=st+1; i<ans.size(); i++)printf(" %d",ans[i]);
+    for(int i=0; i<st; i++)printf(" %d",ans[i]);
+    printf("\n");
+    return 0;
+}
