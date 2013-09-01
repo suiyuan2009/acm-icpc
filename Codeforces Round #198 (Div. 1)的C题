@@ -3,7 +3,7 @@
 f[i][j]代表有i个数都可以自由放，j个数都只有一个位置不能放的方案数，
 f[i][0]=i!，
 f[i][1]=i*f[i][0]，
-f[i][j]=i*f[i][j-1]+(k-1)*f[i+1][j-2]，
+f[i][j]=i*f[i][j-1]+(j-1)*f[i+1][j-2]，
 */
 //#pragma comment(linker, "/STACK:102400000,102400000")
 #include<stdio.h>
