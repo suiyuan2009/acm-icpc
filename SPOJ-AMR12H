@@ -1,0 +1,146 @@
+/*
+题意：x取是[0,1]上的均匀分布，求MmxxMxx这样的式子的期望,
+对于M{f(x),g(x)}，有取到x的概率为f(x)*jifen(0,x,g(y))+g(x)*jifen(0,x,f(y)),
+对于m{f(x),g(x)}，有取到x的概率为f(x)*jifen(x,1,g(y))+g(x)*jifen(x,1,f(y)).
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-7
+typedef unsigned long long ll;
+typedef long double ldb;
+const int inf=0x3f3f3f3f;
+const int maxn=105;
+const int mod=1000000007;
+
+struct Jifen
+{
+    int sign;
+    ldb a[maxn];
+    int m;
+    Jifen(int _sign=0,int _m=1)
+    {
+        sign=_sign;
+        m=_m;
+        for(int i=0; i<maxn; i++)a[i]=0;
+    }
+    Jifen fun(bool sign)
+    {
+        Jifen ret=Jifen();
+        ret.m=m+1;
+        for(int i=0; i<m; i++)
+            ret.a[i+1]=a[i]/(i+1);
+        ret.a[0]=0;
+        if(sign)
+        {
+            ldb tmp=0;
+            for(int i=0; i<m+1; i++)
+            {
+                tmp+=ret.a[i];
+                ret.a[i]=-ret.a[i];
+            }
+            ret.a[0]+=tmp;
+        }
+        return ret;
+    }
+    Jifen operator+(const Jifen &t)const
+    {
+        Jifen ret=Jifen();
+        ret.m=max(m,t.m);
+        for(int i=0; i<ret.m; i++)
+            ret.a[i]=a[i]+t.a[i];
+        return ret;
+    }
+    Jifen operator*(const Jifen &t)const
+    {
+        Jifen ret=Jifen();
+        ret.m=t.m+m-1;
+        for(int i=0; i<m; i++)
+            for(int j=0; j<t.m; j++)
+                ret.a[i+j]+=a[i]*t.a[j];
+        return ret;
+    }
+    void pd()
+    {
+        for(int i=0; i<m; i++)
+            printf("%lf ",(double)a[i]);
+        printf("\n");
+    }
+};
+
+char str[maxn*2];
+Jifen ji[maxn];
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%s",str);
+        int n=strlen(str);
+        int cnt=0;
+        for(int i=0; i<n; i++)
+        {
+            if(str[i]=='M')
+            {
+                Jifen tt=Jifen(2);
+                //ji.push(tt);
+                ji[cnt++]=tt;
+            }
+            else if(str[i]=='m')
+            {
+                Jifen tt=Jifen(1);
+                // ji.push(tt);
+                ji[cnt++]=tt;
+            }
+            else
+            {
+                Jifen tt=Jifen();
+                tt.a[0]=1;
+                if(!cnt==0&&ji[cnt-1].sign==0)
+                {
+                    // printf("**\n");
+                    while(!cnt==0&&ji[cnt-1].sign==0)
+                    {
+                        Jifen ss=ji[cnt-1];
+                        cnt--;
+                        Jifen op=ji[cnt-1];
+                        cnt--;
+                        if(op.sign==1) tt=(tt.fun(1)*ss)+(ss.fun(1)*tt);
+                        else tt=(tt.fun(0)*ss)+(ss.fun(0)*tt);
+                    }
+                }
+                ji[cnt++]=tt;
+            }
+        }
+        Jifen ret=ji[0];
+
+        // ret.pd();
+
+        for(int i=ret.m; i>=1; i--)
+            ret.a[i]=ret.a[i-1];
+        ret.m++;
+        ret.a[0]=0;
+        ret=ret.fun(0);
+
+        //printf("** %d\n",ret.m);
+
+        ldb ans=0;
+        for(int i=0; i<ret.m; i++)ans+=ret.a[i];
+        //printf("%.10f\n",ans);
+        printf("%.10f\n",(double)ans);
+    }
+    return 0;
+}
