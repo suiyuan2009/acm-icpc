@@ -1,0 +1,255 @@
+/*
+题意：树上修改边权，询问两点间路径最大边权
+轻重边剖分
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-7
+typedef long long ll;
+typedef long double ldb;
+const int inf=0x3f3f3f3f;
+const int maxn=10005;
+const int maxm=maxn+maxn;
+const int mod=1000000007;
+
+int n;
+int num,next[maxm],head[maxn],ev[maxm],ew[maxm],flag[maxm],be[maxm];
+int ps[maxn],dep[maxn],c[maxn],cnt_h,pnt[maxn][20];
+int heavy[maxn],to[maxn];
+int pntw[maxn];
+
+struct ST
+{
+    int id;
+    int l,r,val;
+} st[maxn*3];
+
+void init()
+{
+    num=0;
+    memset(head,-1,sizeof(head));
+    memset(flag,0,sizeof(flag));
+    memset(pnt,0,sizeof(pnt));
+    memset(heavy,-1,sizeof(heavy));
+    memset(to,0,sizeof(to));
+}
+
+void add_edge(int u,int v,int w)
+{
+    next[++num]=head[u];
+    head[u]=num;
+    ev[num]=v,ew[num]=w;
+    be[num]=u;
+}
+
+void build(int id,int l,int r)
+{
+    st[id].l=l,st[id].r=r,st[id].val=0;
+    if(l==r)return;
+    int m=((l+r)>>1);
+    build(id*2,l,m);
+    build(id*2+1,m+1,r);
+}
+
+void update(int id,int pos,int val)
+{
+    if(st[id].l==st[id].r)
+    {
+        if(st[id].l==pos)
+            st[id].val=val;
+        return;
+    }
+    int m=((st[id].l+st[id].r)>>1);
+    if(pos<=m)update(id*2,pos,val);
+    else update(id*2+1,pos,val);
+    st[id].val=max(st[id*2].val,st[id*2+1].val);
+}
+
+int ret;
+void query(int id,int l,int r)
+{
+    if(st[id].l==l&&st[id].r==r)
+    {
+        ret=max(ret,st[id].val);
+        return;
+    }
+    int m=((st[id].l+st[id].r)>>1);
+    if(r<=m)query(id*2,l,r);
+    else if(l>m)query(id*2+1,l,r);
+    else
+    {
+        query(id*2,l,m);
+        query(id*2+1,m+1,r);
+    }
+}
+
+void dfs_1(int u,int fa)
+{
+    c[u]=1;
+    dep[u]=dep[fa]+1;
+    int maxx=-1,idx=-1;
+    pnt[u][0]=fa;
+    for(int i=1; i<20; i++)
+        pnt[u][i]=pnt[pnt[u][i-1]][i-1];
+    for(int i=head[u]; i!=-1; i=next[i])
+    {
+        int v=ev[i];
+        if(v==fa)continue;
+        pntw[v]=ew[i];
+        dfs_1(v,u);
+        if(maxx<c[v])
+        {
+            maxx=c[v];
+            idx=i;
+        }
+        c[u]+=c[v];
+    }
+    if(idx!=-1)
+    {
+        heavy[u]=idx;
+        flag[idx]=1;
+    }
+}
+
+void dfs_2(int u,int fa)
+{
+    if(heavy[u]!=-1)
+    {
+        ps[u]=(++cnt_h);
+        update(1,cnt_h,ew[heavy[u]]);
+        dfs_2(ev[heavy[u]],u);
+        to[ev[heavy[u]]]=to[u]+1;
+    }
+    for(int i=head[u]; i!=-1; i=next[i])
+    {
+        int v=ev[i];
+        if(v==fa||v==ev[heavy[u]])continue;
+        to[v]=0;
+        dfs_2(v,u);
+    }
+}
+
+int up(int u,int dis)
+{
+    int cnt=0;
+    while(dis)
+    {
+        if(dis&1)u=pnt[u][cnt];
+        cnt++;
+        dis>>=1;
+    }
+    return u;
+}
+int lca(int u,int v)
+{
+    int d1=dep[u],d2=dep[v];
+    if(d1>d2)u=up(u,d1-d2);
+    else v=up(v,d2-d1);
+    int l=0,r=min(d1,d2)-1;
+    int ans=u;
+    while(l<=r)
+    {
+        int m=((l+r)>>1);
+        int pu=up(u,m);
+        if(pu==up(v,m))
+        {
+            ans=pu;
+            r=m-1;
+        }
+        else l=m+1;
+    }
+    return ans;
+}
+
+int get(int u,int root)
+{
+    int ans=0;
+    while(u!=root)
+    {
+        if(!to[u])
+        {
+            ans=max(ans,pntw[u]);
+            u=pnt[u][0];
+        }
+        else
+        {
+            if(dep[u]-to[u]<=dep[root])
+            {
+                ret=0;
+                query(1,ps[root],ps[pnt[u][0]]);
+                ans=max(ans,ret);
+                u=root;
+            }
+            else
+            {
+                int pu=up(u,to[u]);
+                ret=0;
+                query(1,ps[pu],ps[pnt[u][0]]);
+                ans=max(ans,ret);
+                u=pu;
+            }
+        }
+    }
+    return ans;
+}
+
+char str[15];
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+        init();
+        scanf("%d",&n);
+        for(int i=1; i<n; i++)
+        {
+            int u,v,w;
+            scanf("%d%d%d",&u,&v,&w);
+            add_edge(u,v,w);
+            add_edge(v,u,w);
+        }
+        build(1,1,n);
+        dfs_1(1,0);
+        dfs_2(1,0);
+        while(scanf("%s",str))
+        {
+            if(str[0]=='D')break;
+            int u,v;
+            scanf("%d%d",&u,&v);
+            if(str[0]=='Q')
+            {
+                int root=lca(u,v);
+                int ans=get(u,root);
+                ans=max(ans,get(v,root));
+                printf("%d\n",ans);
+            }
+            else
+            {
+                if(!flag[u*2]&&!flag[u*2-1])
+                {
+                    ew[u*2]=ew[u*2-1]=v;
+                }
+                else
+                {
+                    int pu=ev[u],pv=be[u];
+                    if(pnt[pu][0]==pv)swap(pu,pv);
+                    update(1,ps[pu],v);
+                }
+            }
+        }
+    }
+    return 0;
+}
