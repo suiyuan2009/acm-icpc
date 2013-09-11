@@ -1,0 +1,100 @@
+/*
+题意：给n个20位的01串，求两两异或后结果中1的数目最少是多少
+双向bfs
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-7
+typedef long long ll;
+typedef long double ldb;
+const int inf=0x3f3f3f3f;
+const int maxn=10005;
+const int maxm=maxn+maxn;
+const int mod=1000000007;
+
+int n;
+int d[1<<20],c[1<<20];
+
+void init()
+{
+    for(int i=0; i<(1<<20); i++)
+    {
+        d[i]=-1;
+        c[i]=0;
+    }
+}
+
+int f(char ch)
+{
+    if(ch>='0'&&ch<='9')return ch-'0';
+    return ch-'A'+10;
+}
+
+char str[15];
+int bfs()
+{
+    init();
+    queue<int>que;
+    for(int i=1; i<=n; i++)
+    {
+        scanf("%s",str);
+        int tt=0;
+        for(int j=0; j<5; j++)
+        {
+            tt*=16;
+            tt+=f(str[j]);
+        }
+        d[tt]=0,c[tt]=i;
+        que.push(tt);
+    }
+    int lim=inf,ret=inf;
+    while(!que.empty())
+    {
+        //printf("**\n");
+        int u=que.front();
+        que.pop();
+        for(int i=0; i<20; i++)
+        {
+            int v=u;
+            if(u&(1<<i))v-=(1<<i);
+            else v|=(1<<i);
+            if(d[v]==-1)
+            {
+                d[v]=d[u]+1;
+                c[v]=c[u];
+                if(d[v]<=lim)que.push(v);
+            }
+            else
+            {
+                if(c[v]==c[u])continue;
+                ret=min(ret,d[v]+d[u]+1);
+                lim=min(lim,d[u]);
+            }
+        }
+    }
+    return ret;
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%d",&n);
+        printf("%d\n",bfs());
+    }
+    return 0;
+}
