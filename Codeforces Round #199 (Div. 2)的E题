@@ -1,0 +1,148 @@
+/*
+题意：给出棵树，动态给节点涂色，询问一个点到涂色点的最近距离
+n*sqrt(m)
+将询问分成sqrt(m)份，每一份处理结束后bfs一次，在一份内用lca求最近距离
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+typedef double ldb;
+const int inf=0x3f3f3f3f;
+const int maxn=100005;
+const int mod=1000000007;
+
+int n,m;
+int per;
+int d[maxn];
+vector<int>g[maxn];
+int seq[maxn*10],num;
+int f[20][maxn*10];
+int ps[maxn];
+int dep[maxn];
+
+
+void dfs(int u,int fa)
+{
+    dep[u]=dep[fa]+1;
+    seq[++num]=u;
+    if(!ps[u])ps[u]=num;
+    for(int i=0; i<g[u].size(); i++)
+    {
+        int v=g[u][i];
+        if(v==fa)continue;
+        dfs(v,u);
+        seq[++num]=u;
+        if(!ps[u])ps[u]=num;
+    }
+}
+
+void init_rmq()
+{
+    for(int i=1; i<=num; i++)
+        f[0][i]=seq[i];
+    for(int i=1; i<=log(num)/log(2); i++)
+        for(int j=1; j<=num; j++)
+        {
+            if(dep[f[i-1][j]]<dep[f[i-1][j+(1<<(i-1))]])
+                f[i][j]=f[i-1][j];
+            else f[i][j]=f[i-1][j+(1<<(i-1))];
+        }
+}
+
+int rmq(int i,int j)
+{
+    i=ps[i],j=ps[j];
+    if(i>j)swap(i,j);
+    int k=log(j-i+1)/log(2);
+    if(dep[f[k][i]]<dep[f[k][j-(1<<k)+1]])return f[k][i];
+    return f[k][j-(1<<k)+1];
+}
+
+queue<int>que;
+void bfs()
+{
+    while(!que.empty())
+    {
+        int u=que.front();
+        que.pop();
+        for(int i=0; i<g[u].size(); i++)
+        {
+            int v=g[u][i];
+            if(d[v]>d[u]+1)
+            {
+                que.push(v);
+                d[v]=d[u]+1;
+            }
+        }
+    }
+}
+
+vector<int>tt;
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    scanf("%d%d",&n,&m);
+    for(int i=1; i<n; i++)
+    {
+        int u,v;
+        scanf("%d%d",&u,&v);
+        g[u].push_back(v);
+        g[v].push_back(u);
+    }
+    dfs(1,0);
+    init_rmq();
+
+    //printf("** %d\n",rmq(1,5));
+
+    for(int i=1; i<=n; i++)d[i]=inf;
+    d[1]=0;
+    que.push(1);
+    bfs();
+    per=sqrt(m);
+
+    //printf("** %d\n",per);
+
+    for(int i=1; i<=m; i++)
+    {
+        int f,x;
+        scanf("%d%d",&f,&x);
+        if(f==1)
+        {
+            d[x]=0;
+            que.push(x);
+            tt.push_back(x);
+        }
+        else
+        {
+            int ret=d[x];
+            for(int j=0; j<tt.size(); j++)
+            {
+                int lca=rmq(tt[j],x);
+
+                // printf("** %d %d\n",tt[j],x);
+
+                ret=min(ret,dep[x]+dep[tt[j]]-dep[lca]*2);
+            }
+            printf("%d\n",ret);
+        }
+        if(i%per==0)
+        {
+            bfs();
+            tt.clear();
+        }
+    }
+    return 0;
+}
