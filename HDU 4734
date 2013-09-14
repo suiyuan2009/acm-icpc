@@ -1,0 +1,82 @@
+/*
+数位dp
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef double ldb;
+const int inf=0x3f3f3f3f;
+const int maxm=5005;
+const int maxn=15;
+typedef __int64 ll;
+
+int T,ncase=0;
+int f[maxn][maxm][2],g[maxn][maxm][2];
+int b[maxn],n,m,tt[maxn];
+int A,B;
+int t1[maxn],t2[maxn];
+
+int get(int x)
+{
+    if(!x)return 0;
+    return get(x/10)*2+x%10;
+}
+
+int dfs(int x,int y,int z)
+{
+    if(y>m)return 0;
+    if(x==n+1)return 1;
+    if(!z&&9*((1<<(n-x+1))-1)+y<=m)return t1[x];
+    if(z&&9*((1<<(n-x+1))-1)+y<=m)return t2[x]+1;
+    if(g[x][y][z]==ncase)return f[x][y][z];
+    int ret=0;
+    int lim=z?b[x]:9;
+    for(int i=0; i<=lim; i++)
+        ret+=dfs(x+1,y+i*(1<<(n-x)),z&&i==b[x]);
+    g[x][y][z]=ncase;
+    return f[x][y][z]=ret;
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    scanf("%d",&T);
+    while(T--)
+    {
+        ++ncase;
+        scanf("%d%d",&A,&B);
+        m=get(A);
+        n=0;
+        if(!B)b[++n]=0;
+        else
+        {
+            while(B)
+            {
+                tt[++n]=B%10;
+                B/=10;
+            }
+            for(int i=1; i<=n; i++)
+                b[i]=tt[n-i+1];
+        }
+        t1[n+1]=1,t2[n+1]=0;
+        for(int i=n; i>=1; i--)
+        {
+            t2[i]=t2[i+1]+b[i]*t1[i+1];
+            t1[i]=t1[i+1]*10;
+        }
+        int ret=dfs(1,0,1);
+        printf("Case #%d: %d\n",ncase,ret);
+    }
+    return 0;
+}
