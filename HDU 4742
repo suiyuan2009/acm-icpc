@@ -1,0 +1,158 @@
+/*
+题意：给N个三维坐标点，一个点小于另一个点当且仅当三个维度的值都小于，求最长上升子序列的数量
+方法就在陈丹琦《从《Cash》谈一类分治算法的应用》这篇论文里，
+首先按x值sort一遍，
+然后，如果我们要算[l,r]这个区间里的dp值，
+记m=(l+r)>>1，假设我们已经得到了[l,m]中所有的dp值，
+那么[m+1,r]区间中的dp值一部分由[l,m]中的dp值转移过来，
+一部分由[m+1,r]区间中的dp值转移过来，
+这个时候我们仅仅计算第一部分，算完后问题就和[l,m]这段区间无关了，
+所有现在要做的就是用左边区间的值去更新右边区间的值，
+首先我们把[l,r]中所有的点按y值排序，这时只剩下z值没有处理，
+然后就像归并排序一样，我们从左往右扫描按y值排序的数组，
+如果碰到的是左区间的值，就用它按z值更新树状数组，
+如果碰到的是右区间的值，就从树状数组中取出最优值更新当前dp值，
+最后要清空树状数组，然后接着计算[m+1,r]区间。
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef double ldb;
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+const int maxn=100005;
+const int mod=(1<<30);
+
+struct Point {
+    int x,y,z;
+    bool operator<(const Point&a)const {
+        if(x==a.x) {
+            if(y==a.y)return z<a.z;
+            return y<a.y;
+        }
+        return x<a.x;
+    }
+    void input() {
+        scanf("%d%d%d",&x,&y,&z);
+    }
+} p[maxn];
+int n;
+vector<int>mp;
+struct F {
+    int x,y;
+    F() {}
+    F(int _x,int _y) {
+        x=_x,y=_y;
+    }
+    void update(F a) {
+        if(x<a.x) {
+            x=a.x,y=a.y;
+        } else if(x==a.x) {
+            y+=a.y;
+            if(y>=mod)y-=mod;
+        }
+    }
+};
+F c[maxn],f[maxn];
+
+int lowbit(int x) {
+    return x&(-x);
+}
+void add(int pos,F val) {
+    while(pos<=n) {
+        c[pos].update(val);
+        pos+=lowbit(pos);
+    }
+}
+void clean(int pos) {
+    F tt=F(0,0);
+    while(pos<=n) {
+        c[pos]=tt;
+        pos+=lowbit(pos);
+    }
+}
+void query(int pos,F &val) {
+    while(pos) {
+        val.update(c[pos]);
+        pos-=lowbit(pos);
+    }
+}
+
+void init() {
+    mp.clear();
+    for(int i=1; i<=n; i++)
+        f[i].x=f[i].y=1;
+    memset(c,0,sizeof(c));
+}
+
+struct G {
+    int idx;
+    int y,z;
+    G() {}
+    G(int _y,int _z,int _idx) {
+        y=_y,z=_z,idx=_idx;
+    }
+    bool operator<(const G &a)const {
+        if(y==a.y)return z<a.z;
+        return y<a.y;
+    }
+};
+G g[maxn];
+void solve(int l,int r) {
+    if(l==r)return;
+    int m=((l+r)>>1);
+    solve(l,m);
+    int cnt_g=0;
+    for(int i=l; i<=r; i++)
+        g[cnt_g++]=G(p[i].y,p[i].z,i);
+    sort(g,g+cnt_g);
+    for(int i=0; i<cnt_g; i++) {
+        if(g[i].idx<=m)add(g[i].z,f[g[i].idx]);
+        else {
+            F tt=F(0,0);
+            query(g[i].z,tt);
+            tt.x++;
+            f[g[i].idx].update(tt);
+        }
+    }
+    for(int i=0; i<cnt_g; i++)
+        if(g[i].idx<=m)clean(g[i].z);
+    solve(m+1,r);
+}
+
+int main() {
+    //freopen("in.cpp","r",stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--) {
+        scanf("%d",&n);
+        init();
+        for(int i=1; i<=n; i++) {
+            p[i].input();
+            mp.push_back(p[i].z);
+        }
+        sort(mp.begin(),mp.end());
+        mp.erase(unique(mp.begin(),mp.end()),mp.end());
+        for(int i=1; i<=n; i++) {
+            p[i].z=lower_bound(mp.begin(),mp.end(),p[i].z)-mp.begin()+1;
+            //printf("** %d\n",p[i].z);
+        }
+        sort(p+1,p+n+1);
+        solve(1,n);
+        F ret=F(0,0);
+        for(int i=1; i<=n; i++)ret.update(f[i]);
+        printf("%d %d\n",ret.x,ret.y);
+    }
+    return 0;
+}
