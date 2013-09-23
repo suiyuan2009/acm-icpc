@@ -1,0 +1,91 @@
+/*
+kmp+偏序
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=100005;
+
+int n,m,kk;
+int s[2][maxn];
+int c[2][maxn][30];
+vector<int>choose;
+int fail[maxn];
+
+void init()
+{
+    choose.clear();
+    for(int i=1; i<=n; i++)
+        for(int j=1; j<=kk; j++)
+            c[1][i][j]=c[1][i-1][j]+(s[1][i]==j);
+    for(int i=1; i<=m; i++)
+        for(int j=1; j<=kk; j++)
+            c[0][i][j]=c[0][i-1][j]+(s[0][i]==j);
+}
+
+bool cmp(int sign1,int l,int idx,int sign2,int r,int idy)
+{
+    int cnt1=c[sign1][idx][s[sign1][idx]]-c[sign1][l-1][s[sign1][idx]];
+    int cnt2=c[sign2][idy][s[sign2][idy]]-c[sign2][r-1][s[sign2][idy]];
+    if(cnt1!=cnt2)return 0;
+    cnt1=cnt2=0;
+    for(int i=0; i<s[sign1][idx]; i++)
+        cnt1+=c[sign1][idx][i]-c[sign1][l-1][i];
+    for(int i=0; i<s[sign2][idy]; i++)
+        cnt2+=c[sign2][idy][i]-c[sign2][r-1][i];
+    return cnt1==cnt2;
+}
+
+void makefail()
+{
+    for(int i=1,j=0; i<=m; i++,j++)
+    {
+        fail[i]=j;
+        while(j>0&&!cmp(0,1,j,0,i-j+1,i))j=fail[j];
+    }
+}
+
+void kmp()
+{
+    for(int i=1,j=1; i<=n;)
+    {
+        while(j>0&&!cmp(0,1,j,1,i-j+1,i))j=fail[j];
+        if(j==0||cmp(0,1,j,1,i-j+1,i))j++,i++;
+        if(j==m+1)
+        {
+            i--,j--;
+            choose.push_back(i-m+1);
+            j=fail[j];
+        }
+    }
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    while(~scanf("%d%d%d",&n,&m,&kk))
+    {
+        for(int i=1; i<=n; i++)scanf("%d",&s[1][i]);
+        for(int i=1; i<=m; i++)scanf("%d",&s[0][i]);
+        init();
+        makefail();
+        kmp();
+        printf("%d\n",choose.size());
+        for(int i=0; i<choose.size(); i++)
+            printf("%d\n",choose[i]);
+    }
+    return 0;
+}
