@@ -1,0 +1,116 @@
+/*
+题意：给两个串，求最长公共子序列，不包含第三个串作为子串
+kmp+dp
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=105;
+
+char a[maxn],b[maxn],t[maxn];
+int n,m,lt;
+int f[maxn][maxn][maxn];
+int fail[maxn];
+int pnt[maxn][maxn][maxn][3];
+
+void makefail()
+{
+    for(int i=1,j=0; i<=lt; i++,j++)
+    {
+        fail[i]=j;
+        while(j>0&&t[i-1]!=t[j-1])j=fail[j];
+    }
+}
+
+void pd(int x,int y,int z,int i,int j,int k,int val)
+{
+    if(f[x][y][z]<f[i][j][k]+val)
+    {
+        f[x][y][z]=f[i][j][k]+val;
+        pnt[x][y][z][0]=i;
+        pnt[x][y][z][1]=j;
+        pnt[x][y][z][2]=k;
+    }
+}
+
+void solve()
+{
+    memset(f,-1,sizeof(f));
+    f[0][0][0]=f[0][1][0]=f[1][0][0]=0;
+    for(int i=0; i<=n; i++)
+        for(int j=0; j<=m; j++)
+            for(int k=0; k<lt; k++)
+            {
+                if(f[i][j][k]==-1)continue;
+                pd(i+1,j,k,i,j,k,0);
+                pd(i,j+1,k,i,j,k,0);
+                if(i<n&&j<m&&a[i]==b[j])
+                {
+                    if(t[k]==a[i])
+                    {
+                        pd(i+1,j+1,k+1,i,j,k,1);
+                    }
+                    else
+                    {
+                        int tk=k+1;
+                        while(tk>0&&t[tk-1]!=a[i])tk=fail[tk];
+                        pd(i+1,j+1,tk,i,j,k,1);
+                    }
+                }
+            }
+}
+
+vector<char>ans;
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    scanf("%s%s%s",a,b,t);
+    n=strlen(a);
+    m=strlen(b);
+    lt=strlen(t);
+    makefail();
+    solve();
+    int ret=0,idx=0;
+    for(int i=0; i<lt; i++)
+        if(ret<f[n][m][i])
+        {
+            ret=f[n][m][i];
+            idx=i;
+        }
+
+    // printf("** %d\n",idx);
+
+    if(ret==0)printf("0\n");
+    else
+    {
+        ans.clear();
+        int x=n,y=m,z=idx;
+        while(x>=1&&y>=1)
+        {
+            //printf("** %d %d %d: %d\n",x,y,z,f[x][y][z]);
+            int px=pnt[x][y][z][0];
+            int py=pnt[x][y][z][1];
+            int pz=pnt[x][y][z][2];
+            if(px+1==x&&py+1==y)
+                ans.push_back(a[x-1]);
+            x=px,y=py,z=pz;
+        }
+        for(int i=ans.size()-1; i>=0; i--)
+            printf("%c",ans[i]);
+        printf("\n");
+    }
+    return 0;
+}
