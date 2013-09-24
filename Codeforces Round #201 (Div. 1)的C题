@@ -1,0 +1,61 @@
+/*
+题意：从a到b最小需要几步，a-b<=10^6，每次可以a--或者a-=a%c[i]
+贪心，加点优化
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=100005;
+
+int n;
+vector<int>c;
+vector<int>nxt_c;
+int a,b;
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    scanf("%d",&n);
+    for(int i=1; i<=n; i++)
+    {
+        int x;
+        scanf("%d",&x);
+        c.push_back(x);
+    }
+    sort(c.begin(),c.end());
+    c.erase(unique(c.begin(),c.end()),c.end());
+    scanf("%d%d",&a,&b);
+    int ret=0;
+    while(a!=b)
+    {
+        nxt_c.clear();
+        int next=a-1;
+        for(int i=0; i<c.size(); i++)
+        {
+            int tt=a/c[i]*c[i];
+            if(tt>=b)
+            {
+                nxt_c.push_back(c[i]);
+                next=min(next,tt);
+            }
+        }
+        c=nxt_c;
+        ret++;
+        a=next;
+    }
+    printf("%d\n",ret);
+    return 0;
+}
