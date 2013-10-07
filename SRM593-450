@@ -1,5 +1,6 @@
 /*
-给n个区间[ai,bi]，每个区间选择1个数，把数分成两部分，使得两个部分各自值的和相差最小
+给n个区间[ai,bi]，每个区间选择1个数，把数分成两部分，
+使得两个部分各自值的和相差最大可能最小，
 结论就是最后选择的都是区间的端点，所以把ci=ai+bi，看能取到哪些ci
 */
 //#pragma comment(linker, "/STACK:102400000,102400000")
@@ -45,10 +46,15 @@ public:
         for(int i=0; i<=tot; i++)
             if(f[i])
             {
-                int x=tot-i;
-                if(i>x)x=i;
-                if(ret==-1)ret=x;
-                else ret=min(ret,x);
+                /*int x=tot-i;
+                 if(i>x)x=i;
+                 if(ret==-1)ret=x;
+                 else ret=min(ret,x);*/
+                if(i>=sub&&i)
+                {
+                    if(ret==-1)ret=i;
+                    else ret=min(ret,i);
+                }
             }
         return ret-sub;
     }
