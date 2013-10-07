@@ -1,0 +1,55 @@
+/*
+给n个区间[ai,bi]，每个区间选择1个数，把数分成两部分，使得两个部分各自值的和相差最小
+结论就是最后选择的都是区间的端点，所以把ci=ai+bi，看能取到哪些ci
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-7
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=55;
+
+int f[maxn*20000];
+int c[maxn];
+int n;
+class MayTheBestPetWin
+{
+public:
+    int calc(vector <int> a, vector <int> b)
+    {
+        n=a.size();
+        int tot=0,sub=0;
+        for(int i=1; i<=n; i++)
+        {
+            c[i]=a[i-1]+b[i-1];
+            tot+=c[i];
+            sub+=a[i-1];
+        }
+        f[0]=1;
+        for(int i=0; i<n; i++)
+            for(int j=tot; j>=0; j--)
+                if(f[j])f[j+c[i+1]]=1;
+        int ret=-1;
+        for(int i=0; i<=tot; i++)
+            if(f[i])
+            {
+                int x=tot-i;
+                if(i>x)x=i;
+                if(ret==-1)ret=x;
+                else ret=min(ret,x);
+            }
+        return ret-sub;
+    }
+};
