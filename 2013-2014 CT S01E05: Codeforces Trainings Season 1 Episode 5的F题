@@ -1,0 +1,162 @@
+/*
+拆点加最短路，注意dijkstra+priority_queue的写法
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-7
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=1005;
+const int maxm=300005;
+
+int f[maxn][105];
+bool in[maxn][105];
+int ct[maxn];
+int head[maxn],next[maxm],ev[maxm],ew[maxm],num;
+int n,m;
+
+void init()
+{
+    memset(head,-1,sizeof(head));
+    num=0;
+}
+
+void add_edge(int u,int v,int w)
+{
+    next[++num]=head[u];
+    head[u]=num;
+    ev[num]=v,ew[num]=w;
+}
+
+bool pd(int &ret,int val)
+{
+    //if(val==-1)return 0;
+    if(ret==-1)
+    {
+        ret=val;
+        return 1;
+    }
+    if(ret<val)return 0;
+    ret=val;
+    return 1;
+}
+
+
+struct P
+{
+    int d,x,y;
+    bool operator<(const P&a)const
+    {
+        return d>a.d;
+    }
+};
+priority_queue<P,vector<P> >que;
+
+int dijkstra(int s,int t,int c)
+{
+    P U,V;
+    while(!que.empty())que.pop();
+    for(int i=0; i<n; i++)
+        for(int j=0; j<=c; j++)
+        {
+            f[i][j]=-1;
+            in[i][j]=0;
+        }
+    f[s][0]=0;
+    U.d=0,U.x=s,U.y=0;
+    que.push(U);
+
+    //int tot=0;
+    while(!que.empty())
+    {
+        // printf("%d\n",que.top().x);
+        // printf("** %d\n",++tot);
+
+        U=que.top();
+        que.pop();
+        int ux=U.x,uy=U.y,uw=U.d;
+        if(ux==t)break;
+        if(in[ux][uy])continue;
+        in[ux][uy]=1;
+        /*for(int i=head[ux]; i!=-1; i=next[i])
+        {
+            int v=ev[i],d=ew[i];
+            for(int j=0; j<=c-uy; j++)
+            {
+                int cost=j*ct[ux];
+                if(j+uy-d>=0)
+                {
+                    if(pd(f[v][j+uy-d],f[ux][uy]+cost))
+                    {
+                        V.x=v,V.y=j+uy-d,V.d=f[ux][uy]+cost;
+                        que.push(V);
+                    }
+                }
+            }
+        }*/
+        if(uy<c&&pd(f[ux][uy+1],f[ux][uy]+ct[ux]))
+        {
+            V.x=ux,V.y=uy+1,V.d=f[ux][uy]+ct[ux];
+            que.push(V);
+        }
+        for(int i=head[ux]; i!=-1; i=next[i])
+        {
+            int v=ev[i],d=ew[i];
+            if(uy-d>=0)
+            {
+                if(pd(f[v][uy-d],f[ux][uy]))
+                {
+                    V.x=v,V.y=uy-d,V.d=f[ux][uy];
+                    que.push(V);
+                }
+            }
+        }
+    }
+    int ret=-1;
+    for(int i=0; i<=c; i++)
+        if(f[t][i]!=-1)
+            pd(ret,f[t][i]);
+    return ret;
+}
+
+int main()
+{
+    //freopen("tank.in","r",stdin);
+
+    while(~scanf("%d%d",&n,&m))
+    {
+        // printf("** %d %d\n",n,m);
+        init();
+        for(int i=0; i<n; i++)scanf("%d",&ct[i]);
+        for(int i=0; i<m; i++)
+        {
+            int u,v,w;
+            scanf("%d%d%d",&u,&v,&w);
+            add_edge(u,v,w);
+            add_edge(v,u,w);
+        }
+        int T;
+        scanf("%d",&T);
+        while(T--)
+        {
+            int s,t,c;
+            scanf("%d%d%d",&c,&s,&t);
+            int ret=dijkstra(s,t,c);
+            if(ret==-1)printf("impossible\n");
+            else printf("%d\n",ret);
+        }
+    }
+    return 0;
+}
