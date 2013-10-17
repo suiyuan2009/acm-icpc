@@ -1,0 +1,45 @@
+/*
+题意：给出n个数，问是否能找到n的一个排列p[i]，使得(a[i]+p[i]-1)%n+1仍然是n的一个排列
+首先必要条件是sum(a[i])%n=0，因为p[i]和最后得到的排列和相等，
+然后据说能够证明这也是必要条件，大概就是相互调换构造吧
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=25;
+
+int a[maxn],n;
+
+int main()
+{
+    // freopen("in.cpp","r",stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%d",&n);
+        int s=0;
+        for(int i=1; i<=n; i++)
+        {
+            scanf("%d",&a[i]);
+            s+=a[i];
+        }
+        if(s%n==0)printf("Sepehr\n");
+        else printf("Sohrab\n");
+    }
+    return 0;
+}
