@@ -1,0 +1,100 @@
+/*
+题意：一个数中只能包含0,4,7才算luck，问n是否可以分解成6个luck数
+记f[i][j]为前i位符合后进位是j是否可能
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-8
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+const int maxn=25;
+
+vector<pair<int,int> >yc[43];
+ll n;
+bool f[maxn][5];
+int pnt[maxn][5][2];
+ll ans[6],A[18];
+
+void init()
+{
+    for(int i=0; i<=6; i++)
+        for(int j=0; j+i<=6; j++)
+        {
+            int tt=i*4+j*7;
+            if(yc[tt].size()==0)yc[tt].push_back(make_pair(i,j));
+        }
+    A[0]=1;
+    for(int i=1; i<=18; i++)
+        A[i]=A[i-1]*10;
+}
+
+int a[maxn],cnt_a;
+void solve()
+{
+    cnt_a=0;
+    while(n)
+    {
+        a[++cnt_a]=n%10;
+        n/=10;
+    }
+    memset(f,0,sizeof(f));
+    f[0][0]=1;
+    for(int i=0; i<cnt_a; i++)
+        for(int j=0; j<=4; j++)
+        {
+            if(!f[i][j])continue;
+            for(int k=0; k<=42; k++)
+            {
+                if(yc[k].size()==0)continue;
+                int tt=(j+k)%10,jin=(j+k)/10;
+                if(tt!=a[i+1])continue;
+                if(f[i+1][jin])continue;
+                f[i+1][jin]=1;
+                pnt[i+1][jin][0]=j;
+                pnt[i+1][jin][1]=k;
+            }
+        }
+    if(!f[cnt_a][0])printf("-1\n");
+    else
+    {
+        memset(ans,0,sizeof(ans));
+        int x=cnt_a,y=0;
+        while(x)
+        {
+            int px=x-1,py=pnt[x][y][0];
+            int tt=pnt[x][y][1];
+            int l=yc[tt][0].first,r=yc[tt][0].second;
+            for(int i=0;i<l;i++)ans[i]+=A[x-1]*4;
+            for(int i=l;i<l+r;i++)ans[i]+=A[x-1]*7;
+            x=px,y=py;
+        }
+        for(int i=0;i<5;i++)printf("%I64d ",ans[i]);
+        printf("%I64d\n",ans[5]);
+    }
+}
+
+int main()
+{
+    // freopen("in.cpp","r",stdin);
+    init();
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%I64d",&n);
+        solve();
+    }
+    return 0;
+}
