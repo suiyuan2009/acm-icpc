@@ -1,0 +1,85 @@
+/*
+题意：给出n个数和k，对每个数最多减去k，且不能小于1，问这n个数的最大公约数的最大值
+记最后答案是ans，那么ans<=ai且ai%ans<=k，
+记n个数的最小数为m，如果m<=k+1，那么ai%m<=m-1<=k，ans=m就行，
+否则，从k+1到m枚举答案，每次看区间集合[p*ans,p*ans+k]是否覆盖了所有的点
+k+1这个数其实说的是[x-k,x]区间内有k+1个数，所以如果m<=k+1，答案总是可以调整成m，
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-8
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+const int maxn=300005;
+
+int n,a[maxn],k,m=maxn*100,top=0;
+
+int c[2000005];
+int lowbit(int x)
+{
+    return x&(-x);
+}
+void pd(int pos)
+{
+    while(pos<2000005)
+    {
+        c[pos]++;
+        pos+=lowbit(pos);
+    }
+}
+int sum(int pos)
+{
+    int ret=0;
+    while(pos)
+    {
+        ret+=c[pos];
+        pos-=lowbit(pos);
+    }
+    return ret;
+}
+
+
+int main()
+{
+    // freopen("in.cpp","r",stdin);
+    scanf("%d%d",&n,&k);
+    for(int i=1; i<=n; i++)
+    {
+        scanf("%d",&a[i]);
+        pd(a[i]);
+        top=max(top,a[i]);
+        m=min(m,a[i]);
+    }
+
+    //printf("** %d %d\n",m,top);
+
+    if(m<=k+1)printf("%d\n",m);
+    else
+    {
+        int ret=1;
+        for(int i=k+1; i<=m; i++)
+        {
+            int cnt=0;
+            for(int j=1; j<=top/i; j++)
+            {
+                int l=i*j,r=l+k;
+                cnt+=sum(r)-sum(l-1);
+            }
+            if(cnt==n)ret=i;
+        }
+        printf("%d\n",ret);
+    }
+    return 0;
+}
