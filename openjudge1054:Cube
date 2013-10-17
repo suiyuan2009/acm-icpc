@@ -1,0 +1,135 @@
+/*
+题意：给出网格上的n个点，形成一棵树，边一定平行坐标轴，有一个正方体，
+每次移动只有当初始时的姿势和终止时的姿势一样才算一次旅行，问每个点最多进行多少次旅行，
+正方体每次移动相当于一次置换，从根dfs即可
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=100005;
+const int maxm=maxn+maxn;
+
+int n;
+int a[maxn];
+int f[maxn][6];
+int dir[4][6]=
+{
+    {3,4,2,1,5,6},
+    {5,6,3,4,2,1},
+    {4,3,1,2,5,6},
+    {6,5,3,4,1,2},
+};
+struct P
+{
+    int x,y;
+} p[maxn];
+int head[maxn],ev[maxm],ew[maxm],flag[maxm],num,next[maxm];
+
+void add_edge(int u,int v)
+{
+    next[++num]=head[u];
+    head[u]=num;
+    ev[num]=v;
+    ew[num]=abs(p[u].x-p[v].x)+abs(p[u].y-p[v].y);
+    if(p[u].x==p[v].x)
+    {
+        if(p[u].y<p[v].y)flag[num]=0;
+        else flag[num]=2;
+    }
+    else
+    {
+        if(p[u].x<p[v].x)flag[num]=3;
+        else flag[num]=1;
+    }
+}
+
+void dfs(int u,int fa)
+{
+    // printf("** %d\n",u);
+    for(int i=head[u]; i; i=next[i])
+    {
+        int v=ev[i];
+        if(v==fa)continue;
+        int tt=ew[i]%4;
+        int tmp[4][6];
+        for(int j=0;j<6;j++)tmp[0][j]=f[u][j];
+        for(int j=1;j<=tt;j++)
+            for(int k=0;k<6;k++)
+              tmp[j][k]=tmp[j-1][dir[flag[i]][k]-1];
+        for(int j=0;j<6;j++)
+        f[v][j]=tmp[tt][j];
+        dfs(v,u);
+    }
+}
+
+struct G
+{
+    int id,x;
+    bool operator<(const G&a)const
+    {
+        if(x==a.x)return id<a.id;
+        return x<a.x;
+    }
+} g[maxn];
+int ans[maxn];
+
+int main()
+{
+    // freopen("in.cpp","r",stdin);
+    while(~scanf("%d",&n))
+    {
+        for(int i=1; i<=n; i++)scanf("%d%d",&p[i].x,&p[i].y);
+        num=0;
+        memset(head,0,sizeof(head));
+        for(int i=1; i<n; i++)
+        {
+            int u,v;
+            scanf("%d%d",&u,&v);
+            add_edge(u,v);
+            add_edge(v,u);
+        }
+        for(int i=0; i<6; i++)f[1][i]=i;
+        dfs(1,0);
+
+        /*for(int i=1;i<=n;i++)
+        {
+            for(int j=0;j<6;j++)
+                printf("%d ",f[i][j]);
+            printf("\n");
+        }*/
+
+        for(int i=1; i<=n; i++)
+        {
+            int tt=0;
+            for(int j=0; j<6; j++)
+                tt=tt*10+f[i][j];
+            g[i].id=i;
+            g[i].x=tt;
+        }
+        sort(g+1,g+n+1);
+        for(int i=1; i<=n; i++)
+        {
+            int j=i;
+            while(j+1<=n&&g[j+1].x==g[i].x)j++;
+            for(int k=i; k<=j; k++)
+                ans[g[k].id]=j-i;
+            i=j;
+        }
+        for(int i=1; i<=n; i++)printf("%d\n",ans[i]);
+    }
+    return 0;
+}
