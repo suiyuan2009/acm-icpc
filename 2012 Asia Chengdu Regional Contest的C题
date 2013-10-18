@@ -1,0 +1,71 @@
+/*
+题意：给出n,划分成若干个相似三角形，问方案数，顺序相关
+易知答案为sigma(2^(k-1)*g(x))，其中g(x)表示三边长互质且和是x的方案数，k*x=n，
+首先对于b=c的三角形数，有(i-1)/2-i/3+(i%3?0:1)个，
+b<c的三角形数为f(x-1)-((x-1)&1?x/4:0)，因为要减去a+b=c+1且a+b+c=x-1的三角形数
+最后g(x)=f(x)-sigma(g(k)),k|x。
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=5000005;
+const int mod=1000000007;
+
+int f[maxn],p2[maxn];
+
+void init()
+{
+    f[3]=1,p2[1]=1,p2[2]=2;
+    for(int i=4; i<maxn; i++)
+    {
+        f[i]=f[i-1]+(i-1)/2-i/3+(i%3?0:1);
+        if(!(i&1))f[i]-=i/4;
+        if(f[i]>=mod)f[i]-=mod;
+        if(f[i]<0)f[i]+=mod;
+    }
+    for(int i=3; i<maxn; i++)
+    {
+        p2[i]=p2[i-1]<<1;
+        if(p2[i]>=mod)p2[i]-=mod;
+        for(int j=i+i; j<maxn; j+=i)
+        {
+            f[j]-=f[i];
+            if(f[j]<0)f[j]+=mod;
+        }
+    }
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    init();
+    int n;
+    int ncase=0;
+    while(~scanf("%d",&n))
+    {
+        ll ret=0;
+        for(int i=1; i*i<=n; i++)
+            if(n%i==0)
+            {
+                ret=(ret+(ll)p2[n/i]*f[i])%mod;
+                if(i*i!=n)
+                    ret=(ret+(ll)p2[i]*f[n/i])%mod;
+            }
+        printf("Case %d: %I64d\n",++ncase,ret);
+    }
+    return 0;
+}
