@@ -1,0 +1,104 @@
+/*
+题意：从n个点中选3个点组成三角形，问最小周长
+分治，类似找最近点对，合并时每次选取ret*ret/2的矩形区域
+We can prove that the number of points in the box is at most 16...from gcj2009wf
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+#include<deque>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=1000005;
+const double dinf=60000000000.0;
+
+int n;
+struct P
+{
+    int x,y;
+    bool operator<(const P&a)const
+    {
+        return x<a.x;
+    }
+} p[maxn],q[maxn];
+bool cmp(P a,P b)
+{
+    return a.y<b.y;
+}
+
+double dist(P a,P b)
+{
+    return sqrt((ll)(a.x-b.x)*(a.x-b.x)+(ll)(a.y-b.y)*(a.y-b.y));
+}
+
+double solve(int l,int r)
+{
+    if(l==r||l+1==r)return dinf;
+    if(l+2==r)return dist(p[l],p[l+1])+dist(p[l],p[l+2])+dist(p[l+1],p[l+2]);
+    int m=((l+r)>>1);
+    double ret=min(solve(l,m),solve(m+1,r));
+    int c=0;
+    for(int i=l; i<=r; i++)
+        if(abs(p[i].x-p[m].x)<=ret/2)
+            q[++c]=p[i];
+    sort(q+1,q+c+1,cmp);
+    /*deque<int>deq;
+    for(int i=1; i<=c; i++)
+    {
+        if(abs(q[i].x-p[m].x)>ans/2)continue;
+        deq.push_back(i);
+        while(q[i].y-q[deq[0]].y>ans/2)
+            deq.pop_front();
+        //  printf("****%d\n",deq.size());
+        for(int j=0; j<deq.size(); j++)
+            for(int k=j+1; k<deq.size(); k++)
+            {
+                if(dist(q[deq[j]],q[deq[k]])>=ans)continue;
+                for(int r=k+1; r<deq.size(); r++)
+                {
+                    //  printf("***\n");
+                    //printf("** %d %d %d %d\n",deq[j],deq[k],deq[r],c);
+                    // printf("** %d %d\n",q[deq[r]].x,q[deq[r]].y);
+                    double tt=dist(q[deq[j]],q[deq[k]])+dist(q[deq[j]],q[deq[r]])+dist(q[deq[k]],q[deq[r]]);
+                    // printf("*** %.10f\n",tt);
+                    ret=min(ret,tt);
+                }
+            }
+    }*/
+    for(int i=1; i<=c; i++)
+        for(int j=i+1; j<=c; j++)
+        {
+            if(q[j].y-q[i].y>ret/2)break;
+            for(int k=j+1; k<=c; k++)
+            {
+                if(q[k].y-q[i].y>ret/2)break;
+                ret=min(ret,dist(q[i],q[j])+dist(q[i],q[k])+dist(q[j],q[k]));
+            }
+        }
+    return ret;
+}
+
+int main()
+{
+    //freopen("B-small-practice.in","r",stdin);
+    while(~scanf("%d",&n))
+    {
+        for(int i=1; i<=n; i++)
+            scanf("%d%d",&p[i].x,&p[i].y);
+        sort(p+1,p+n+1);
+        printf("%.10f\n",solve(1,n));
+    }
+    return 0;
+}
