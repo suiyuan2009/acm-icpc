@@ -1,0 +1,68 @@
+/*
+题意：给出n个坐标，问对于每一个坐标，是否存在a,b,c，使得ax+by+cz>=axi+byi+czi恒成立
+就是求a,b,c,使得(xi-x)*a+(yi-y)*b+(zi-z)*c>=0横成立
+枚举另外两个点，以(x,y,z)为原点，形成一个平面，check所有点是否都不在这个平面下
+如果所有点都是共线的，显然满足条件。
+叉乘和直线方程系数的关系。
+*/
+#include <map>
+#include <set>
+#include <cmath>
+#include <queue>
+#include <cstdio>
+#include <vector>
+#include <string>
+#include <cassert>
+#include <cstring>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+const double eps = 1e-6;
+typedef long long ll;
+const int inf = 0x3fffffff;
+const int maxn = 55;
+const int maxm = maxn + maxn;
+int n;
+int x[maxn], y[maxn], z[maxn];
+bool top[maxn];
+
+int main()
+{
+    //freopen("in.cpp", "r", stdin);
+    int T;
+    scanf("%d", &T);
+    while (T--)
+    {
+        scanf("%d", &n);
+        memset(top, 0, sizeof(top));
+        for (int i = 1; i <= n; i++)
+        {
+            scanf("%d%d%d", &x[i], &y[i], &z[i]);
+        }
+        bool sign = 1;
+        for (int i = 1; i <= n; i++)
+            for (int j = i + 1; j <= n; j++)
+                for (int k = j + 1; k <= n; k++)
+                {
+                    int a = (y[i] - y[k]) * (z[j] - z[k]) - (y[j] - y[k]) * (z[i] - z[k]);
+                    int b = (x[j] - x[k]) * (z[i] - z[k]) - (x[i] - x[k]) * (z[j] - z[k]);
+                    int c = (x[i] - x[k]) * (y[j] - y[k]) - (x[j] - x[k]) * (y[i] - y[k]);
+                    if (a != 0 || b != 0 || c != 0)
+                    {
+                        sign = 0;
+                        for (int t = -1; t <= 1; t += 2)
+                        {
+                            int maxx = -inf;
+                            for (int r = 1; r <= n; r++)
+                                maxx = max(maxx, a * x[r] + b * y[r] + c * z[r]);
+                            for (int r = 1; r <= n; r++)
+                                if (a * x[r] + b * y[r] + c * z[r] == maxx)top[r] = 1;
+                        }
+                    }
+                }
+        for (int i = 1; i <= n; i++)
+            printf("%c", (top[i] || sign) ? 'T' : 'F');
+        printf("\n");
+    }
+    return 0;
+}
