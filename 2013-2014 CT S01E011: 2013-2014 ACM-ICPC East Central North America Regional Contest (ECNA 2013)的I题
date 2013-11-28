@@ -1,0 +1,89 @@
+/*
+题意：单词由a,ab,bb组成，单词的顺序是先按长度再按字典序排，问第N个单词是什么
+首先预处理出长度<=i的单词个数，然后找出第N个单词的长度，直接构造
+注意到一个性质是只要第一个字母是a的串都可以构造，所以每次只需要判断第一个字母是否可以是a就行，
+是的话就结束，不是的话就只能是bb了，并且n-=p2[l-i-1]，也就是以a打头的所有串
+*/
+//#pragma comment(linker, "/STACK:1024000000,1024000000")
+#include <map>
+#include <set>
+#include <cmath>
+#include <queue>
+#include <cstdio>
+#include <vector>
+#include <string>
+#include <cassert>
+#include <cstring>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+const int maxn = 105;
+const double eps = 1e-6;
+typedef unsigned long long ll;
+const ll inf = 1LL << 62;
+
+ll f[maxn], s[maxn], p2[maxn];
+int cnt_f;
+
+void init()
+{
+    f[0] = f[1] = 1;
+    s[1] = 1, p2[0] = 1, p2[1] = 2;
+    int now = 1;
+    while (f[now] < inf)
+    {
+        now++;
+        f[now] = f[now - 1] + 2 * f[now - 2];
+        s[now] = s[now - 1] + f[now];
+        p2[now] = p2[now - 1] * 2;
+    }
+    cnt_f = now;
+}
+void print(ll p, ll l)
+{
+    for (int i = l - 1; i >= 0; i--)
+    {
+        if (p & (1LL << i))printf("b");
+        else printf("a");
+    }
+}
+void solve(ll n)
+{
+    int l = 0;
+    while (l <= cnt_f)
+    {
+        if (s[l] >= n)break;
+        l++;
+    }
+    n = n - s[l - 1];
+    for (int i = 0; i < l; i++)
+    {
+        if (p2[l - i - 1] >= n)
+        {
+            printf("a");
+            print(n - 1, l - i - 1);
+            break;
+        }
+        printf("bb");
+        n -= p2[l - i - 1];
+        i++;
+    }
+}
+
+int main()
+{
+    // freopen("in.txt", "r", stdin);
+    init();
+    ll n, m;
+    int ncase = 0;
+    while (scanf("%lld%lld", &n, &m))
+    {
+        if (n + m == 0)break;
+        printf("Case %d: ", ++ncase);
+        solve(n * (m - 1) + 1);
+        printf(" ");
+        solve(n * m);
+        printf("\n");
+    }
+    return 0;
+}
