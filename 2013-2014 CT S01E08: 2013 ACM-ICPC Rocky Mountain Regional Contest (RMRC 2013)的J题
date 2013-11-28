@@ -1,0 +1,100 @@
+/*
+题意：给出n个带权区间，选的区间可以包含，但不可以交叉，问可选的最大权值和
+将区间按右端点从小到大排序，右端点相同的按左端点从大到小排序，
+对于每段区间，dp求出这段区间里不相交也不包含的线段的最大权值和，
+插入新区间，范围和原区间相同，值为dp的值+原区间权值，用于DP
+感想：对区间排序很关键，转化成经典的DP也是关键的一步，还有插入新区间。
+*/
+//#pragma comment(linker, "/STACK:1024000000,1024000000")
+#include <map>
+#include <set>
+#include <cmath>
+#include <queue>
+#include <cstdio>
+#include <vector>
+#include <string>
+#include <cassert>
+#include <cstring>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+const double eps = 1e-6;
+typedef long long ll;
+const int maxn = 5005;
+const int maxm = maxn + maxn;
+
+int n;
+struct  P
+{
+    int x, y, w;
+    P() {}
+    P(int _x, int _y, int _w)
+    {
+        x = _x;
+        y = _y;
+        w = _w;
+    }
+    bool operator<(const P &a)const
+    {
+        if (y == a.y)return x > a.x;
+        return y < a.y;
+    }
+} p[maxn];
+vector<P>e[maxm];
+
+int f[maxm];
+int solve(int l, int r)
+{
+    //return 0;
+    for (int i = l; i <= r; i++)f[i] = 0;
+    for (int i = l; i <= r; i++)
+    {
+        if (i > l)f[i] = max(f[i], f[i - 1]);
+        for (int j = 0; j < e[i].size(); j++)
+            f[e[i][j].y] = max(f[e[i][j].y], f[i] + e[i][j].w);
+    }
+    return f[r];
+}
+
+vector<int>vis;
+int main()
+{
+    // freopen("in.cpp", "r", stdin);
+    scanf("%d", &n);
+    // printf("** %d\n", n);
+    for (int i = 1; i <= n; i++)
+    {
+        scanf("%d%d%d", &p[i].x, &p[i].y, &p[i].w);
+        p[i].y += p[i].x;
+        vis.push_back(p[i].x);
+        vis.push_back(p[i].y);
+    }
+    // printf("**\n");
+    sort(vis.begin(), vis.end());
+    vis.erase(unique(vis.begin(), vis.end()), vis.end());
+    // printf("***\n");
+    for (int i = 1; i <= n; i++)
+    {
+        p[i].y = lower_bound(vis.begin(), vis.end(), p[i].y) - vis.begin() + 1;
+        p[i].x = lower_bound(vis.begin(), vis.end(), p[i].x) - vis.begin() + 1;
+
+        // printf("** %d %d\n",p[i].x,p[i].y);
+
+    }
+    p[n + 1].x = 1, p[n + 1].y = vis.size();
+    p[n + 1].w = 0;
+    n++;
+    sort(p + 1, p + n + 1);
+    //printf("***\n");
+    for (int i = 1; i <= n; i++)
+    {
+        int tt = solve(p[i].x, p[i].y) + p[i].w;
+        e[p[i].x].push_back(P(p[i].x, p[i].y, tt));
+    }
+    int ret = 0;
+    for (int i = 1; i <= vis.size(); i++)
+        for (int j = 0; j < e[i].size(); j++)
+            ret = max(ret, e[i][j].w);
+    printf("%d\n", ret);
+    return 0;
+}
