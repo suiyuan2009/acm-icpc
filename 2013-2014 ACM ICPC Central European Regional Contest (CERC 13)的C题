@@ -1,0 +1,76 @@
+/*
+题意：给出n个数，10^5，一段区间的GCD是他里面所有数的GCD，问GCD*区间长度最大值
+一个结论是一段区间中不同的GCD值数量是O(log(a[r]))的，
+所以对于每个不同的GCD，记录得到这个值的最左可以是多少，
+然后指针向右移动，类似DP
+感想：关于数组区间问题，类似DP的思想，右端点向右移动，根据题意确定状态
+*/
+//#pragma comment(linker, "/STACK:1024000000,1024000000")
+#include <map>
+#include <set>
+#include <cmath>
+#include <queue>
+#include <cstdio>
+#include <vector>
+#include <string>
+#include <cassert>
+#include <cstring>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+const int maxn = 100005;
+const double eps = 1e-6;
+typedef __int64 ll;
+
+int n;
+ll a[maxn];
+vector < pair<ll, int> >e[maxn], tt;
+
+ll gcd(ll x, ll y)
+{
+    if (y == 0)return x;
+    return gcd(y, x % y);
+}
+
+int main()
+{
+    //freopen("in.txt", "r", stdin);
+    int T;
+    scanf("%d", &T);
+    while (T--)
+    {
+        scanf("%d", &n);
+        for (int i = 1; i <= n; i++)scanf("%I64d", &a[i]);
+        for (int i = 1; i <= n; i++)
+        {
+            e[i].clear();
+            if (i == 1)e[i].push_back(make_pair(a[i], i));
+            else
+            {
+                tt.clear();
+                for (int j = 0; j < e[i - 1].size(); j++)
+                    tt.push_back(make_pair(gcd(a[i], e[i - 1][j].first), e[i - 1][j].second));
+                tt.push_back(make_pair(a[i], i));
+                sort(tt.begin(), tt.end());
+                for (int j = 0; j < tt.size(); j++)
+                {
+                    if (j && tt[j].first == tt[j - 1].first)continue;
+                    e[i].push_back(tt[j]);
+                }
+            }
+        }
+
+        /*for (int i = 1; i <= n; i++)
+        {
+            for (int j = 0; j < e[i].size(); j++)
+                printf("%d: %I64d %d\n", i, e[i][j].first, e[i][j].second);
+        }*/
+
+        ll ret = 0;
+        for (int i = 1; i <= n; i++)
+            for (int j = 0; j < e[i].size(); j++)
+                ret = max(ret, e[i][j].first * (i - e[i][j].second + 1));
+        printf("%I64d\n", ret);
+    }
+    return 0;
+}
