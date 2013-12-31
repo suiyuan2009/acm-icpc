@@ -1,0 +1,337 @@
+/*
+题意：初始时两个串s1,s2，长度分别是n,m，且si=si-2+si-1，sk中有子串ACx个，给出n,m,k,x，构造s1,s2。
+枚举s1,s2中AC的数量和首尾状态，递推判断是否等于x。
+*/
+#include<stdio.h>
+#include<string.h>
+#include<vector>
+#include<algorithm>
+#include<math.h>
+#include<queue>
+using namespace std;
+const double eps=1e-6;
+typedef long long ll;
+const int maxn=105;
+
+int k,x,n,m;
+ll f[maxn];
+
+void init()
+{
+    f[0]=f[1]=1;
+    for(int i=2; i<=50; i++)
+        f[i]=f[i-1]+f[i-2];
+}
+
+char gouzao[maxn];
+void go(int n,int len,int mask)
+{
+    // gouzao[0]=0;
+    int l=mask%4;
+    int r=mask/4;
+    if(l==r)
+    {
+        if(l==0)
+        {
+            gouzao[0]=gouzao[len-1]='B';
+            for(int i=1; i<=n+n; i+=2)
+            {
+                gouzao[i]='A';
+                gouzao[i+1]='C';
+            }
+            for(int i=n+n+1; i<len-1; i++)
+                gouzao[i]='B';
+        }
+        else if(l==1)
+        {
+            gouzao[0]=gouzao[len-1]='A';
+            for(int i=0; i<n+n; i+=2)
+            {
+                gouzao[i]='A';
+                gouzao[i+1]='C';
+            }
+            for(int i=n+n; i<len-1; i++)
+                gouzao[i]='B';
+        }
+        else
+        {
+            gouzao[0]=gouzao[len-1]='C';
+            for(int i=1; i<=n+n; i+=2)
+            {
+                gouzao[i]='A';
+                gouzao[i+1]='C';
+            }
+            for(int i=n+n+1; i<len-1; i++)
+                gouzao[i]='B';
+        }
+    }
+    else
+    {
+        if(l==0)
+        {
+            if(r==1)
+            {
+                gouzao[0]='B';
+                gouzao[len-1]='A';
+                for(int i=1; i<=n+n; i+=2)
+                {
+                    gouzao[i]='A';
+                    gouzao[i+1]='C';
+                }
+                for(int i=n+n+1; i<len-1; i++)
+                    gouzao[i]='B';
+            }
+            else
+            {
+                gouzao[0]='B';
+                gouzao[len-1]='C';
+                for(int i=1; i<=n+n; i+=2)
+                {
+                    gouzao[i]='A';
+                    gouzao[i+1]='C';
+                }
+                for(int i=n+n+1; i<len-1; i++)
+                    gouzao[i]='B';
+            }
+        }
+        else if(l==1)
+        {
+            if(r==0)
+            {
+                gouzao[0]='A';
+                gouzao[len-1]='B';
+                for(int i=0; i<n+n; i+=2)
+                {
+                    gouzao[i]='A';
+                    gouzao[i+1]='C';
+                }
+                for(int i=n+n; i<len-1; i++)
+                    gouzao[i]='B';
+            }
+            else
+            {
+                gouzao[0]='A';
+                gouzao[len-1]='C';
+                for(int i=0; i<n+n; i+=2)
+                {
+                    gouzao[i]='A';
+                    gouzao[i+1]='C';
+                }
+                for(int i=n+n; i<len-1; i++)
+                    gouzao[i]='B';
+            }
+        }
+        else
+        {
+            if(r==0)
+            {
+                gouzao[0]='C';
+                gouzao[len-1]='B';
+                for(int i=1; i<=n+n; i+=2)
+                {
+                    gouzao[i]='A';
+                    gouzao[i+1]='C';
+                }
+                for(int i=n+n+1; i<len-1; i++)
+                    gouzao[i]='B';
+            }
+            else
+            {
+                gouzao[0]='C';
+                gouzao[len-1]='A';
+                for(int i=1; i<=n+n; i+=2)
+                {
+                    gouzao[i]='A';
+                    gouzao[i+1]='C';
+                }
+                for(int i=n+n+1; i<len-1; i++)
+                    gouzao[i]='B';
+            }
+        }
+    }
+}
+bool solve(int n,int len,int mask)
+{
+    if(n+n>len)return 0;
+    int l=mask%4;
+    int r=mask/4;
+    if(len==1)
+    {
+        if(l==r)return 1;
+        return 0;
+    }
+    if(l==r)
+    {
+        if(l==0)
+        {
+            if(n+n>len-2)return 0;
+        }
+        else if(l==1)
+        {
+            if(n+n>len-1)return 0;
+        }
+        else
+        {
+            if(n+n>len-1)return 0;
+        }
+    }
+    else
+    {
+        if(l==0)
+        {
+            if(r==1)
+            {
+                if(n+n>len-2)return 0;
+            }
+            else
+            {
+                if(n+n>len-1)return 0;
+            }
+        }
+        else if(l==1)
+        {
+            if(r==0)
+            {
+                if(n+n>len-1)return 0;
+            }
+            else
+            {
+                if(n+n>len)return 0;
+            }
+        }
+        else
+        {
+            if(r==0)
+            {
+                if(n+n>len-2)return 0;
+            }
+            else
+            {
+                if(n+n>len-2)return 0;
+            }
+        }
+    }
+    return 1;
+}
+
+char ans1[maxn],ans2[maxn];
+char ans3[maxn];
+int main()
+{
+    //printf("**** %d\n",solve(1,2,9));
+    init();
+    strcpy(ans3,"Happy new year!");
+    scanf("%d%d%d%d",&k,&x,&n,&m);
+    if(k==1)
+    {
+        bool sign=0;
+        for(int i=0; i<3; i++)
+            for(int j=0; j<3; j++)
+            {
+                if(solve(x,n,i*4+j))
+                {
+                    go(x,n,i*4+j);
+                    strcpy(ans1,gouzao);
+                    sign=1;
+                }
+            }
+        if(!sign)printf("%s\n",ans3);
+        else
+        {
+            for(int i=0; i<m; i++)
+                ans2[i]='B';
+            for(int i=0; i<n; i++)printf("%c",ans1[i]);
+            printf("\n");
+            for(int i=0; i<m; i++)printf("%c",ans2[i]);
+            printf("\n");
+        }
+    }
+    else if(k==2)
+    {
+        bool sign=0;
+        for(int i=0; i<3; i++)
+            for(int j=0; j<3; j++)
+            {
+                if(solve(x,m,i*4+j))
+                {
+                    go(x,m,i*4+j);
+                    strcpy(ans2,gouzao);
+                    sign=1;
+                }
+            }
+        if(!sign)printf("%s\n",ans3);
+        else
+        {
+            for(int i=0; i<n; i++)
+                ans1[i]='B';
+            for(int i=0; i<n; i++)printf("%c",ans1[i]);
+            printf("\n");
+            for(int i=0; i<m; i++)printf("%c",ans2[i]);
+            printf("\n");
+        }
+    }
+    else
+    {
+        bool sign=0;
+        for(int i=0; i+i<=n; i++)
+        {
+            if(sign)break;
+            for(int j=0; j+j<=m; j++)
+            {
+                for(int r=0; r<3; r++)
+                    for(int s=0; s<3; s++)
+                        for(int p=0; p<3; p++)
+                            for(int q=0; q<3; q++)
+                            {
+                                if(solve(i,n,s*4+r)&&solve(j,m,q*4+p))
+                                {
+                                  //  if(i==0&&j==0)
+                                    //    printf("*** %d %d %d %d\n",r,s,p,q);
+                                    /*ll tt=f[k-3]*i+f[k-2]*j;
+
+                                    if(s==1&&p==2)tt++;
+                                    if(q==1&&p==2)tt+=k/2-1;
+                                    if(q==1&&r==2)tt+=k/2-1;*/
+                                    //printf("** %lld\n",tt);
+                                    ll tt=i+j+(s==1&&p==2);
+                                    int ttl=r,ttr=q;
+                                    int prel=p,prer=q;
+                                    ll pre=j;
+                                    for(int t=4; t<=k; t++)
+                                    {
+                                        ll tmp=pre+tt;
+                                        if(prer==1&&ttl==2)tmp++;
+                                        int ttt=prel;
+                                        prel=ttl,prer=ttr;
+                                        ttl=ttt;
+                                        pre=tt;
+                                        tt=tmp;
+                                    }
+                                   // if(i==0&&j==0&&r==0&&s==0&&p==2&&q==1)
+                                     //   printf("** %lld\n",tt);
+                                    //if(tt==x)printf("** %lld\n",tt);
+                                    if(tt==x)
+                                    {
+                                        // printf("***%d %d:%d %d %d %d\n",i,j,s,r,q,p);
+                                        sign=1;
+                                        go(i,n,s*4+r);
+                                        strcpy(ans1,gouzao);
+                                        go(j,m,q*4+p);
+                                        strcpy(ans2,gouzao);
+                                    }
+                                }
+                            }
+                if(sign)break;
+            }
+        }
+        if(sign)
+        {
+            for(int i=0; i<n; i++)printf("%c",ans1[i]);
+            printf("\n");
+            for(int i=0; i<m; i++)printf("%c",ans2[i]);
+            printf("\n");
+        }
+        else printf("%s\n",ans3);
+    }
+    return 0;
+}
