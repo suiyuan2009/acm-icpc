@@ -1,0 +1,110 @@
+/*
+题意：一个数组，每次可以取一定长度的顺子，问最少几次取完
+c(n+m-1,m)，状态数组单调不严格递增，状态少，直接dp
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+using namespace std;
+const double eps = 1e-6;
+typedef long long ll;
+const double PI = acos(-1);
+const int maxn = 210000;
+
+int f[15][maxn + 5];
+int n, m, a[15], b[15];
+ll pw[15];
+vector<ll>t[15];
+
+void dfs(int cnt, int pre, int lim, ll val)
+{
+    if (cnt == lim)
+    {
+        t[lim].push_back(val);
+        //printf("** %lld\n", val);
+        return;
+    }
+    for (int i = pre; i <= 8; i++)
+        dfs(cnt + 1, i, lim, val + i * pw[cnt]);
+}
+
+void init()
+{
+    pw[0] = 1;
+    for (int i = 1; i < 15; i++)pw[i] = pw[i - 1] * 9;
+    for (int i = 1; i <= 13; i++)
+    {
+        dfs(0, 0, i, 0);
+        sort(t[i].begin(), t[i].end());
+    }
+    //for (int i = 1; i <= 13; i++)
+    //printf("** %d\n", (int)t[i].size());
+}
+
+int bs(int lim, ll val)
+{
+    int l = 0, r = (int)t[lim].size() - 1;
+    while (l <= r)
+    {
+        int m = (l + r) / 2;
+        if (t[lim][m] == val)return m;
+        if (t[lim][m] < val)l = m + 1;
+        else r = m - 1;
+    }
+    return -1;
+}
+
+void pd(int &ret, int val)
+{
+    if (ret == -1 || ret > val)ret = val;
+}
+
+int main()
+{
+  //  freopen("in.txt", "r", stdin);
+   // freopen("out.txt", "w", stdout);
+    init();
+    while (~scanf("%d", &n))
+    {
+        for (int i = 1; i <= n; i++)scanf("%d", &a[i]);
+        scanf("%d", &m);
+        for (int i = 1; i <= m; i++)scanf("%d", &b[i]);
+        sort(b + 1, b + m + 1);
+        memset(f, -1, sizeof(f));
+        f[1][bs(1, a[1])] = 0;
+        for (int i = 1; i <= n; i++)
+            for (int j = (int)t[i].size() - 1; j >= 0; j--)
+            {
+                if (f[i][j] == -1)continue;
+                if (i + 1 <= n)
+                {
+                    ll tmp = t[i][j] + pw[i] * a[i + 1];
+                    //if(i==1&&j==0)printf("** %lld\n",tmp);
+                    int tmp2 = bs(i + 1, tmp);
+                    if (tmp2 != -1)pd(f[i + 1][tmp2], f[i][j]);
+                }
+                int cnt = 0;
+                ll tmp = t[i][j];
+                for (int k = 1; k <= m; k++)
+                {
+                    if (b[k] > i)break;
+                    while (cnt < b[k])
+                    {
+                        tmp -= pw[i - cnt - 1];
+                        cnt++;
+                    }
+                    int tmp2 = bs(i, tmp);
+                    if (tmp2 != -1)pd(f[i][tmp2], f[i][j] + 1);
+                }
+            }
+        // printf("**%d %d\n", bs(1, 0), f[1][bs(1, 0)]);
+        int ans = f[n][bs(n, 0)];
+        if (ans == -1)printf("WTD is really a Gambling God!\n");
+        else printf("BG will finish the cards by %d steps.\n", ans);
+    }
+    return 0;
+}
