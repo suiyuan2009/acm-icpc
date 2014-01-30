@@ -1,0 +1,56 @@
+/*
+题意：给出5*10^7个数，内存16M，不相等的数配对，最多几对
+如果存在绝对众数，那么是tot-cnt，否则是tot/2
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+using namespace std;
+const double eps = 1e-6;
+typedef long long ll;
+const double PI = acos(-1);
+const int maxn = 55;
+const int maxm = 1000000000;
+
+int n;
+class EllysPairing
+{
+public:
+    int getMax(int M, vector <int> count, vector <int> first, vector <int> mult, vector <int> add)
+    {
+        int n = count.size();
+        int cnt = 0, tot = 0, val = 0, v = 0;
+        for (int i = 0; i < n; i++)tot += count[i];
+        for (int i = 0; i < n; i++)
+        {
+            v = first[i];
+            for (int j = 0; j < count[i]; j++)
+            {
+                if (cnt == 0)
+                {
+                    val = v;
+                    cnt++;
+                }
+                else if (val == v)cnt++;
+                else cnt--;
+                v = (v * mult[i] + add[i]) & (M - 1);
+            }
+        }
+        int cc = 0;
+        for (int i = 0; i < n; i++)
+        {
+            v = first[i];
+            for (int j = 0; j < count[i]; j++)
+            {
+                if (v == val)cc++;
+                v = (v * mult[i] + add[i]) & (M - 1);
+            }
+        }
+        return min(tot / 2, tot - cc);
+    }
+};
