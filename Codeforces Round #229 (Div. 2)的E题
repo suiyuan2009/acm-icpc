@@ -1,0 +1,122 @@
+/*
+题意：线段树区间每个数加x，询问一段区间的和
+需要离散化，每个点代表x[l]到x[l+1]的左闭右开区间，记sum代表区间和，add代表需要传下去的值
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <map>
+#include <iostream>
+using namespace std;
+typedef __int64 ll;
+const int maxn = 100005;
+
+int n, m, w;
+vector<int>x;
+struct OP
+{
+    int s, x1, y1, x2, y2, v;
+    void input()
+    {
+        scanf("%d", &s);
+        if (s)scanf("%d%d%d%d", &x1, &y1, &x2, &y2);
+        else scanf("%d%d%d%d%d", &x1, &y1, &x2, &y2, &v);
+    }
+} op[maxn];
+
+struct ST
+{
+    int l, r;
+    ll sum, val;
+} st[2][maxn * 36];
+void build(int idx, int idy, int l, int r)
+{
+    st[idx][idy].l = l, st[idx][idy].r = r;
+    st[idx][idy].sum = st[idx][idy].val = 0;
+    if (l == r)return;
+    int m = (l + r) / 2;
+    build(idx, idy * 2, l, m);
+    build(idx, idy * 2 + 1, m + 1, r);
+}
+void down(int idx, int idy)
+{
+    st[idx][idy * 2].sum += (x[st[idx][idy * 2].r] - x[st[idx][idy * 2].l - 1]) * st[idx][idy].val;
+    st[idx][idy * 2 + 1].sum += (x[st[idx][idy * 2 + 1].r] - x[st[idx][idy * 2 + 1].l - 1]) * st[idx][idy].val;
+    st[idx][idy * 2].val += st[idx][idy].val;
+    st[idx][idy * 2 + 1].val += st[idx][idy].val;
+    st[idx][idy].val = 0;
+}
+void update(int idx, int idy, int l, int r, ll val)
+{
+    st[idx][idy].sum += (x[r] - x[l - 1] ) * val;
+    if (st[idx][idy].l == l && st[idx][idy].r == r)
+    {
+        st[idx][idy].val += val;
+        return;
+    }
+    int m = (st[idx][idy].l + st[idx][idy].r) / 2;
+    down(idx, idy);
+    if (r <= m)update(idx, idy * 2, l, r, val);
+    else if (l > m)update(idx, idy * 2 + 1, l, r, val);
+    else
+    {
+        update(idx, idy * 2, l, m, val);
+        update(idx, idy * 2 + 1, m + 1, r, val);
+    }
+    //st[idx][idy].sum = st[idx][idy << 1].sum + st[idx][(idy << 1) + 1].sum;
+}
+
+ll query(int idx, int idy, int l, int r)
+{
+    if (st[idx][idy].l == l && st[idx][idy].r == r)
+        return st[idx][idy].sum;
+    int m = (st[idx][idy].l + st[idx][idy].r) / 2;
+    down(idx, idy);
+    if (r <= m)return query(idx, idy * 2, l, r);
+    else if (l > m)return query(idx, idy * 2 + 1, l, r);
+    else return query(idx, idy * 2, l, m) + query(idx, idy * 2 + 1, m + 1, r);
+}
+int main()
+{
+    //freopen("in.txt", "r", stdin);
+    // freopen("out.txt", "w", stdout);
+    scanf("%d%d%d", &n, &m, &w);
+    for (int i = 1; i <= w; i++)
+    {
+        op[i].input();
+        for (int j = -1; j <= 1; j++)
+        {
+            x.push_back(op[i].x1 + j);
+            x.push_back(op[i].x2 + j);
+            x.push_back(op[i].y1 + j);
+            x.push_back(op[i].y2 + j);
+        }
+    }
+    sort(x.begin(), x.end());
+    x.erase(unique(x.begin(), x.end()), x.end());
+    build(0, 1, 1, x.size());
+    build(1, 1, 1, x.size());
+    ll sum = 0;
+    for (int i = 1; i <= w; i++)
+    {
+        // printf("*** %d\n", i);
+        int x1 = lower_bound(x.begin(), x.end(), op[i].x1) - x.begin() + 1;
+        int y1 = lower_bound(x.begin(), x.end(), op[i].y1) - x.begin() + 1;
+        int x2 = lower_bound(x.begin(), x.end(), op[i].x2) - x.begin() + 1;
+        int y2 = lower_bound(x.begin(), x.end(), op[i].y2) - x.begin() + 1;
+        if (op[i].s)
+        {
+            printf("%I64d\n", query(0, 1, x1, x2) + query(1, 1, y1, y2) - sum);
+        }
+        else
+        {
+            sum += ((ll)(op[i].y2 - op[i].y1 + 1) * (op[i].x2 - op[i].x1 + 1)) * op[i].v;
+            update(0, 1, x1, x2, ((ll)(op[i].y2 - op[i].y1 + 1))*op[i].v);
+            update(1, 1, y1, y2, ((ll)(op[i].x2 - op[i].x1 + 1))*op[i].v);
+        }
+    }
+    return 0;
+}
