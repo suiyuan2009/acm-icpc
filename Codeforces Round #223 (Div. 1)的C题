@@ -1,0 +1,87 @@
+/*
+题意：问一段区间中最长合法括号序列的长度
+分治，线段树节点记录当前段最长，还有多少左/右括号没用
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <map>
+#include <iostream>
+using namespace std;
+typedef long long ll;
+const int maxn = 1000005;
+
+char str[maxn];
+int n, m;
+
+struct ST
+{
+    int l, r, a, b, c;
+    ST() {}
+    ST(int _a, int _b, int _c, int _l = 0, int _r = 0)
+    {
+        a = _a, b = _b, c = _c, l = _l, r = _r;
+    }
+} st[maxn * 3];
+void pd(ST &ret, ST x, ST y)
+{
+    int tt = min(x.b, y.c);
+    ret.a = x.a + y.a + tt;
+    ret.b = x.b + y.b - tt;
+    ret.c = x.c + y.c - tt;
+}
+void build(int id, int l, int r)
+{
+    st[id].l = l, st[id].r = r;
+    if (l == r)
+    {
+        if (str[l - 1] == '(')
+        {
+            st[id].a = st[id].c = 0;
+            st[id].b = 1;
+        }
+        else
+        {
+            st[id].a = st[id].b = 0;
+            st[id].c = 1;
+        }
+        return;
+    }
+    int m = (l + r) / 2;
+    build(id * 2, l, m);
+    build(id * 2 + 1, m + 1, r);
+    pd(st[id], st[id * 2], st[id * 2 + 1]);
+}
+ST query(int id, int l, int r)
+{
+    if (st[id].l == l && st[id].r == r)return st[id];
+    int m = (st[id].l + st[id].r) / 2;
+    if (r <= m)return query(id * 2, l, r);
+    else if (l > m)return query(id * 2 + 1, l, r);
+    else
+    {
+        ST ret = query(id * 2, l, m);
+        pd(ret, ret, query(id * 2 + 1, m + 1, r));
+        return ret;
+    }
+}
+
+int main()
+{
+    //freopen("in.txt", "r", stdin);
+    //freopen("out.txt", "w", stdout);
+    scanf("%s%d", &str, &m);
+    n = strlen(str);
+    build(1, 1, n);
+    // printf("****\n");
+    for (int i = 1; i <= m; i++)
+    {
+        int l, r;
+        scanf("%d%d", &l, &r);
+        printf("%d\n", query(1, l, r).a * 2);
+    }
+    return 0;
+}
