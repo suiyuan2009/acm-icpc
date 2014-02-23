@@ -1,0 +1,81 @@
+/*
+题意：给一颗树，节点10^5，问每个节点的叶节点值的最小绝对差
+启发式合并，用set暴力合并，小的合并到大的里，复杂度n*logn*logn
+证明：
+首先是一个递归。假设某个集合有n个元素，假设n个独立元素合并成这个集合所需要的最大操作步数为f(n),
+则f(n) = 1 + max(f(n-i) + f(i))，f(1) = 0.然后就是求f（n）。这里应该就可以很容易看出来f（n）= O（nlogn）了。
+实际上也可以通过归纳假设来证明。假设f（1） = O（1log1），f（2） = O（2log2）来推出 f（2^k) = O(2^k * k)。
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <set>
+#include <stack>
+#include <iostream>
+using namespace std;
+const double eps = 1e-6;
+typedef long long ll;
+const double PI = acos(-1);
+const int maxn = 50005;
+const int inf = 0x3fffffff;
+
+int a[maxn],n,m;
+vector<int>g[maxn];
+int pnt[maxn];
+set<int>sset[maxn];
+int ans[maxn];
+stack<int>s;
+set<int>::iterator it,it2;
+bool vis[maxn];
+
+void dfs(int u)
+{
+    if(g[u].size()==0)
+    {
+        sset[u].insert(a[u]);
+        return;
+    }
+    for(int i=0; i<g[u].size(); i++)
+    {
+        int v=g[u][i];
+        dfs(v);
+        if(sset[u].size()<sset[v].size())
+            swap(sset[u],sset[v]);
+        ans[u]=min(ans[u],ans[v]);
+        for(it=sset[v].begin(); it!=sset[v].end(); ++it)
+        {
+            it2=sset[u].lower_bound(*it);
+            if(it2!=sset[u].end())
+                ans[u]=min(ans[u],*it2-*it);
+            if(it2!=sset[u].begin())
+                ans[u]=min(ans[u],*it-*--it2);
+            if(sset[u].find(*it)==sset[u].end())
+                sset[u].insert(*it);
+        }
+    }
+}
+
+int main()
+{
+    scanf("%d%d",&n,&m);
+    for(int i=2; i<=n; i++)
+    {
+        int x;
+        scanf("%d",&x);
+        g[x].push_back(i);
+        pnt[i]=x;
+    }
+    for(int i=n-m+1; i<=n; i++)
+        scanf("%d",&a[i]);
+    for(int i=1; i<=n; i++)ans[i]=2147483647;
+    dfs(1);
+    for(int i=1; i<n-m; i++)
+        printf("%d ",ans[i]);
+    printf("%d\n",ans[n-m]);
+    return 0;
+}
