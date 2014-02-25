@@ -1,0 +1,66 @@
+/*
+暴力
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <set>
+#include <stack>
+#include <iostream>
+using namespace std;
+const double eps = 1e-6;
+typedef __int64 ll;
+const double PI = acos(-1);
+const int maxn = 100005;
+const int maxm=26;
+const int inf = 0x3fffffff;
+
+int c[maxn][maxm];
+char s[maxn],t[105];
+int ls,lt;
+
+int pd(int x)
+{
+    int cnt=0;
+    for(int i=x; i!=-1;)
+    {
+        cnt++;
+        if(cnt==lt)return i;
+        i=c[i][t[cnt]-'a'];
+    }
+    return -1;
+}
+
+int main()
+{
+    scanf("%s%s",s,t);
+    ls=strlen(s);
+    lt=strlen(t);
+    for(int i=0; i<maxm; i++)c[ls-1][i]=-1;
+    for(int i=ls-2; i>=0; i--)
+        for(int j=0; j<maxm; j++)
+        {
+            c[i][j]=c[i+1][j];
+            c[i][s[i+1]-'a']=i+1;
+        }
+    ll ret=0;
+    int pre=0;
+    int sign=1;
+    for(int i=0; i<ls; i++)
+        if(s[i]==t[0])
+        {
+            int tt=pd(i);
+            // printf("%d %d\n",i,tt);
+            if(tt==-1)break;
+            ret+=(ll)(i-pre+sign)*(ls-tt);
+            sign=0;
+            pre=i;
+        }
+    printf("%I64d\n",ret);
+    return 0;
+}
