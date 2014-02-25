@@ -1,0 +1,154 @@
+/*
+题意：给出n个串，多次询问以s为前缀，t为后缀的串的个数
+正着sort，串reverse之后再sort，答案就是在第一次sort的[a,b]区间中的串和第二次的[c,d]中的串的交
+线段树每次查询[c,d]中的数有多少在[a,b]大小范围内
+用移位不要用乘除
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <set>
+#include <stack>
+#include <iostream>
+using namespace std;
+const double eps = 1e-6;
+typedef __int64 ll;
+const double PI = acos(-1);
+const int maxn = 100005;
+const int maxm = 26;
+const int inf = 0x3fffffff;
+
+struct Trie
+{
+    int next[maxn][26],root,L;
+    int x[maxn*26],y[maxn*26];
+    int change(char ch)
+    {
+        return ch-'a';
+    }
+    int newnode()
+    {
+        for(int i=0; i<26; i++)
+            next[L][i]=-1;
+        return L++;
+    }
+    void init()
+    {
+        L=0;
+        root=newnode();
+        memset(x,-1,sizeof(x));
+        memset(y,-1,sizeof(y));
+    }
+    void insert(string s,int idx)
+    {
+        int len=s.size();
+        int now=root;
+        for(int i=0; i<len; i++)
+        {
+            if(next[now][change(s[i])]==-1)
+                next[now][change(s[i])]=newnode();
+            now=next[now][change(s[i])];
+            if(x[now]==-1)x[now]=idx;
+            y[now]=idx;
+        }
+    }
+    pair<int,int>query(string s)
+    {
+        int len=s.size();
+        int now=root;
+        for(int i=0; i<len; i++)
+        {
+            now=next[now][change(s[i])];
+            if(now==-1)return make_pair(-1,-1);
+        }
+        return make_pair(x[now],y[now]);
+    }
+} f,b;
+
+int n;
+pair<string,int>s[maxn],t[maxn];
+
+struct ST
+{
+    int l,r,x,y;
+} st[maxn*3];
+void build(int id,int l,int r)
+{
+    st[id].l=l,st[id].r=r,st[id].x=maxn*maxm,st[id].y=-1;
+    if(l==r)
+    {
+        st[id].x=st[id].y=t[l].second;
+        return;
+    }
+    int m=(l+r)>>1;
+    build(id<<1,l,m);
+    build(id<<1|1,m+1,r);
+    st[id].x=min(st[id<<1].x,st[id<<1|1].x);
+    st[id].y=max(st[id<<1].y,st[id<<1|1].y);
+}
+int query(int id,int l,int r,int x,int y)
+{
+    if(st[id].x>y||st[id].y<x)return 0;
+    if(st[id].x>=x&&st[id].y<=y)return r-l+1;
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)return query(id<<1,l,r,x,y);
+    else if(l>m)return query(id<<1|1,l,r,x,y);
+    return query(id<<1,l,m,x,y)+query(id<<1|1,m+1,r,x,y);
+}
+
+string rev(string s)
+{
+    string ret;
+    ret.clear();
+    for(int i=s.size()-1; i>=0; i--)
+        ret+=s[i];
+    return ret;
+}
+
+int main()
+{
+    //printf("** %d\n",1<<3|1);
+    //freopen("in.txt","r",stdin);
+    scanf("%d",&n);
+    for(int i=1; i<=n; i++)
+    {
+        cin>>s[i].first;
+        s[i].second=i;
+    }
+    sort(s+1,s+n+1);
+    f.init();
+    for(int i=1; i<=n; i++)
+    {
+        f.insert(s[i].first,i);
+        s[i].second=t[i].second=i;
+        t[i].first=rev(s[i].first);
+    }
+    sort(t+1,t+n+1);
+    b.init();
+    for(int i=1; i<=n; i++)
+        b.insert(t[i].first,i);
+    build(1,1,n);
+    int m;
+    scanf("%d",&m);
+    while(m--)
+    {
+        string l,r;
+        cin>>l>>r;
+        r=rev(r);
+        pair<int,int>x=f.query(l);
+        pair<int,int>y=b.query(r);
+        if(x.first==-1||y.first==-1)
+        {
+            printf("0\n");
+            continue;
+        }
+        int ret=query(1,y.first,y.second,x.first,x.second);
+        printf("%d\n",ret);
+    }
+    return 0;
+}
