@@ -1,0 +1,126 @@
+/*
+题意：给出一棵树，两种操作，对于v这课子树，离v距离i的节点加x-i*k，询问节点值
+先dfs序列，两颗线段树，一棵在v这条线段上add depth[v]*k+x，一棵add k，询问时答案即为 sum1-level[x]*suml2
+注意线段树*3是不够的，N=300000
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <set>
+#include <stack>
+#include <iostream>
+using namespace std;
+typedef __int64 ll;
+const double eps = 1e-6;
+const double PI = acos(-1);
+const int maxn=300005;
+const int inf = 0x3fffffff;
+const int mod=1000000007;
+
+int n;
+vector<int>g[maxn];
+int c_seq,pos[maxn][2],level[maxn];
+
+void dfs(int u,int d)
+{
+    level[u]=d;
+    pos[u][0]=++c_seq;
+    for(int i=0; i<g[u].size(); i++)
+        dfs(g[u][i],d+1);
+    pos[u][1]=c_seq;
+}
+
+struct ST
+{
+    int l,r;
+    ll v1,v2;
+} st[maxn*4];
+void build(int id,int l,int r)
+{
+    st[id].l=l,st[id].r=r,st[id].v1=st[id].v2=0;
+    if(l==r)return;
+    int m=(l+r)/2;
+    build(id*2,l,m);
+    build(id*2+1,m+1,r);
+}
+void pd(int id,int l,int r,ll v1,ll v2)
+{
+   // if(n==300000)printf("%d %d %d %d\n",st[id].l,st[id].r,l,r);
+    if(st[id].l==l&&st[id].r==r)
+    {
+        st[id].v1+=v1;
+        if(st[id].v1>=mod)st[id].v1-=mod;
+        st[id].v2+=v2;
+        if(st[id].v2>=mod)st[id].v2-=mod;
+        return;
+    }
+    int m=(st[id].l+st[id].r)/2;
+    if(r<=m)pd(id*2,l,r,v1,v2);
+    else if(l>m)pd(id*2+1,l,r,v1,v2);
+    else
+    {
+        pd(id*2,l,m,v1,v2);
+        pd(id*2+1,m+1,r,v1,v2);
+    }
+}
+ll ret1,ret2;
+void query(int id,int pos)
+{
+    ret1+=st[id].v1;
+    if(ret1>=mod)ret1-=mod;
+    ret2+=st[id].v2;
+    if(ret2>=mod)ret2-=mod;
+    if(st[id].l==st[id].r)return;
+    int m=(st[id].l+st[id].r)/2;
+    if(pos<=m)query(id*2,pos);
+    else query(id*2+1,pos);
+}
+
+int main()
+{
+    //freopen("in.txt","r",stdin);
+    scanf("%d",&n);
+    for(int i=2; i<=n; i++)
+    {
+        int x;
+        scanf("%d",&x);
+        g[x].push_back(i);
+    }
+    dfs(1,0);
+    build(1,1,n);
+    int m;
+    scanf("%d",&m);
+    while(m--)
+    {
+        int sign,v;
+        ll x,k;
+        scanf("%d",&sign);
+        if(sign==1)
+        {
+            scanf("%d%I64d%I64d",&v,&x,&k);
+           /* if(n==300000)
+            {
+                //printf("** %d: %d %d\n",v,pos[v][0],pos[v][1]);
+
+               // for(int i=54090; i<=54100; i++)
+                  //  printf("@@ %d: %d %d\n",i,pos[i][0],pos[i][1]);
+            }*/
+            pd(1,pos[v][0],pos[v][1],(x+level[v]*k%mod)%mod,k);
+        }
+        else
+        {
+            scanf("%d",&v);
+            ret1=ret2=0;
+            query(1,pos[v][0]);
+            //printf("** %I64d %I64d\n",ret1,ret2);
+            ll ret=(ret1-(level[v]*ret2)%mod+mod)%mod;
+            printf("%I64d\n",ret);
+        }
+    }
+    return 0;
+}
