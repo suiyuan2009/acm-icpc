@@ -1,0 +1,59 @@
+/*
+题意：得到第i个物品会先失去ai，再得到bi，问最多能得到多少物品，初始时有F，且过程中不能有负
+对于物品x和y,先x再y的话要满足sum-x.a+x.b-y.a>=0，否则需要sum-y.a+y.b-x.a>=0，先选择b大的比较好
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <set>
+#include <stack>
+#include <iostream>
+using namespace std;
+const double eps = 1e-6;
+const double PI = acos(-1);
+const int maxn=5005;
+const int inf = 0x3fffffff;
+const int mod=1000000007;
+
+int f[maxn];
+struct P
+{
+    int x,y;
+    bool operator<(const P&a)const
+    {
+        return y>a.y;
+    }
+} p[55];
+
+class AlbertoTheAviator
+{
+public:
+    int MaximumFlights(int F, vector <int>a, vector <int>b)
+    {
+        int n=a.size();
+        for(int i=0; i<n; i++)
+        {
+            p[i+1].x=a[i];
+            p[i+1].y=b[i];
+        }
+        sort(p+1,p+n+1);
+        memset(f,-1,sizeof(f));
+        f[F]=0;
+        for(int i=1; i<=n; i++)
+             for(int j=0;j<=F;j++)
+                if(p[i].x<=j&&f[j]!=-1)
+                {
+                    int tt=j-p[i].x+p[i].y;
+                    f[tt]=max(f[tt],f[j]+1);
+                }
+        int ret=0;
+        for(int i=0; i<=F; i++)
+            ret=max(ret,f[i]);
+        return ret;
+    }
+};
