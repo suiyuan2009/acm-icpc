@@ -1,0 +1,114 @@
+/*
+题意：最小方差生成树
+枚举“平均值”，per=(d[i]+d[j])/2，d[i]代表第i条边的边权，修改边权为(d[i]-per)*(d[i]-per)做最小生成树，最后计算结果
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <set>
+#include <stack>
+#include <iostream>
+using namespace std;
+const double eps = 1e-8;
+const double PI = acos(-1);
+const int maxn=25;
+const int maxm=80005;
+const int inf = 0x3fffffff;
+const int mod=1000000007;
+
+double dis[maxn];
+vector<double>a;
+struct E
+{
+    int u,v;
+    double w;
+    E() {}
+    E(int _u,int _v,double _w)
+    {
+        u=_u,v=_v,w=_w;
+    }
+    bool operator<(const E &a)const
+    {
+        return w<a.w;
+    }
+};
+vector<E>d;
+vector<double>tmp;
+
+struct P
+{
+    double x,y;
+} p[maxn];
+int n;
+double dist(P a,P b)
+{
+    return sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
+}
+
+int pnt[maxn];
+int pd(int x)
+{
+    if(x!=pnt[x])pnt[x]=pd(pnt[x]);
+    return pnt[x];
+}
+double solve(double per)
+{
+    tmp.clear();
+    d.clear();
+    for(int i=0; i<n; i++)
+        for(int j=0; j<i; j++)
+        {
+            double tt=dist(p[i],p[j]);
+            d.push_back(E(i,j,(tt-per)*(tt-per)));
+        }
+    sort(d.begin(),d.end());
+    double ret=0;
+    for(int i=0; i<n; i++)pnt[i]=i;
+    for(int i=0; i<d.size(); i++)
+    {
+        int u=d[i].u,v=d[i].v;
+        int x=pd(u);
+        int y=pd(v);
+        if(x==y)continue;
+        tmp.push_back(dist(p[u],p[v]));
+        pnt[x]=y;
+    }
+    double pp=0;
+    for(int i=0; i<n-1; i++)
+        pp+=tmp[i];
+    pp/=(n-1);
+    for(int i=0; i<n-1; i++)
+        ret+=(pp-tmp[i])*(pp-tmp[i]);
+    return sqrt(ret/(n-1));
+}
+
+class Egalitarianism2
+{
+public:
+    double minStdev(vector <int> x, vector <int> y)
+    {
+        n=x.size();
+        for(int i=0; i<n; i++)
+        {
+            p[i].x=x[i];
+            p[i].y=y[i];
+        }
+        double ret=-100;
+        for(int i=0; i<n; i++)
+            for(int j=0; j<i; j++)
+                a.push_back(dist(p[i],p[j]));
+        for(int i=0; i<a.size(); i++)
+            for(int j=0; j<i; j++)
+            {
+                double per=(a[i]+a[j])*0.5;
+                double tt=solve(per);
+                if(ret<0||ret>tt)ret=tt;
+            }
+        return ret;
+    }
+};
