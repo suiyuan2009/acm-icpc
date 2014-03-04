@@ -1,6 +1,7 @@
 /*
 题意：最小方差生成树
 枚举“平均值”，per=(d[i]+d[j])/2，d[i]代表第i条边的边权，修改边权为(d[i]-per)*(d[i]-per)做最小生成树，最后计算结果
+其实只是为了sort时排序的顺序问题
 */
 #include <stdio.h>
 #include <string>
