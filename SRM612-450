@@ -1,6 +1,9 @@
 /*
 题意：给出n个二维坐标，问x维和y维分别打乱之后叫人猜，至少能猜中多少个。
 费用流，先构造一组解，解中的每一条边费用为1，最后跑一遍费用流，费用即答案。
+
+犯了傻逼错误，这题输入的就是没打乱时的所有坐标，所以不能跑两次网络流，不是所有的可能相互对比，
+而是所有的可能和这个没打乱的坐标对比，，
 */
 #include <stdio.h>
 #include <string>
@@ -136,6 +139,212 @@ public:
         }
         int flow,cost;
         mincost(n+n+2,n+n+1,n+n+2,flow,cost);
+        return cost;
+    }
+};
+
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <set>
+#include <stack>
+#include <iostream>
+using namespace std;
+const double eps = 1e-6;
+const double PI = acos(-1);
+const int maxn=205;
+const int maxm=maxn*maxn*2;
+const int inf = 0x3fffffff;
+const int mod=1000000007;
+
+int c[maxm],f[maxm],w[maxm],ev[maxm],be[maxm],Next[maxm],value[maxm];
+int nbs[maxn],pnt[maxn],open[maxn],oldque[maxn],d[maxn],mk[maxn],num=0;
+
+void init()
+{
+    num=0;
+    //memset(nbs,0,sizeof(nbs));
+    for(int i=0; i<maxn; i++)
+    {
+        nbs[i]=pnt[i]=open[i]=oldque[i]=d[i]=mk[i]=0;
+    }
+    for(int i=0; i<maxm; i++)
+    {
+        c[i]=f[i]=w[i]=ev[i]=be[i]=Next[i]=value[i]=0;
+    }
+}
+
+void AddEdge(int u,int v,int cc,int ww)
+{
+    Next[++num]=nbs[u];
+    nbs[u]=num;
+    be[num]=num+1;
+    ev[num]=v;
+    c[num]=cc;
+    f[num]=0;
+    w[num]=ww;
+    Next[++num]=nbs[v];
+    nbs[v]=num;
+    be[num]=num-1;
+    ev[num]=u;
+    c[num]=0;
+    f[num]=0;
+    w[num]=-ww;
+}
+
+void mincost(int n,int s,int t,int&flow,int&cost)
+{
+    int cur,tail,tl,i,j,u,v;
+    memset(f,0,sizeof(f));
+    flow=0;
+    cost=0;
+    do
+    {
+        memset(d,0,sizeof(d));
+        for(i=1; i<=n; i++)value[i]=inf;
+        open[0]=s;
+        d[s]=0x3fffffff;
+        tail=value[s]=0;
+        while(tail>=0)
+        {
+            memset(mk,0,sizeof(mk));
+            memcpy(oldque,open,sizeof(open));
+            for(tl=tail,pnt[s]=cur=0,tail=-1; cur<=tl; cur++)
+                for(u=oldque[cur],j=nbs[u]; j; j=Next[j])
+                {
+                    v=ev[j];
+                    if(f[j]<c[j]&&value[u]<inf&&value[u]+w[j]<value[v])
+                    {
+                        if(!mk[v])
+                        {
+                            mk[v]=1;
+                            open[++tail]=v;
+                        }
+                        pnt[v]=j;
+                        value[v]=value[u]+w[j];
+                        if(d[u]<c[j]-f[j])d[v]=d[u];
+                        else d[v]=c[j]-f[j];
+                    }
+                }
+        }
+        if(value[t]==inf)return;
+        flow+=d[t];
+        cost+=d[t]*value[t];
+        for(u=t; u!=s; u=ev[be[j]])
+        {
+            j=pnt[u];
+            f[j]+=d[t];
+            f[be[j]]=-f[j];
+        }
+    }
+    while(d[t]>0);
+}
+
+vector<int>a,b;
+int ta[maxn],tb[maxn];
+bool e[maxn][maxn];
+class SpecialCells
+{
+public:
+    int guess(vector <int> x, vector <int> y)
+    {
+        int n=x.size(),m;
+        sort(x.begin(),x.end());
+        sort(y.begin(),y.end());
+        for(int i=0; i<x.size();)
+        {
+            int cnt=0;
+            for(int j=i; j<x.size(); j++)
+            {
+                if(x[j]!=x[i])break;
+                cnt++;
+            }
+            a.push_back(cnt);
+            i+=cnt;
+        }
+        for(int i=0; i<y.size();)
+        {
+            int cnt=0;
+            for(int j=i; j<y.size(); j++)
+            {
+                if(y[j]!=y[i])break;
+                cnt++;
+            }
+            b.push_back(cnt);
+            i+=cnt;
+        }
+        n=a.size(),m=b.size();
+
+        /* for(int i=1; i<=n; i++)
+             printf("%d ",a[i-1]);
+         printf("\n");
+         for(int i=1; i<=m; i++)
+             printf("%d ",b[i-1]);
+         printf("\n");*/
+
+        init();
+        for(int i=1; i<=n; i++)
+            for(int j=1; j<=m; j++)
+                AddEdge(i,j+n,1,0);
+        for(int i=1; i<=n; i++)
+            AddEdge(n+m+1,i,a[i-1],0);
+        for(int i=1; i<=m; i++)
+            AddEdge(i+n,n+m+2,b[i-1],0);
+        int flow,cost;
+        mincost(n+m+2,n+m+1,n+m+2,flow,cost);
+        //int cnt=0;
+        for(int i=1; i<=n; i++)
+            for(int j=nbs[i]; j; j=Next[j])
+                if(ev[j]>n&&ev[j]<=n+m&&f[j]==1)
+                {
+                    e[i][ev[j]-n]=1;
+                    //printf("*%d: %d %d\n",++cnt,i,ev[j]-n);
+                    /* ta[i]++;
+                     tb[ev[j]-n]++;*/
+                }
+
+        /* for(int i=1; i<=n; i++)
+             printf("%d ",ta[i]);
+         printf("\n");
+         for(int i=1; i<=m; i++)
+             printf("%d ",tb[i]);
+         printf("\n");*/
+
+        init();
+        for(int i=1; i<=n; i++)
+            for(int j=1; j<=m; j++)
+                AddEdge(i,j+n,1,e[i][j]);
+        for(int i=1; i<=n; i++)
+            AddEdge(n+m+1,i,a[i-1],0);
+        for(int i=1; i<=m; i++)
+            AddEdge(i+n,n+m+2,b[i-1],0);
+        mincost(n+m+2,n+m+1,n+m+2,flow,cost);
+
+        //cnt=0;
+        // printf("\n");
+        /*memset(ta,0,sizeof(ta));
+        memset(tb,0,sizeof(tb));
+        int cnt=0;
+        for(int i=1; i<=n; i++)
+            for(int j=nbs[i]; j; j=Next[j])
+                if(ev[j]>n&&ev[j]<=m+n&&f[j]==1)
+                {
+                    if(e[i][ev[j]-n])cnt++;
+                    ta[i]++;
+                    tb[ev[j]-n]++;
+                    // printf("*%d: %d %d\n",++cnt,i,ev[j]-n);
+                }
+        /for(int i=1; i<=n; i++)
+            printf("%d ",ta[i]);
+        printf("\n");
+        for(int i=1; i<=m; i++)
+            printf("%d ",tb[i]);
+        printf("\n");*/
         return cost;
     }
 };
