@@ -1,0 +1,137 @@
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <set>
+#include <stack>
+#include <iostream>
+using namespace std;
+const double eps = 1e-6;
+const double PI = acos(-1);
+const int maxn=205;
+const int maxm=maxn*maxn*2;
+const int inf = 0x3fffffff;
+const int mod=1000000007;
+
+int c[maxm],f[maxm],w[maxm],ev[maxm],be[maxm],Next[maxm],value[maxm];
+int nbs[maxn],pnt[maxn],open[maxn],oldque[maxn],d[maxn],mk[maxn],num=0;
+
+void init()
+{
+    num=0;
+    //memset(nbs,0,sizeof(nbs));
+    for(int i=0; i<maxn; i++)
+    {
+        nbs[i]=pnt[i]=open[i]=oldque[i]=d[i]=mk[i]=0;
+    }
+    for(int i=0; i<maxm; i++)
+    {
+        c[i]=f[i]=w[i]=ev[i]=be[i]=Next[i]=value[i]=0;
+    }
+}
+
+void AddEdge(int u,int v,int cc,int ww)
+{
+    Next[++num]=nbs[u];
+    nbs[u]=num;
+    be[num]=num+1;
+    ev[num]=v;
+    c[num]=cc;
+    f[num]=0;
+    w[num]=ww;
+    Next[++num]=nbs[v];
+    nbs[v]=num;
+    be[num]=num-1;
+    ev[num]=u;
+    c[num]=0;
+    f[num]=0;
+    w[num]=-ww;
+}
+
+void mincost(int n,int s,int t,int&flow,int&cost)
+{
+    int cur,tail,tl,i,j,u,v;
+    memset(f,0,sizeof(f));
+    flow=0;
+    cost=0;
+    do
+    {
+        memset(d,0,sizeof(d));
+        for(i=1; i<=n; i++)value[i]=inf;
+        open[0]=s;
+        d[s]=0x3fffffff;
+        tail=value[s]=0;
+        while(tail>=0)
+        {
+            memset(mk,0,sizeof(mk));
+            memcpy(oldque,open,sizeof(open));
+            for(tl=tail,pnt[s]=cur=0,tail=-1; cur<=tl; cur++)
+                for(u=oldque[cur],j=nbs[u]; j; j=Next[j])
+                {
+                    v=ev[j];
+                    if(f[j]<c[j]&&value[u]<inf&&value[u]+w[j]<value[v])
+                    {
+                        if(!mk[v])
+                        {
+                            mk[v]=1;
+                            open[++tail]=v;
+                        }
+                        pnt[v]=j;
+                        value[v]=value[u]+w[j];
+                        if(d[u]<c[j]-f[j])d[v]=d[u];
+                        else d[v]=c[j]-f[j];
+                    }
+                }
+        }
+        if(value[t]==inf)return;
+        flow+=d[t];
+        cost+=d[t]*value[t];
+        for(u=t; u!=s; u=ev[be[j]])
+        {
+            j=pnt[u];
+            f[j]+=d[t];
+            f[be[j]]=-f[j];
+        }
+    }
+    while(d[t]>0);
+}
+
+bool e[maxn][maxn];
+vector<int>a,b;
+int cntx[maxn],cnty[maxn];
+class SpecialCells
+{
+public:
+    int guess(vector <int> x, vector <int> y)
+    {
+        int n=x.size();
+        a=x,b=y;
+        sort(a.begin(),a.end());
+        sort(b.begin(),b.end());
+        a.erase(unique(a.begin(),a.end()),a.end());
+        b.erase(unique(b.begin(),b.end()),b.end());
+        for(int i=0; i<n; i++)
+        {
+            x[i]=lower_bound(a.begin(),a.end(),x[i])-a.begin()+1;
+            y[i]=lower_bound(b.begin(),b.end(),y[i])-b.begin()+1;
+            e[x[i]][y[i]]=1;
+            cntx[x[i]]++;
+            cnty[y[i]]++;
+        }
+        for(int i=1; i<=n; i++)
+            for(int j=1; j<=n; j++)
+                if(cntx[i]&&cnty[j])AddEdge(i,j+n,1,e[i][j]);
+        for(int i=1; i<=n; i++)
+        {
+            if(cntx[i])AddEdge(n+n+1,i,cntx[i],0);
+            if(cnty[i])AddEdge(i+n,n+n+2,cnty[i],0);
+        }
+        int flow,cost;
+        mincost(n+n+2,n+n+1,n+n+2,flow,cost);
+        return cost;
+    }
+};
