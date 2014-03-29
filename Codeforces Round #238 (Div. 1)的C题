@@ -1,0 +1,105 @@
+/*
+题意：给出一个无向图，没有自环和重边，将边配对，每条边只能在一对里，且配对的边有公共端点
+巧妙的dfs，对于每个节点，先找出之前没遍历到的边(u,v)，然后先处理v这个节点，如果v处理完之后还多一条边，
+就组成了(u,v,w)这个答案，如果没多边，就先把(u,v)加入栈中，最后自己消化。
+*/
+#include <cstdio>
+#include <string>
+#include <cstring>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+#include <queue>
+#include <map>
+#include <stack>
+using namespace std;
+typedef __int64 ll;
+const double eps = 1e-6;
+const double PI = acos(-1);
+const int maxn = 100005;
+const int inf = 0x3fffffff;
+const int mod = 1000000007;
+
+vector<int>g[maxn];
+int n,m;
+map<int,int>sy[maxn];
+struct P
+{
+    int x,y,z;
+    P() {}
+    P(int _x,int _y,int _z)
+    {
+        x=_x,y=_y,z=_z;
+    }
+};
+vector<P>ans;
+vector<int>a[maxn];
+bool vis[maxn];
+int dfs(int u)
+{
+    //printf("* %d\n",u);
+    if(vis[u])return 0;
+    vis[u]=1;
+    //a[u].clear();
+    for(int i=0; i<g[u].size(); i++)
+    {
+        int v=g[u][i];
+        if(sy[u][v])continue;
+        a[u].push_back(v);
+        // printf("** %d %d\n",u,v);
+        sy[u][v]=sy[v][u]=1;
+    }
+    stack<int>s;
+    for(int i=0; i<a[u].size(); i++)
+    {
+        int v=a[u][i];
+        // printf("*** %d %d\n",u,v);
+        int w=dfs(v);
+        if(w==0)s.push(v);
+        else
+        {
+            ans.push_back(P(u,v,w));
+            // printf("** %d %d %d\n",u,v,w);
+        }
+    }
+    while(s.size()>=2)
+    {
+        int v=s.top();
+        s.pop();
+        int w=s.top();
+        s.pop();
+        ans.push_back(P(v,u,w));
+        // printf("**** %d %d %d\n",v,u,w);
+    }
+    if(s.empty())return 0;
+    return s.top();
+}
+
+int main()
+{
+    // freopen("in.txt","r",stdin);
+    scanf("%d%d",&n,&m);
+    for(int i=1; i<=m; i++)
+    {
+        int u,v;
+        scanf("%d%d",&u,&v);
+        g[u].push_back(v);
+        g[v].push_back(u);
+    }
+    if(m&1)printf("No solution\n");
+    else
+    {
+        dfs(1);
+        /*printf("** %d\n",ans.size());
+         for(int i=0; i<ans.size(); i++)
+             printf("%d %d %d\n",ans[i].x,ans[i].y,ans[i].z);*/
+
+        if(ans.size()!=m/2)printf("No solution\n");
+        else
+        {
+            for(int i=0; i<ans.size(); i++)
+                printf("%d %d %d\n",ans[i].x,ans[i].y,ans[i].z);
+        }
+    }
+    return 0;
+}
