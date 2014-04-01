@@ -4,7 +4,7 @@ The sequence of integer pairs (a1, b1), (a2, b2), ..., (ak, bk) is b
 all numbers b1 - a1, b2 - a2, ..., bk - ak are distinct.
 For the given number n find the number of beautiful sequences of length k. As the answer can be rather large, print the remainder after dividing it by 1000000007 (109 + 7).
 
-
+f[i][j]代表i个数和为j的方案数，可以由i个数每个数+1得到，也可以由i-1个数每个数+1，然后添加1得到。
 */
 #include <cstdio>
 #include <string>
