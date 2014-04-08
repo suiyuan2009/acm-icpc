@@ -1,3 +1,8 @@
+/*
+题意：给出无向图，问从0到N-1是否有一条长度为T的路
+问题等价于是否存在长度为K的路，使得K==T%2C，C为连接节点0的一条边的边权，
+拆点做最短路
+*/
 #include <cstdio>
 #include <string>
 #include <cstring>
