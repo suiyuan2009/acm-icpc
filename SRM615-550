@@ -70,10 +70,3 @@ public:
         return no;
     }
 };
-
-int main()
-{
-    //freopen("in.cpp","r",stdin);
-
-    return 0;
-}
