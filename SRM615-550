@@ -1,0 +1,74 @@
+#include <cstdio>
+#include <string>
+#include <cstring>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+#include <queue>
+#include <map>
+#include <stack>
+#include <iostream>
+using namespace std;
+typedef long long ll;
+const double eps = 1e-8;
+const double PI = acos(-1);
+const int maxn =55;
+const int maxm=20005;
+const int inf = 0x3fffffff;
+const int mod = 1000000007;
+
+string yes="Possible",no="Impossible";
+int dist[maxn][maxm];
+vector<int>g[maxn],w[maxn];
+struct cmp
+{
+    bool operator()(pair<int,int>a,pair<int,int>b)
+    {
+        return dist[a.first][a.second]>dist[b.first][b.second];
+    }
+};
+priority_queue<pair<int,int>,vector<pair<int,int> >,cmp>que;
+class LongLongTripDiv1
+{
+public:
+    string isAble(int n, vector <int> a, vector <int> b, vector <int> d, long long T)
+    {
+        memset(dist,-1,sizeof(dist));
+        for(int i=0; i<a.size(); i++)
+        {
+            g[a[i]].push_back(b[i]);
+            g[b[i]].push_back(a[i]);
+            w[a[i]].push_back(d[i]);
+            w[b[i]].push_back(d[i]);
+        }
+        if(!g[0].size())return no;
+        int m=w[0][0]*2;
+        dist[0][0]=0;
+        que.push(make_pair(0,0));
+        while(!que.empty())
+        {
+            pair<int,int>u=que.top();
+            que.pop();
+            for(int i=0; i<g[u.first].size(); i++)
+            {
+                int v=g[u.first][i];
+                int ww=w[u.first][i];
+                int tmp=(u.second+ww)%m;
+                if(dist[v][tmp]==-1||dist[v][tmp]>dist[u.first][u.second]+ww)
+                {
+                    dist[v][tmp]=dist[u.first][u.second]+ww;
+                    que.push(make_pair(v,tmp));
+                }
+            }
+        }
+        if(dist[n-1][T%m]!=-1&&dist[n-1][T%m]<=T)return yes;
+        return no;
+    }
+};
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+
+    return 0;
+}
