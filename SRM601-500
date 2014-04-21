@@ -6,7 +6,7 @@ The XOR of all elements in the first set is less than the XOR of all elements in
 You are given two ints N and M. Let X be the total number of different ways to choose the pair of sets. Return the value (X modulo 1,000,000,007).
 
 枚举第r位Y是1，X是0，记f[i][j][1/0]为到第i个数，X和Y的异或和是j，Y的第r位是1的方案数。
-由于枚举第r位的时候，j的前r位没用，其实状态不需要每次重算。
+由于枚举第r位的时候，j的前r位没用，随着r的增加，j维状态会减少。
 */
 #include <stdio.h>
 #include <string>
