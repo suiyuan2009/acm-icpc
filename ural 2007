@@ -1,0 +1,75 @@
+/*
+题意：给两个串，可以有两种操作，一是用第二个串中的一个字母对消掉第一个串中的一个相同的字母，而是插入一个字母，
+第二个串中的字母只能被操作一次，最少被操作一次。
+从z到a贪心，如果第i个位置之后第一个和第i个位置不同的字母小于第i个位置上的，就消掉，找到第一个当前要处理的字母
+的位置，在他之前插入直到全部插完，最后，如果还剩余就把数量mod 2之后插到最后面。
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <stack>
+#include <iostream>
+using namespace std;
+typedef long long ll;
+const double eps = 1e-10;
+//const double PI = acos(-1);
+const int maxn = 200005;
+const int inf = 0x3fffffff;
+const int mod = 1000000007;
+
+string s,t;
+int c[30],a[maxn];
+
+void solve(int id)
+{
+    int n=s.size();
+    a[n-1]=n;
+    for(int i=n-2; i>=0; i--)
+    {
+        if(s[i]==s[i+1])a[i]=a[i+1];
+        else a[i]=i+1;
+    }
+    t.clear();
+    for(int i=0; i<n; i++)
+    {
+        if(c[id]&&s[i]-'a'==id&&(a[i]==n||s[a[i]]<s[i]))c[id]--;
+        else if(s[i]-'a'>id)
+        {
+            while(c[id])
+            {
+                t+=id+'a';
+                c[id]--;
+            }
+            t+=s[i];
+        }
+        else t+=s[i];
+    }
+    s=t;
+    if(c[id])
+    {
+        c[id]%=2;
+        while(c[id])
+        {
+            s+=id+'a';
+            c[id]--;
+        }
+    }
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    // freopen("out.cpp","w",stdout);
+    cin>>s>>t;
+    for(int i=0; i<t.size(); i++)
+        c[t[i]-'a']++;
+    for(int i=25; i>=0; i--)
+        if(c[i])solve(i);
+    cout<<s<<endl;
+    return 0;
+}
