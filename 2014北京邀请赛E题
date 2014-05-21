@@ -1,0 +1,119 @@
+/*
+We define a kind of strings as elegant string: among all the substrings of an elegant string, none of them is a permutation of "0, 1,…, k".
+Let function(n, k) be the number of elegant strings of length n which only contains digits from 0 to k (inclusive). Please calculate function(n, k).
+记f[i][j]为到第i个数，末尾j个数不重复的方案数
+*/
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <queue>
+using namespace std;
+typedef long long ll;
+const int maxn = 15;
+const int inf = 0x3fffffff;
+const double eps = 1e-8;
+const ll mod = 20140518;
+
+struct  Mat
+{
+    int n, m;
+    ll a[maxn][maxn];
+    Mat() {}
+    Mat(int _n, int _m, bool sign)
+    {
+        n = _n, m = _m;
+        for (int i = 1; i <= n; i++)
+            for (int j = 1; j <= m; j++)
+                a[i][j] = (i == j && sign);
+    }
+    Mat operator*(const Mat &tt)const
+    {
+        Mat ret = Mat(n, tt.m, 0);
+        for (int i = 1; i <= n; i++)
+            for (int j = 1; j <= tt.m; j++)
+            {
+                for (int k = 1; k <= m; k++)
+                    ret.a[i][j] = (ret.a[i][j] + a[i][k] * tt.a[k][j]) % mod;
+            }
+        return ret;
+    }
+    void pd()
+    {
+        printf("**\n");
+        for (int i = 1; i <= n; i++)
+        {
+            for (int j = 1; j <= m; j++)
+                printf("%lld ", a[i][j]);
+            printf("\n");
+        }
+        printf("***\n");
+    }
+};
+
+
+ll n;
+int m;
+ll f[maxn][maxn];
+int main()
+{
+    // freopen("in.cpp", "r", stdin);
+    int T, ncase = 0;
+    scanf("%d", &T);
+    while (T--)
+    {
+        scanf("%lld%d", &n, &m);
+        memset(f, 0, sizeof(f));
+        f[0][0] = 1;
+        for (int i = 0; i <= m; i++)
+            for (int j = 0; j <= m; j++)
+            {
+                if (j == 0)
+                {
+                    for (int k = 1; k <= i; k++)
+                        f[i + 1][k] = (f[i + 1][k] + f[i][j]) % mod;
+                    if (i < m)f[i + 1][j] = (f[i + 1][j] + f[i][j] * (m + 1 - i)) % mod;
+                }
+                else
+                {
+                    for (int k = 1; k <= j; k++)
+                        f[i + 1][k] = (f[i + 1][k] + f[i][j]) % mod;
+                    f[i + 1][j + 1] = (f[i + 1][j + 1] + f[i][j] * (m + 1 - j)) % mod;
+                }
+            }
+        ll ret = 0;
+        if (n <= m + 1)
+        {
+            for (int i = 0; i <= m; i++)
+                ret = (ret + f[n][i]) % mod;
+        }
+        else
+        {
+            Mat mul = Mat(m, m, 0);
+            for (int i = 1; i <= m; i++)
+            {
+                for (int j = 1; j <= i; j++)
+                    mul.a[j][i] = 1;
+                mul.a[i][i - 1] = m + 2 - i;
+            }
+            Mat ans = Mat(m, 1, 0);
+            for (int i = 1; i <= m; i++)
+                ans.a[i][1] = f[m + 1][i];
+            Mat tt = Mat(m, m, 1);
+            ll c = n - m - 1;
+            while (c)
+            {
+                if (c & 1LL)tt = mul * tt;
+                mul = mul * mul;
+                c >>= 1LL;
+            }
+            ans = tt * ans;
+            for (int i = 1; i <= m; i++)
+                ret = (ret + ans.a[i][1]) % mod;
+        }
+        printf("Case #%d: %lld\n", ++ncase, ret);
+    }
+    return 0;
+}
