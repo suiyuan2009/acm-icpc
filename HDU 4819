@@ -1,7 +1,7 @@
 /*
 题意：
 每次查询子矩阵的最大值和最小值，然后更新单点值
-二维线段树
+二维线段树 http://ydcydcy1.blog.163.com/blog/static/216089040201361793327952/
 */
 #include <cstdio>
 #include <algorithm>
