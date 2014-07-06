@@ -1,0 +1,115 @@
+/×
+题意：
+有一个无限的二叉树，给出一个人的路径S，然后接着给出一个串T，可以去掉T中的若干个字符，问最后可以停在多少个不同的节点上
+
+预处理出T串的向右边/向左边第一个L和R的位置，然后从后往前dp，f[L[i][0]]+=f[i];f[L[i][1]]+=f[i],最后ans数组累和，f[i]代表以i为第一个操作的串可能有多少。
+枚举向上走多少个U。
+×/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<cmath>
+#include<string>
+#include<map>
+#include<vector>
+#include<iostream>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn=100005;
+const double eps=1e-8;
+const int mod=21092013;
+
+stack<int>st;
+char s[maxn],t[maxn];
+int n,m;
+int R[maxn][2],L[maxn][2];
+int f[maxn],ans[maxn];
+
+void pd(int &ret,int val)
+{
+    ret+=val;
+    if(ret>=mod)ret-=mod;
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    //freopen("out.txt","w",stdout);
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%s%s",s,t);
+        for(int i=0; i<maxn; i++)
+        {
+            f[i]=ans[i]=0;
+            for(int j=0; j<2; j++)
+                R[i][j]=L[i][j]=-1;
+        }
+        n=strlen(s);
+        m=strlen(t);
+        while(!st.empty())st.pop();
+        for(int i=0; i<n; i++)
+        {
+            if(s[i]=='U')
+            {
+                if(!st.empty())st.pop();
+            }
+            else if(s[i]=='L')st.push(0);
+            else st.push(1);
+        }
+        L[0][0]=L[0][1]=-1;
+        int l=-1,r=-1;
+        for(int i=1; i<=m+1; i++)
+        {
+            L[i][0]=l;
+            L[i][1]=r;
+            if(i>m)continue;
+            if(t[i-1]=='L')l=i;
+            if(t[i-1]=='R')r=i;
+        }
+        R[m+1][0]=R[m+1][1]=-1;
+        l=-1,r=-1;
+        for(int i=m; i>=1; i--)
+        {
+            R[i][0]=l,R[i][1]=r;
+            if(t[i-1]=='L')l=i;
+            if(t[i-1]=='R')r=i;
+        }
+        f[m+1]=1;
+        for(int i=m+1; i>=1; i--)
+        {
+            int p0=L[i][0];
+            //printf("** %d\n",p0);
+            if(p0!=-1)pd(f[p0],f[i]);
+            int p1=L[i][1];
+            if(p1!=-1)pd(f[p1],f[i]);
+        }
+        ans[m+1]=f[m+1];
+        for(int i=m; i>=1; i--)
+            pd(ans[i],ans[i+1]+f[i]);
+
+       /* for(int i=1; i<=m+1; i++)
+            printf("%d ",ans[i]);
+        printf("\n");*/
+
+        int ret=ans[1];
+        //printf("** %d\n",ans[1]);
+        for(int i=0; i<m; i++)
+        {
+            if(t[i]=='U')
+            {
+                if(st.empty())break;
+                int tt=st.top();
+                st.pop();
+                int pos=R[i+1][1-tt];
+                pd(ret,1);
+                pd(ret,ans[pos+1]);
+                //printf("** %d\n",ret);
+            }
+        }
+        printf("Case %d: %d\n",++ncase,ret);
+    }
+    return 0;
+}
