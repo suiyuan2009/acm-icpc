@@ -13,6 +13,7 @@ const int inf = 0x3fffffff;
 
 int f[maxm][maxn];
 int n, c[maxn], a[maxn][maxn], vis[maxn];
+int p[maxn];
 void pd(int &ret, int val)
 {
     if (ret == -1 || ret > val)ret = val;
@@ -20,7 +21,7 @@ void pd(int &ret, int val)
 
 int main()
 {
-    // freopen("in.cpp", "r", stdin);
+    //freopen("in.cpp", "r", stdin);
     int ncase = 0;
     while (~scanf("%d", &n))
     {
@@ -39,27 +40,26 @@ int main()
         }
         memset(f, -1, sizeof(f));
         for (int i = 1; i <= n; i++)f[0][i] = 0;
+        for (int i = 1; i <= n; i++)p[i] = 0;
         for (int i = 0; i < maxm - 1; i++)
+        {
+            int cnt = 0, cnt2 = 0;
+            for (int k = 1; k <= n; k++)vis[k] = 0;
+            for (int k = 1; k <= n; k++)
+            {
+                while (p[k] + 1 <= c[k] && a[k][p[k] + 1] <= i + 1)p[k]++;
+                if (a[k][p[k]] == i + 1)
+                {
+                    vis[k] = 1;
+                    cnt2++;
+                    if (p[k] < c[k])cnt++;
+                }
+            }
             for (int j = 1; j <= n; j++)
             {
                 if (f[i][j] == -1)continue;
-                for (int k = 1; k <= n; k++)vis[k] = 0;
                 bool sign = 0;
-                int cnt = 0, cnt2 = 0;
-                for (int k = 1; k <= c[j]; k++)
-                    if (a[j][k] == i + 1)
-                    {
-                        if (k > 1)sign = 1;
-                        break;
-                    }
-                for (int k = 1; k <= n; k++)
-                    for (int r = 1; r <= c[k]; r++)
-                        if (a[k][r] == i + 1)
-                        {
-                            vis[k] = 1;
-                            cnt2++;
-                            if (r < c[k])cnt++;
-                        }
+                if (a[j][p[j]] == i + 1 && p[j] > 1)sign = 1;
                 if (sign)
                 {
                     if (cnt2 == 1)pd(f[i + 1][j], f[i][j] + cnt - 1);
@@ -83,6 +83,7 @@ int main()
                     }
                 }
             }
+        }
         int ret = -1;
         for (int i = 1; i <= n; i++)
             if (f[maxm - 1][i] != -1)pd(ret, f[maxm - 1][i]);
