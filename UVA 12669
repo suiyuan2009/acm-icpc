@@ -1,0 +1,214 @@
+#include <cstdio>
+#include <algorithm>
+#include <vector>
+#include <cmath>
+#include <cstring>
+#include <string>
+#include <queue>
+#include <stack>
+#include <iostream>
+using namespace std;
+typedef long long ll;
+const int maxn = 100005;
+const int inf = 0x3fffffff;
+
+int ls, lt, q;
+string s, t;
+
+struct BIT
+{
+    int c[maxn];
+    void init()
+    {
+        for (int i = 0; i < maxn; i++)c[i] = 0;
+    }
+    int lowbit(int x)
+    {
+        return x & (-x);
+    }
+    void add(int x, int val)
+    {
+        for (; x < maxn; x += lowbit(x))c[x] += val;
+    }
+    int sum(int x)
+    {
+        int ret = 0;
+        for (; x; x -= lowbit(x))ret += c[x];
+        return ret;
+    }
+} bit;
+
+struct  ST
+{
+    int  l, r, val1, val2, cnt;
+} st[maxn * 4];
+void build(int id, int l, int r)
+{
+    st[id].l = l, st[id].r = r;
+    st[id].cnt = 0, st[id].val1 = st[id].val2 = -1;
+    if (l == r)return;
+    int m = (l + r) >> 1;
+    build(id << 1, l, m);
+    build(id << 1 | 1, m + 1, r);
+}
+void pd(int id)
+{
+    st[id].cnt = (st[id].cnt + 1) & 1;
+    if (st[id].val1 == -1)return;
+    int tt = st[id].val1;
+    st[id].val1 = lt - st[id].val2;
+    st[id].val2 = lt - tt;
+}
+void sy(int &ret, int val, int sign)
+{
+    if (val == -1)return;
+    if (sign)ret = max(ret, val);
+    else
+    {
+        if (ret == -1 || ret > val)ret = val;
+    }
+}
+void down(int id)
+{
+    st[id].cnt = 0;
+    pd(id << 1);
+    pd(id << 1 | 1);
+}
+void up(int id)
+{
+    st[id].val1 = st[id].val2 = -1;
+    sy(st[id].val1, st[id << 1].val1, 0);
+    sy(st[id].val1, st[id << 1 | 1].val1, 0);
+    sy(st[id].val2, st[id << 1].val2, 1);
+    sy(st[id].val2, st[id << 1 | 1].val2, 1);
+}
+void reverse(int id, int l, int r)
+{
+    if (st[id].l == l && st[id].r == r)
+    {
+        pd(id);
+        return;
+    }
+    if (st[id].cnt & 1)down(id);
+    int m = (st[id].l + st[id].r) >> 1;
+    if (r <= m)reverse(id << 1, l, r);
+    else if (l > m)reverse(id << 1 | 1, l, r);
+    else
+    {
+        reverse(id << 1, l, m);
+        reverse(id << 1 | 1, m + 1, r);
+    }
+    up(id);
+}
+
+void update(int id, int pos, int val)
+{
+    if (st[id].l == st[id].r)
+    {
+        st[id].val1 = st[id].val2 = val;
+        return;
+    }
+    if (st[id].cnt & 1)down(id);
+    int m = (st[id].l + st[id].r) >> 1;
+    if (pos <= m)update(id << 1, pos, val);
+    else update(id << 1 | 1, pos, val);
+    up(id);
+}
+int query(int id, int l, int r)
+{
+    if (l > r)return -1;
+    if (st[id].l == l && st[id].r == r)return st[id].val2;
+    if (st[id].cnt & 1)down(id);
+    int m = (st[id].l + st[id].r) >> 1;
+    if (r <= m)return query(id << 1, l, r);
+    else if (l > m)return query(id << 1 | 1, l, r);
+    return max(query(id << 1, l, m), query(id << 1 | 1, m + 1, r));
+}
+int c[maxn], a[maxn];
+int main()
+{
+    //freopen("in.cpp", "r", stdin);
+    //freopen("out.cpp", "w", stdout);
+    while (~scanf("%d", &q))
+    {
+        cin >> t >> s;
+        ls = s.size();
+        lt = t.size();
+        bit.init();
+        build(1, 1, ls);
+        for (int i = 1; i <= ls; i++)c[i] = -1;
+        for (int i = 0; i < ls; i++)
+        {
+            if (i + lt - 1 >= ls)break;
+            int cnt = 0, sign = 0;
+            for (int j = 0; j < lt; j++)
+            {
+                if (s[i + j] == t[j])continue;
+                if (tolower(s[i + j]) == tolower(t[j]))cnt++;
+                else sign = 1;
+            }
+            if (sign)c[i + 1] = -1;
+            else c[i + 1] = cnt;
+        }
+        for (int i = 1; i <= ls; i++)
+            if (c[i] != -1)update(1, i, c[i]);
+        while (q--)
+        {
+            int l, r;
+            scanf("%d%d", &l, &r);
+            printf("%d\n", query(1, l, r - lt + 1));
+            bit.add(l, 1);
+            bit.add(r + 1, -1);
+            if (l <= r - lt + 1)reverse(1, l, r - lt + 1);
+            if (max(1, l - lt + 1) <= l - 1)
+            {
+                for (int i = max(1, l - lt + 1); i <= min(ls, l - 1 + lt - 1); i++)
+                    a[i] = bit.sum(i) & 1;
+                for (int i = max(1, l - lt + 1); i <= l - 1; i++)
+                {
+                    if (i + lt - 1 > ls)break;
+                    int sign = 0, cnt = 0;
+                    for (int j = 0; j < lt; j++)
+                    {
+                        char tmp = s[i + j - 1];
+                        if (a[i + j])
+                        {
+                            if (tmp >= 'a')tmp = tmp - 'a' + 'A';
+                            else tmp = tmp - 'A' + 'a';
+                        }
+                        if (tmp == t[j])continue;
+                        if (tolower(tmp) == tolower(t[j]))cnt++;
+                        else sign = 1;
+                    }
+                    if (sign)continue;
+                    update(1, i, cnt);
+                }
+            }
+            if (max(1, r - lt + 2) <= min(r, ls))
+            {
+                for (int i = max(1, r - lt + 2); i <= min(r + lt - 1, ls); i++)
+                    a[i] = bit.sum(i) & 1;
+                for (int i = max(1, r - lt + 2); i <= r; i++)
+                {
+                    if (i + lt - 1 > ls)break;
+                    int sign = 0, cnt = 0;
+                    for (int j = 0; j < lt; j++)
+                    {
+                        char tmp = s[i + j - 1];
+                        if (a[i + j])
+                        {
+                            if (tmp >= 'a')tmp = tmp - 'a' + 'A';
+                            else tmp = tmp - 'A' + 'a';
+                        }
+                        if (tmp == t[j])continue;
+                        if (tolower(tmp) == tolower(t[j]))cnt++;
+                        else sign = 1;
+                    }
+                    if (sign)continue;
+                    update(1, i, cnt);
+                }
+            }
+        }
+    }
+    return 0;
+}
