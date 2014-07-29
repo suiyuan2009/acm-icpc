@@ -1,0 +1,95 @@
+/×
+判断两点之间是否有其他点隔着n*nlogn，注意距离先判，再操作map
+×/
+#include <cstdio>
+#include <algorithm>
+#include <vector>
+#include <cmath>
+#include <cstring>
+#include <string>
+#include <queue>
+#include <stack>
+#include <iostream>
+#include <map>
+using namespace std;
+typedef long long ll;
+const int maxn = 1005;
+const int inf = 0x3fffffff;
+
+int n,L;
+struct P{
+    int x,y,id;
+    bool operator<(const P&a)const{
+        if(x==a.x)return y<a.y;
+        return x<a.x;
+    }
+}p[maxn];
+int head[maxn],ev[maxn*maxn],nxt[maxn*maxn],num;
+
+void add(int u,int v){
+    nxt[++num]=head[u];
+    head[u]=num;
+    ev[num]=v;
+}
+
+int d[maxn],vis[maxn];
+queue<int>q;
+int bfs(){
+    for(int i=1;i<=n+2;i++){
+        d[i]=maxn,vis[i]=0;
+    }
+    while(!q.empty())q.pop();
+    d[1]=0,vis[1]=1;
+    q.push(1);
+    while(!q.empty()){
+        int u=q.front();
+        if(u==2)break;
+        q.pop();
+        for(int i=head[u];i!=-1;i=nxt[i]) {
+            int v=ev[i];
+            if(vis[v])continue;
+            d[v]=d[u]+1;
+            vis[v]=1;
+            // printf("%d %d: %d\n",u,v,d[v]);
+            q.push(v);
+        }
+    }
+    return d[2];
+}
+
+int main(){
+    //freopen("ACM/in.in", "r", stdin);
+    //freopen("ACM/out.cpp","w",stdout);
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        scanf("%d%d",&n,&L);
+        for(int i=1;i<=n+2;i++){
+            scanf("%d%d",&p[i].x,&p[i].y);
+            p[i].id=i;
+        }
+        sort(p+1,p+n+2+1);
+        memset(head,-1,sizeof(head));
+        num=0;
+        for(int i=1;i<=n+2;i++){
+            map<double,int>sy;
+            for(int j=i+1;j<=n+2;j++){
+                ll x=p[j].x-p[i].x;
+                ll y=p[j].y-p[i].y;
+                if(x*x+y*y>(ll)L*L)continue;
+                double cur=(x==0?100000000.0:y*1.0/x);
+                if(sy.find(cur)!=sy.end())continue;
+                sy[cur]=1;
+                add(p[i].id,p[j].id);
+                add(p[j].id,p[i].id);
+            }
+        }
+        // for(int i=1;i<=n+2;i++)
+        //   for(int j=head[i];j!=-1;j=nxt[j])
+        //     printf("%d %d\n",i,ev[j]);
+        int tt=bfs();
+        if(tt==maxn)printf("impossible\n");
+        else printf("%d\n",tt-1);
+    }
+    return 0;
+}
