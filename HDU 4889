@@ -1,0 +1,33 @@
+/*
+构造一个图，使得给定的算法点入队超过C次
+*/
+#include <cstdio>
+#include <algorithm>
+#include <vector>
+#include <cmath>
+#include <cstring>
+#include <string>
+#include <queue>
+#include <stack>
+#include <iostream>
+#include <map>
+using namespace std;
+typedef long long ll;
+const int maxn = 35;
+const int inf = 0x3fffffff;
+
+
+int main(){
+    int c;
+   // freopen("ACM/in.in", "r", stdin);
+    //freopen("ACM/out.cpp","w",stdout);
+    while(~scanf("%d",&c)){
+        printf("61 90\n");
+        for(int i=1;i<61;i+=2){
+            printf("%d %d -1\n",i,i+1);
+            printf("%d %d -2\n",i,i+2);
+            printf("%d %d %d\n",i+1,i+2,-(1<<(30-(i+1)/2))-1);
+        }
+    }
+    return 0;
+}
