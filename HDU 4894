@@ -1,3 +1,8 @@
+/*
+题意：树上有若干点是敌人据点，一个点属于最近的据点，自己最多放m个据点，问自己最多控制多少点
+
+f[i][j][k]代表点i为根的子树，放了j个据点，且点i被k控制，最多控制多少点，转移是背包
+*/
 #include <cstdio>
 #include <algorithm>
 #include <vector>
