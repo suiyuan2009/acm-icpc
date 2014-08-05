@@ -1,0 +1,192 @@
+/*
+题意：给出n个数，2^ai*3*bi，随机选择，问最小公倍数的和。
+按ai排序，对于b小于等于当前bi的，ret+=2^cnt*2^ai*3^bi，大于bi的，线段树需要维护2^(k-1)*2^bk这些数的和，
+系数k是指当前bk是第k大的。
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+using namespace std;
+typedef long long ll;
+const int maxn=100005;
+const int mod=1000000007;
+
+struct P
+{
+    int x,y;
+    // ll a,b;
+    bool operator<(const P&a)const
+    {
+        if(x==a.x)return y<a.y;
+        return x<a.x;
+    }
+} p[maxn];
+int n;
+ll A[maxn],B[maxn],C[maxn];
+
+ll mul(int a,int b)
+{
+    ll ret=1;
+    ll tt=a;
+    while(b)
+    {
+        if(b&1)ret=ret*tt%mod;
+        b>>=1;
+        tt=tt*tt%mod;
+    }
+    return ret;
+}
+
+vector<int>vis;
+void init()
+{
+    A[0]=1;
+    for(int i=1; i<maxn; i++)A[i]=A[i-1]*2%mod;
+    for(int i=1; i<=n; i++)
+        scanf("%d%d",&p[i].x,&p[i].y);
+    sort(p+1,p+n+1);
+    for(int i=1; i<=n; i++)B[i]=mul(2,p[i].x);
+    vis.clear();
+    for(int i=1; i<=n; i++)
+        vis.push_back(p[i].y);
+    sort(vis.begin(),vis.end());
+    vis.erase(unique(vis.begin(),vis.end()),vis.end());
+    for(int i=0; i<vis.size(); i++)
+        C[i+1]=mul(3,vis[i]);
+    for(int i=1; i<=n; i++)
+        p[i].y=lower_bound(vis.begin(),vis.end(),p[i].y)-vis.begin()+1;
+}
+
+struct BIT
+{
+    int c[maxn];
+    void init()
+    {
+        for(int i=0; i<maxn; i++)c[i]=0;
+    }
+    int lowbit(int x)
+    {
+        return x&(-x);
+    }
+    void add(int x)
+    {
+        while(x<maxn)
+        {
+            c[x]++;
+            x+=lowbit(x);
+        }
+    }
+    int sum(int x)
+    {
+        int ret=0;
+        while(x>0)
+        {
+            ret+=c[x];
+            x-=lowbit(x);
+        }
+        return ret;
+    }
+} bit;
+
+struct ST
+{
+    int l,r,cnt;
+    ll val;
+} st[maxn*4];
+void build(int id,int l,int r)
+{
+    st[id].l=l,st[id].r=r;
+    st[id].val=0,st[id].cnt=0;
+    if(l==r)return;
+    int m=(l+r)>>1;
+    build(id<<1,l,m);
+    build(id<<1|1,m+1,r);
+}
+void down(int id)
+{
+    st[id<<1].val=st[id<<1].val*A[st[id].cnt]%mod;
+    st[id<<1|1].val=st[id<<1|1].val*A[st[id].cnt]%mod;
+    st[id<<1].cnt+=st[id].cnt;
+    st[id<<1|1].cnt+=st[id].cnt;
+    st[id].cnt=0;
+}
+void up(int id)
+{
+    st[id].val=(st[id<<1].val+st[id<<1|1].val)%mod;
+}
+ll query(int id,int l,int r)
+{
+    if(l>r)return 0;
+    if(st[id].l==l&&st[id].r==r)return st[id].val;
+    down(id);
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)query(id<<1,l,r);
+    else if(l>m)return query(id<<1|1,l,r);
+    return (query(id<<1,l,m)+query(id<<1|1,m+1,r))%mod;
+}
+void update1(int id,int l,int r)
+{
+    if(l>r)return;
+    if(st[id].l==l&&st[id].r==r)
+    {
+        st[id].val=st[id].val*2%mod;
+        st[id].cnt++;
+        return;
+    }
+    down(id);
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)update1(id<<1,l,r);
+    else if(l>m)update1(id<<1|1,l,r);
+    else
+    {
+        update1(id<<1,l,m);
+        update1(id<<1|1,m+1,r);
+    }
+    up(id);
+}
+void update2(int id,int pos)
+{
+    if(st[id].l==st[id].r)
+    {
+        st[id].val=st[id].val*2%mod;
+        st[id].val=(st[id].val+C[pos]*A[st[id].cnt]%mod)%mod;
+        //st[id].cnt++;
+        return;
+    }
+    int m=(st[id].l+st[id].r)>>1;
+    down(id);
+    if(pos<=m)update2(id<<1,pos);
+    else update2(id<<1|1,pos);
+    up(id);
+}
+
+int main()
+{
+    //freopen("ACM/in.in","r",stdin);
+    while(~scanf("%d",&n))
+    {
+        init();
+        build(1,1,vis.size());
+        ll ret=0;
+        bit.init();
+        for(int i=1; i<=n; i++)
+        {
+            int tt=bit.sum(p[i].y);
+            ll tmp=A[tt]*B[i]%mod*C[p[i].y]%mod;
+            ret=(ret+tmp)%mod;
+            //printf("%d: %lld",i,ret);
+            tmp=query(1,p[i].y+1,vis.size());
+            //printf(" && %lld $$\n",tmp);
+            ret=(ret+tmp*B[i]%mod)%mod;
+            update1(1,p[i].y+1,vis.size());
+            update2(1,p[i].y);
+            bit.add(p[i].y);
+            //printf("**%lld\n",ret);
+        }
+        printf("%I64d\n",ret);
+    }
+    return 0;
+}
