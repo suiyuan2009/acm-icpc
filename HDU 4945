@@ -1,0 +1,127 @@
+/*
+题意：一个序列有多少个子序列，一个序列，如果每次取出两个相同的值，求和之后放入，最后能得到2048
+先筛出2^i的数，如果这些数的和大于2048，一定能得到2048，所以统计多少个子序列和小于2048，
+状态有个优化，f[i][j]代表到2^i时，和在[j*(2^i),j*(2^(i+1)))中
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+using namespace std;
+typedef long long ll;
+const int maxn=100005;
+const int maxm=12;
+const int mod=998244353;
+
+int n,a[maxn],c[maxm];
+ll A[maxn],B[maxn];
+int p[maxn];
+ll f[maxm][2050];
+void init()
+{
+    memset(p,-1,sizeof(p));
+    for(int i=0; i<maxm; i++)p[1<<i]=i;
+    A[0]=B[0]=1;
+    for(int i=1; i<maxn; i++)
+    {
+        A[i]=A[i-1]*i%mod;
+        B[i]=B[i-1]+B[i-1];
+        if(B[i]>=mod)B[i]-=mod;
+    }
+}
+
+void gcd(ll a,ll b,ll&d,ll&x,ll&y)
+{
+    if(!b)
+    {
+        d=a;
+        x=1;
+        y=0;
+    }
+    else
+    {
+        gcd(b,a%b,d,y,x);
+        y-=a/b*x;
+    }
+}
+
+ll inv(ll a,ll n)
+{
+    ll d,x,y;
+    gcd(a,n,d,x,y);
+    return d==1?(x%n+n)%(n/d):-1;
+}
+
+/*ll cal(int n,int m)
+{
+    ll ret=A[n];
+    ll tmp=A[n-m]*A[m]%mod;
+    return ret*inv(tmp,mod)%mod;
+}*/
+
+inline void pd(ll&ret,ll val)
+{
+    ret+=val;
+    if(ret>=mod)ret-=mod;
+}
+
+ll ni[maxn];
+int h[maxm+5];
+
+int read()
+{
+    char c=getchar();
+    int res=0;
+    while(c<'0'||c>'9') c=getchar();
+    res=c-'0';
+    while((c=getchar())>='0'&&c<='9')
+    {
+        res=res*10+c-'0';
+    }
+    return res;
+}
+
+int main()
+{
+  //  freopen("ACM/in.in","r",stdin);
+    init();
+    for(int i=1;i<maxn;i++)ni[i]=inv(i,mod);
+    int ncase=0;
+    while(~scanf("%d",&n)&&n)
+    {
+        memset(c,0,sizeof(c));
+        int m=0;
+        for(int i=1; i<=n; i++)
+        {
+            a[i]=read();
+            if(p[a[i]]==-1)m++;
+            else c[p[a[i]]]++;
+        }
+        for(int i=0; i<=11; i++)
+            for(int j=0; j<2048; j++)
+                f[i][j]=0;
+        f[0][0]=1;
+        for(int i=0;i<11;i++){
+            for(int j=0;j<2048;j++){
+                if(f[i][j]==0)continue;
+                ll cur=1;
+                for(int k=0;k<=c[i];k++){
+                    int tmp=k*(1<<i);
+                    if(i)tmp+=(1<<(i-1))*j;
+                    if(tmp>=2048)break;
+                    pd(f[i+1][tmp>>i],f[i][j]*cur%mod);
+                    cur=cur*(c[i]-k)%mod*ni[k+1]%mod;
+                }
+            }
+         }
+        ll ret=f[11][0]+f[11][1];
+        ret=ret*B[m]%mod;
+        ret=B[n]-ret;
+        printf("Case #%d: %I64d\n",++ncase,(ret%mod+mod)%mod);
+    }
+    return 0;
+}
