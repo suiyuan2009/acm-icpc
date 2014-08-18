@@ -1,0 +1,86 @@
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<stack>
+#include<cmath>
+#include<map>
+using namespace std;
+typedef long long ll;
+const int maxn=105;
+const double eps=1e-6;
+const int mod=1000000007;
+
+int n,a[maxn],b[maxn];
+int f[maxn][maxn][maxn][2];
+
+void pd(int &ret,int val){
+    if(ret<val)ret=val;
+}
+
+int main(){
+    freopen("ACM/in.in","r",stdin);
+    // freopen("ACM/out.out","w",stdout);
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        scanf("%d",&n);
+        for(int i=1;i<=n;i++)scanf("%d",&a[i]);
+        for(int i=1;i<=n;i++)scanf("%d",&b[i]);
+        int pos=0;
+        for(int i=1;i<=n;i++)if(a[i]<0)pos=i;
+        for(int i=n+1;i>=pos+1;i--){
+            a[i]=a[i-1];
+            b[i]=b[i-1];
+        }
+        a[pos+1]=0,b[pos+1]=0;
+        pos++,n++;
+        for(int i=1;i<=n+1;i++)
+            for(int j=0;j<=n+1;j++)
+                for(int k=j;k<=n+1;k++)
+                    f[i][j][k][0]=f[i][j][k][1]=-mod;
+        /* for(int i=1;i<=n;i++){
+           pd(f[1][0][i][1],b[i]);
+           pd(f[1][i][n+1][0],b[i]);
+           }*/
+        for(int i=0;i<=n;i++)
+            for(int j=max(1,i);j<=n;j++)
+                pd(f[1][i][j][1],b[j]);
+        for(int i=1;i<=n;i++)
+            for(int j=i;j<=n+1;j++)
+                pd(f[1][i][j][0],b[i]); 
+        for(int i=1;i<=n+1;i++)
+            for(int l=n;l>=1;l--)
+                for(int j=0;j<=n+1;j++)
+                {
+                    int k=j+l;
+                    if(k>n+1)break;
+                    if(f[i][j][k][0]!=-mod){
+                        if(j+1<k)pd(f[i+1][j+1][k][0],f[i][j][k][0]-i*abs(a[j]-a[j+1])+b[j+1]);
+                        pd(f[i][j+1][k][0],f[i][j][k][0]-i*abs(a[j]-a[j+1]));
+                        if(j+1<k)pd(f[i+1][j][k-1][1],f[i][j][k][0]-i*abs(a[j]-a[k-1])+b[k-1]);
+                        pd(f[i][j][k-1][1],f[i][j][k][0]-i*abs(a[j]-a[k-1]));
+                    }
+                    if(f[i][j][k][1]!=-mod){
+                        if(j+1<k)pd(f[i+1][j][k-1][1],f[i][j][k][1]-i*abs(a[k]-a[k-1])+b[k-1]);
+                        pd(f[i][j][k-1][1],f[i][j][k][1]-i*abs(a[k]-a[k-1]));
+                        if(j+1<k)pd(f[i+1][j+1][k][0],f[i][j][k][1]-i*abs(a[j+1]-a[k])+b[j+1]);
+                        pd(f[i][j+1][k][0],f[i][j][k][1]-i*abs(a[j+1]-a[k]));
+                    }
+                }
+        // for(int i=1;i<=n;i++)
+        //   printf("%d: %d %d\n",i,a[i],b[i]);
+        //printf("** %d\n",f[1][0][4][1]);
+        //printf("** %d\n",f[2][1][3][0]);
+        int ret=0;
+      for(int i=1;i<=n+1;i++){
+            pd(ret,f[i][pos][pos][0]);
+            pd(ret,f[i][pos][pos][1]);
+        }
+        printf("%d\n",ret);
+    }
+    return 0;
+}
