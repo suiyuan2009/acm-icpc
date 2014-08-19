@@ -1,0 +1,57 @@
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<stack>
+#include<cmath>
+#include<map>
+using namespace std;
+typedef long long ll;
+const int maxn=20005;
+const double eps=1e-6;
+const int mod=1000000007;
+
+int n;
+ll a[maxn],b[maxn];
+void init(){
+    a[0]=b[0]=1;
+    for(int i=1;i<maxn;i++)a[i]=a[i-1]*i%mod;
+    for(int i=1;i<maxn;i++)b[i]=b[i-1]*n%mod;
+}
+
+void gcd(ll a,ll b,ll&d,ll&x,ll&y){
+    if(!b){
+        d=a,x=1,y=0;
+    }
+    else{
+        gcd(b,a%b,d,y,x);
+        y-=a/b*x;
+    }
+}
+
+ll inv(ll a,ll n){
+    ll d,x,y;
+    gcd(a,n,d,x,y);
+    return d==1?(x%n+n)%(n/d):-1;
+}
+
+
+int main(){
+    freopen("ACM/in.in","r",stdin);
+    // freopen("ACM/out.out","w",stdout);
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--){
+        scanf("%d",&n);
+        init();
+        ll ret=0;
+        for(int i=0;i<n;i++){
+            ret=(ret+b[i]*inv(a[i],mod)%mod)%mod;
+        }
+        printf("Case %d: %lld\n",++ncase,ret*a[n-1]%mod);
+    }
+    return 0;
+}
