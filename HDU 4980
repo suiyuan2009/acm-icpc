@@ -1,0 +1,122 @@
+/*
+题意：最小路径覆盖，每条路径不能有重边，边有权值，每条路径花费是m+sum{edgecost}
+
+记f[i][j]为以i为根的子树，向上的有j条路径的最优值，转移是背包套背包，从n^4优化成n^3
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<stack>
+#include<cmath>
+#include<map>
+using namespace std;
+typedef long long ll;
+const int maxn=505;
+const int maxm=maxn+maxn;
+
+int n,m;
+int head[maxn],ev[maxm],ew[maxm],nxt[maxm],num,c[maxn];
+int f[maxn][maxn];
+
+void init(){
+    memset(head,-1,sizeof(head));
+    num=0;
+}
+
+void addedge(int u,int v,int w){
+    nxt[++num]=head[u];
+    head[u]=num;
+    ev[num]=v;
+    ew[num]=w;
+}
+
+void pd(int &ret,int val){
+    if(ret==-1||ret>val)ret=val;
+}
+
+int s[maxn],sw[maxn],cs,g[maxn][maxn],h[maxn][maxn];
+void dfs(int u,int fa){
+    c[u]=1;
+    for(int i=head[u];i+1;i=nxt[i]){
+        int v=ev[i];
+        if(v==fa)continue;
+        dfs(v,u);
+        c[u]+=c[v];
+    }
+    cs=0;
+    for(int i=head[u];i+1;i=nxt[i]){
+        int v=ev[i];
+        if(v==fa)continue;
+        s[++cs]=v;
+        sw[cs]=ew[i];
+    }
+    if(!cs){
+        f[u][0]=f[u][1]=m;
+        return;
+    }
+    for(int i=0;i<=cs;i++)
+        for(int j=0;j<=c[u];j++)
+            g[i][j]=-1;
+   g[0][0]=0;
+   for(int i=0;i<cs;i++){
+        int v=s[i+1],w=sw[i+1];
+        /*for(int j=0;j<=c[u];j++){
+            if(g[i][j]==-1)continue;
+            for(int k=1;k<=c[v];k++){
+                if(f[v][k]==-1)continue;
+                for(int r=0;r<=min(k,j);r++){
+                    int tt=f[v][k]+k*w+g[i][j]-m*r;
+                    pd(g[i+1][j+k-r-r],tt);
+                }
+            }
+        }*/
+        for(int j=0;j<=c[u]+1;j++)
+            for(int k=0;k<=c[v]+1;k++)
+                h[j][k]=-1;
+        for(int j=c[u];j>=0;j--)
+            for(int k=c[v];k>=0;k--){
+                if(h[j+1][k+1]!=-1)pd(h[j][k],h[j+1][k+1]-m);
+                if(k&&g[i][j]!=-1&&f[v][k]!=-1)
+                    pd(h[j][k],g[i][j]+f[v][k]+k*w);
+            }
+        for(int j=0;j<=c[u];j++)
+            for(int k=0;k<=c[v];k++)
+                if(h[j][k]!=-1)pd(g[i+1][j+k],h[j][k]);
+    }
+    for(int i=0;i<=c[u];i++)f[u][i]=g[cs][i];
+    for(int i=1;i<=c[u];i++)
+        for(int j=0;j<i;j++){
+            if(f[u][j]==-1)continue;
+            pd(f[u][i],f[u][j]+(i-j)*m);
+        }
+}
+
+int main(){
+   // freopen("ACM/in.in","r",stdin);
+   // freopen("ACM/out.out","w",stdout);  
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--){
+        scanf("%d%d",&n,&m);
+        init();
+        for(int i=1;i<n;i++){
+            int u,v,w;
+            scanf("%d%d%d",&u,&v,&w);
+            addedge(u,v,w);
+            addedge(v,u,w);
+        }
+        dfs(0,-1);
+        int ret=-1;
+        if(n==1)ret=0;
+        for(int i=0;i<=c[0];i++){
+            if(f[0][i]==-1)continue;
+            pd(ret,f[0][i]);
+        }
+        printf("Case #%d: %d\n",++ncase,ret);
+    }
+    return 0;
+}
