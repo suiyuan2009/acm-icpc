@@ -1,0 +1,223 @@
+/*
+dfs统计或者树分治都行
+*/
+#include <map>
+#include <set>
+#include <cmath>
+#include <queue>
+#include <cstdio>
+#include <string>
+#include <vector>
+#include <cstdlib>
+#include <cstring>
+#include <algorithm>
+using namespace std;
+const int maxn=300005;
+const int maxm=maxn+maxn;
+typedef long long ll;
+
+ll ret;
+struct E{
+    int v,w;
+    E(){}
+    E(int v,int w):v(v),w(w){}
+    bool operator<(const E&a)const{
+        return w<a.w;
+    }
+};
+vector<E>e[maxn];
+int a[maxn],n;
+
+void init(){
+    for(int i=1;i<=n;i++)e[i].clear();
+    for(int i=1;i<=n;i++)scanf("%d",&a[i]);
+    for(int i=1;i<n;i++){
+        int u,v,w;
+        scanf("%d%d%d",&u,&v,&w);
+        e[u].push_back(E(v,w));
+        e[v].push_back(E(u,w));
+    }
+    for(int i=1;i<=n;i++)sort(e[i].begin(),e[i].end());
+}
+
+pair<ll,ll>dfs(int u,int fa,int id){
+    pair<ll,ll>ans;
+    ans.first=1,ans.second=a[u];
+    int cur=-1;
+    ll ps=0,pc=0,s=0,c=0;
+    for(int i=0;i<e[u].size();i++){
+        int v=e[u][i].v,w=e[u][i].w;
+        if(v==fa)continue;
+        pair<ll,ll>tt=dfs(v,u,w);
+        if(w!=id){
+            ans.first+=tt.first;
+            ans.second+=tt.first*a[u]+tt.second;
+        }
+        if(cur!=w){
+            ps+=s,pc+=c;
+            s=c=0;
+        }
+        ret+=tt.first*ps+tt.second*pc+tt.first*pc*a[u];
+        ret+=tt.second+tt.first*a[u]; 
+        c+=tt.first,s+=tt.second;
+        cur=w;
+    }
+    return ans;
+}
+
+int main(){
+    //freopen("ACM/in.in","r",stdin);
+    while(~scanf("%d",&n)){
+        init();
+        ret=0;
+        dfs(1,-1,-1);
+        printf("%lld\n",ret);
+    }
+    return 0;
+}
+
+#include<stdio.h>
+#include<iostream>
+#include<cstring>
+#include<string>
+#include<map>
+#include<vector>
+#include<queue>
+#include<algorithm>
+#include<math.h>
+#include<set>
+using namespace std;
+typedef long long ll;
+const int maxn=300005;
+const int maxm=maxn+maxn;
+
+int n,head[maxn],nxt[maxm],ev[maxm],ew[maxm],num;
+bool rooted[maxn];
+ll h[maxn];
+
+void init()
+{
+    memset(head,-1,sizeof(head));
+    num=0;
+    memset(rooted,0,sizeof(rooted));
+}
+
+void add(int u,int v,int w)
+{
+    nxt[++num]=head[u];
+    head[u]=num;
+    ev[num]=v,ew[num]=w;
+}
+
+int pnt[maxn],d[maxn];
+queue<int>que;
+int bfs(int x)
+{
+    int ret=0,id=x;
+    while(!que.empty())que.pop();
+    pnt[x]=-1,d[x]=0;
+    que.push(x);
+    while(!que.empty())
+    {
+        int u=que.front();
+        que.pop();
+        for(int i=head[u]; i+1; i=nxt[i])
+        {
+            int v=ev[i];
+            if(v==pnt[u]||rooted[v])continue;
+            d[v]=d[u]+1,pnt[v]=u;
+            if(ret<d[v])ret=d[v],id=v;
+            que.push(v);
+        }
+    }
+    return id;
+}
+int get(int x)
+{
+    int l=bfs(x);
+    int r=bfs(l);
+    int dis=d[r]/2,ret=r;
+    while(dis--)ret=pnt[ret];
+    return ret;
+}
+
+struct P
+{
+    int id;
+    ll val;
+    P() {}
+    P(int id,ll val):id(id),val(val) {}
+    bool operator<(const P&a)const
+    {
+        return id<a.id;
+    }
+};
+
+P a[maxn];
+int ca;
+ll s[maxn];
+void dfs2(int u,int fa,ll sum,int id2,int id)
+{
+    a[++ca]=P(id,sum+h[u]);
+    for(int i=head[u]; i+1; i=nxt[i])
+    {
+        int v=ev[i],w=ew[i];
+        if(v==fa||id2==w||rooted[v])continue;
+        dfs2(v,u,sum+h[u],w,id);
+    }
+}
+ll ret;
+void dfs(int root)
+{
+    int u=get(root);
+    rooted[u]=1;
+    ca=0;
+    for(int i=head[u]; i+1; i=nxt[i])
+    {
+        int v=ev[i],w=ew[i];
+        if(rooted[v])continue;
+        dfs2(v,u,h[u],w,w);
+    }
+    sort(a+1,a+ca+1);
+    for(int i=1; i<=ca; i++)s[i]=s[i-1]+a[i].val;
+    int l=0,r=0;
+    ll tret=0;
+    for(int i=1; i<=ca; i++)
+    {
+        while(l+1<=ca&&a[l+1].id<a[i].id)l++;
+        while(r+1<=ca&&a[r+1].id<=a[i].id)r++;
+        int cnt=ca-(r-l);
+        ll tt=s[ca]-(s[r]-s[l]);
+        tret+=a[i].val*cnt+tt-h[u]*cnt;
+        // printf("%d: %I64d\n",u,ret);
+    }
+    ret+=s[ca]+tret/2;
+    //printf("** %d: %I64d\n",u,ret);
+    for(int i=head[u]; i+1; i=nxt[i])
+    {
+        int v=ev[i];
+        if(rooted[v])continue;
+        dfs(v);
+    }
+}
+
+int main()
+{
+  //  freopen("in.cpp","r",stdin);
+    while(~scanf("%d",&n))
+    {
+        init();
+        for(int i=1; i<=n; i++)scanf("%I64d",&h[i]);
+        for(int i=1; i<n; i++)
+        {
+            int u,v,w;
+            scanf("%d%d%d",&u,&v,&w);
+            add(u,v,w);
+            add(v,u,w);
+        }
+        ret=0;
+        dfs(1);
+        printf("%I64d\n",ret);
+    }
+    return 0;
+}
