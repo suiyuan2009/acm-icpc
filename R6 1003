@@ -1,0 +1,65 @@
+/*
+题意：有多少个(a,b)使得gcd(n-a,n)*gcd(n-b,n)=n^k
+枚举约数，欧拉函数
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<stack>
+#include<cmath>
+#include<map>
+using namespace std;;
+const int maxn=100005;
+const int mod=1000000007;
+typedef long long ll;
+
+ll phi(int n){
+    int ans=n,i,j=4;
+    for(int i=2;j<=n;j+=i+i+1,++i)
+        if(n%i==0){
+            ans=ans/i*(i-1);
+            while(n%i==0)n/=i;
+        }
+    if(n!=1)ans=ans/n*(n-1);
+    return (ll)ans;
+}
+
+void pd(ll&ret,ll val){
+    ret+=val;
+    if(ret>=mod)ret-=mod;
+}
+
+int n,k;
+
+int main(){
+   // freopen("ACM/in.in","r",stdin);
+    // freopen("ACM/out.out","w",stdout);
+    while(~scanf("%d%d",&n,&k)){
+        if(n==1){
+            printf("1\n");
+            continue;
+        }
+        if(k>2)printf("0\n");
+        else if(k==2)printf("1\n");
+        else{
+            int j=4;
+            ll ret=0;
+            for(int i=2;j<=n;j+=i+i+1,i++){
+                if(n%i)continue;
+                //  printf("** %d %d\n",i,n/i);
+                ll tt=phi(i)*phi(n/i)%mod;
+                pd(ret,tt);
+                if(j<n)pd(ret,tt);
+            }
+            ll tt=phi(n);
+            pd(ret,tt);
+            if(n>1)pd(ret,tt);
+            printf("%lld\n",ret);
+        }
+    }
+    return 0;
+}
