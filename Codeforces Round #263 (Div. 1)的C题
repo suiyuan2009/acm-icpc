@@ -1,0 +1,58 @@
+/*
+题意：一条线，宽度1，长度n，两种操作，折叠，询问[l,r]区间中的宽度和
+暴力，宽度越来越小
+*/
+#include<bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+const int maxn = 100005;
+
+struct BIT{
+    int c[maxn];
+    void add(int x,int y){
+        for(;x<maxn;x+=x&(-x))c[x]+=y;
+    }
+    int sum(int x){
+        int ret=0;
+        for(;x>0;x-=x&(-x))ret+=c[x];
+        return ret;
+    }
+}bit;
+int n,m;
+
+int main(){
+    //freopen("ACM/in.in","r",stdin);
+    scanf("%d%d",&n,&m);
+    for(int i=1;i<=n;i++)bit.add(i,1);
+    int pos=1,dir=1,len=n;
+    while(m--){
+        int op;
+        scanf("%d",&op);
+        if(op==1){
+            int x;
+            scanf("%d",&x);
+            pos+=dir*x;
+            if(x>len-x){
+                dir=-dir;
+                pos+=dir;
+            }
+            for(int i=1;i<=min(x,len-x);i++){
+                int cur=pos-dir*i;
+                int to=pos+dir*(i-1);
+                int tt=bit.sum(cur)-bit.sum(cur-1);
+                bit.add(to,tt);
+            }
+            len-=min(x,len-x);
+        }
+        else{
+            int l,r;
+            scanf("%d%d",&l,&r);
+            l=pos+dir*l;
+            r=pos+dir*(r-1);
+            if(l>r)swap(l,r);    
+            printf("%d\n",bit.sum(r)-bit.sum(l-1));
+        }
+       //  printf("** %d %d %d\n",pos,dir,len);
+    }
+    return 0;
+}
