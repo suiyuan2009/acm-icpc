@@ -1,0 +1,93 @@
+/*
+题意：一个人要按顺序打n关，每一关有损耗的血量ai，打通之后可以休息，每秒恢复bi，问打通之后最少需要休息多久。
+
+贪心，如果当前的血量打不过下一关，那么补血到能恰好打到下一关，然后重新考虑问题，
+找到能一次性不休息能打到的关卡r，考虑在这一区间中在哪里补血，如果当前一秒能补的血量小于等于区间中任意的bi，
+那么在当前补血，否则不补血，直接打下一关，过程中要注意快溢出的时候，每秒能补的血会减少。
+*/
+#include<bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+const int maxn = 100005;
+
+int n;
+ll lim,a[maxn],b[maxn],s[maxn];
+
+struct ST{
+    int l,r;
+    ll val;
+}st[maxn*4];
+void build(int id,int l,int r){
+    st[id].l=l,st[id].r=r;
+    if(l==r){
+        st[id].val=b[l];
+        return;
+    }
+    int m=(l+r)>>1;
+    build(id<<1,l,m);
+    build(id<<1|1,m+1,r);
+    st[id].val=max(st[id<<1].val,st[id<<1|1].val);
+}
+ll query(int id,int l,int r){
+    if(st[id].l==l&&st[id].r==r)return st[id].val;
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)return query(id<<1,l,r);
+    if(l>m)return query(id<<1|1,l,r);
+    return max(query(id<<1,l,m),query(id<<1|1,m+1,r));
+}
+
+void init(){
+    scanf("%lld",&lim);
+    for(int i=1;i<=n;i++)scanf("%lld%lld",&a[i],&b[i]);
+    for(int i=1;i<=n;i++)s[i]=s[i-1]+a[i];
+    build(1,1,n);
+}
+
+int main(){
+    freopen("ACM/in.in","r",stdin);
+    while(~scanf("%d",&n)){
+        init();
+        ll ret=0,cur=lim;
+        int r=0;
+        for(int i=1;i<=n;){
+            if(cur<=a[i]){
+                ll tt=(a[i]-cur+1+b[i-1]-1)/b[i-1];
+                ret+=tt;
+                cur+=tt*b[i-1];
+                if(cur>lim)cur=lim;
+                continue;
+            }
+            while(r+1<=n&&s[r+1]-s[i-1]<cur)r++;
+            if(r>=n)break; 
+            ll tt=query(1,i,r),tmp=min(lim-cur,b[i-1]);
+            if(tt<tmp){
+                ll tt2=a[r+1]+1-(cur-(s[r]-s[i-1]));
+                if(lim-cur<b[i-1]){
+                    ret++;
+                    cur=lim;
+                }
+                else{
+                    ll tt3=(lim-cur)/b[i-1];
+                    ll tt4=tt3*b[i-1];
+                    if(tt4<=tt2){
+                        cur+=tt3*b[i-1];
+                        ret+=tt3;
+                        if(cur>lim)cur=lim;
+                    }
+                    else{
+                        ll tt5=(tt2+b[i-1]-1)/b[i-1];
+                        cur+=tt5*b[i-1];
+                        ret+=tt5;
+                        if(cur>lim)cur=lim;
+                    }
+                }
+            }
+            else{
+                cur-=a[i];
+                i++;
+            }
+        }
+        printf("%lld\n",ret);
+    }
+    return 0;
+}
