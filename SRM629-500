@@ -1,0 +1,90 @@
+#include<cstdio>
+#include<vector>
+#include<cstring>
+#include<cmath>
+using namespace std;
+const int maxn = 2005;
+const int maxm = 10005;
+const double eps=1e-6;
+
+int n;
+int head[maxn],num,ev[maxm],ew[maxm],nxt[maxm];
+bool vis[maxn];
+
+void init()
+{
+    num=0;
+    memset(head,-1,sizeof(head));
+    memset(vis,0,sizeof(vis));
+}
+void add(int u,int v,int w)
+{
+    nxt[num]=head[u];
+    head[u]=num;
+    ev[num]=v,ew[num]=w;
+    num++;
+}
+
+vector<int>b;
+int f[maxn][2][2];
+
+void pd(int &ret,int val)
+{
+    if(ret==-1||ret>val)ret=val;
+}
+
+class CandyCollection
+{
+    public:
+        int solve(vector<int>t1,vector<int>n1,vector<int>t2,vector<int>n2)
+        {
+            int ret=0;
+            n=t1.size();
+            init();
+            for(int i=0;i<n;i++)
+            {
+                int u=i,v=t1[i]+n,w=n1[i];
+                add(u,v,w),add(v,u,w);
+                v=t2[i]+n,w=n2[i];
+                add(u,v,w),add(v,u,w);
+            }
+            for(int i=0;i<n;i++)
+            {
+                if(vis[i])continue;
+                b.clear();
+                int u=i,pnt=-1;
+                while(!vis[u])
+                {
+                    vis[u]=1;
+                    for(int j=head[u];j+1;j=nxt[j])
+                    {
+                        int v=ev[j],w=ew[j];
+                        if(v==pnt)continue;
+                        b.push_back(w),pnt=u,u=v;
+                        break;
+                    }
+                }
+                int m=b.size();
+                m>>=1;
+                for(int j=0;j<=m;j++)
+                    for(int k=0;k<2;k++)
+                        for(int r=0;r<2;r++)
+                            f[j][k][r]=-1;
+                f[0][0][0]=0,f[0][1][1]=max(b[0],b[m+m-1])+1;
+                f[0][1][0]=b[0]+1,f[0][0][1]=b[m+m-1]+1;
+                for(int j=0;j<m-1;j++)
+                    for(int k=0;k<2;k++)
+                    {
+                        pd(f[j+1][k][0],f[j][k][0]+b[j+j+2]+1);
+                        pd(f[j+1][k][0],f[j][k][1]);
+                        pd(f[j+1][k][1],f[j][k][0]+max(b[j+j+1],b[j+j+2])+1);
+                        pd(f[j+1][k][1],f[j][k][1]+b[j+j+1]+1);
+                    }
+                //printf("** %d\n",f[3][1][1]);
+                int tt=-1;
+                pd(tt,f[m-1][0][1]),pd(tt,f[m-1][1][0]),pd(tt,f[m-1][1][1]);
+                ret+=tt;
+            }
+            return ret;
+        }
+};
