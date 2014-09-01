@@ -1,3 +1,8 @@
+/*
+题意：每种口味糖果有两种形状，每种形状有两种口味，问最少需要买多少糖果，能吃到所有的口味
+
+环上dp
+*/
 #include<cstdio>
 #include<vector>
 #include<cstring>
