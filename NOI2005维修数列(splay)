@@ -1,3 +1,6 @@
+/*
+zimpha的模板get_seq返回null后splay调整会死循环
+*/
 #include<bits/stdc++.h>
 using namespace std;
 const int maxn = 500005;
