@@ -1,0 +1,79 @@
+/*
+题意:两个青蛙在一个环上的两个点，每次每只青蛙随机的往左右跳一格，问多少次之后相遇
+高斯消元，注意不能加距离奇数的点
+*/
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn = 105;
+const double eps = 1e-6;
+const int inf = 0x3fffffff;
+typedef long long ll;
+const ll mod=1000000007;
+
+double a[maxn][maxn],x[maxn];
+int equ,var;//行列
+int Guass(){//初始化时等号右边的常数放到x数组里，计算结果保存在x数组里。
+    int i,j,k,col,max_r;
+    for(k=0,col=0;k<equ&&col<var;k++,col++){
+        max_r=k;
+        for(i=k+1;i<equ;i++)
+            if(fabs(a[i][col])>fabs(a[max_r][col]))
+                max_r=i;
+        if(fabs(a[max_r][col])<eps)return 0;
+        if(k!=max_r){
+            for(j=col;j<var;j++)
+                swap(a[k][j],a[max_r][j]);
+            swap(x[k],x[max_r]);
+        }
+        x[k]/=a[k][col];
+        for(j=col+1;j<var;j++)a[k][j]/=a[k][col];
+        a[k][col]=1;
+        for(i=0;i<equ;i++)
+            if(i!=k){
+                x[i]-=x[k]*a[i][k];
+                for(j=col+1;j<var;j++)
+                    a[i][j]-=a[k][j]*a[i][col];
+                a[i][col]=0;
+            }
+    }
+    return 1;
+}
+
+int n,d;
+
+int main(){ 
+   // freopen("ACM/in.in","r",stdin);
+    // freopen("ACM/out.out","w",stdout);
+    int ncase=0;
+    while(~scanf("%d%d",&n,&d)){
+        if((d&1)&&((n-d)&1)){
+            printf("Case #%d: Never Give Up\n",++ncase);
+            continue;
+        }
+        equ=var=n/2+1;
+        for(int i=0;i<equ;i++){
+            x[i]=0;
+            for(int j=0;j<var;j++)
+                a[i][j]=0;
+        }
+        a[0][0]=1;
+        for(int i=1;i+i<=n;i++){
+            a[i][i]-=1,x[i]-=1,a[i][i]+=0.5;
+            int tt=(i+i+2)%n;
+            int cur;
+            if(tt&1)cur=(n-tt)>>1;
+            else cur=tt>>1;
+            a[i][cur]+=0.25;
+            tt=i+i-2;
+            a[i][tt>>1]+=0.25;
+        }
+        Guass();
+        int cur;
+        if(d&1)cur=(n-d)>>1;
+        else cur=d>>1;
+        printf("Case #%d: %.2f\n",++ncase,x[cur]);
+       // for(int i=0;i<n;i++)
+        // printf("%d: %.2f\n",i,x[i]);
+    }
+    return 0;
+}
