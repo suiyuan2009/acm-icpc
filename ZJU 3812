@@ -1,3 +1,8 @@
+/*
+题意：给出n件物品，每件有两个参数，选或者不选，问是否可以达到第一个参数和为x，第二个参数和为y
+
+f[i]代表第二维是i时第一维可以是哪些
+*/
 #include<bits/stdc++.h>
 using namespace std;
 typedef long long ll;
@@ -15,7 +20,7 @@ map<ull,int>mp;
 
 int main()
 {
-    freopen("ACM/in.in","r",stdin);
+   // freopen("ACM/in.in","r",stdin);
     for(int i=0;i<51;i++)mp[1LL<<i]=i;
     int T;
     scanf("%d",&T);
