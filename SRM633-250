@@ -1,0 +1,77 @@
+/*
+题意：二维平面上，初始在(0,0)，要走到(x,0)，每次可以走a[i]距离，必须重复a数组中的步长，问最少步数
+
+在一个步子序列中，假如和是s，最大值是m，那么能走到的点是max(0,m-(s-m))到s之间的所有点。
+*/
+#include<cstdio>
+#include<vector>
+#include<string>
+#include<cstring>
+#include<algorithm>
+#include<cmath>
+using namespace std;
+typedef long long ll;
+const int maxn = 105;
+
+void pd(ll&ret,ll val){
+    if(ret==-1||ret>val)ret=val;
+}
+
+class PeriodicJumping{
+    public:
+        int minimalTime(int x, vector <int>a){
+            if(x==0)return 0;
+            x=abs(x);
+            int n=a.size();
+            for(int i=0;i<n;i++)a.push_back(a[i]);
+            n+=n;
+            ll sum=0;
+            for(int i=0;i<n;i++){
+                sum+=a[i];
+                if(sum==x)return i+1;
+            }
+            ll ret=-1;
+            for(int i=0;i<n;i++){
+                ll tt=0,mx=-1;
+                for(int j=0;j<=i;j++){
+                    tt+=a[j];
+                    mx=max(mx,(ll)a[j]);
+                }
+                ll l=max(0LL,mx+mx-tt);
+                if(x>=l&&x<=tt)pd(ret,i+1);
+            }
+            if(x>sum){
+                if(x%sum==0){
+                    pd(ret,x/sum*n);
+                }
+                else{
+                    ll tt=x/sum*n;
+                    ll tt2=0;
+                    for(int i=0;i<n;i++){
+                        tt2+=a[i];
+                        tt++;
+                        if(tt2>=x%sum)break;
+                    }
+                    pd(ret,tt);
+                }
+            }
+            return ret;
+        }
+};
+
+int main()
+{
+    //freopen("ACM/in.in","r",stdin);
+    int x;
+    PeriodicJumping tmp;
+    vector<int>a;
+    int n;
+    scanf("%d%d",&x,&n);
+    for(int i=0;i<n;i++){
+        int tt;
+        scanf("%d",&tt);
+        a.push_back(tt);
+    }
+    printf("%d\n",tmp.minimalTime(x,a));
+    return 0;
+}
