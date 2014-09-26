@@ -1,0 +1,148 @@
+#include<cstdio>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<map>
+#include<cmath>
+using namespace std;
+const int maxn = 55;
+const double eps = 1e-6;
+const int inf = 0x3fffffff;
+typedef long long ll;
+const ll mod=1000000007;
+
+int n,m,a[maxn][maxn],ret,sum;
+bool ys[maxn][maxn];
+
+int gcd(int x,int y){
+    return y==0?x:gcd(y,x%y);
+}
+
+void init(){
+    for(int i=0;i<maxn;i++)
+        for(int j=0;j<maxn;j++)
+            ys[i][j]=(gcd(i,j)==1);
+}
+
+inline bool check(int x,int y){
+    return x>=1&&x<=n&&y>=1&&y<=m;
+}
+
+map<double,bool>mp;
+
+void dfs(int ans,int sm){
+    if(ans>=ret)return;
+    if(sm==sum){
+        ret=min(ret,ans);
+        return;
+    }
+    for(int i=1;i<=n;i++)
+        for(int j=1;j<=m;j++){
+            if(!a[i][j])continue;
+
+            if(j==1&&m>=3){
+                bool sign=0;
+                for(int k=1;k<=m;k++)
+                    if(!a[i][k]){
+                        sign=1;
+                        break;
+                    }
+                if(!sign){
+                    for(int k=1;k<=m;k++)a[i][k]--;
+                    dfs(ans+1,sm+m);
+                    for(int k=1;k<=m;k++)a[i][k]++;
+                }
+            }
+
+            if(i==1&&n>=3){
+                bool sign=0;
+                for(int k=1;k<=n;k++)
+                    if(!a[k][j]){
+                        sign=1;
+                        break;
+                    }
+                if(!sign){
+                    for(int k=1;k<=n;k++)a[k][j]--;
+                    dfs(ans+1,sm+n);
+                    for(int k=1;k<=n;k++)a[k][j]++;
+                }
+            }
+
+            mp.clear();
+
+            for(int k=i+1;k<=n;k++)
+                for(int r=1;r<=m;r++){
+                    if((!a[k][r])||k==i||r==j)continue;
+                    int dx=k-i,dy=r-j;
+                 //   if(!ys[abs(dx)][abs(dy)])continue;
+                    double tt=((double)dy)/dx;
+                    if(mp[tt])continue;
+                    mp[tt]=1;
+                    bool sign=0;
+                    int ct=0;
+                    for(int s=0;;s++){
+                        int nx=i+dx*s,ny=j+dy*s;
+                        if(!check(nx,ny))break;
+                        ct++;
+                        if(!a[nx][ny]){
+                            sign=1;
+                            break;
+                        }
+                    }
+                    for(int s=1;;s++){
+                        int nx=i-dx*s,ny=j-dy*s;
+                        if(!check(nx,ny))break;
+                        ct++;
+                        if(!a[nx][ny]){
+                            sign=1;
+                            break;
+                        }
+                    }
+                    if(sign||ct<3)continue;
+                    for(int s=0;;s++){
+                        int nx=i+dx*s,ny=j+dy*s;
+                        if(!check(nx,ny))break;
+                        a[nx][ny]--;
+                    }
+                    for(int s=1;;s++){
+                        int nx=i-dx*s,ny=j-dy*s;
+                        if(!check(nx,ny))break;
+                        a[nx][ny]--;
+                    }
+                    dfs(ans+1,sm+ct);
+                    for(int s=0;;s++){
+                        int nx=i+dx*s,ny=j+dy*s;
+                        if(!check(nx,ny))break;
+                        a[nx][ny]++;
+                    }
+                    for(int s=1;;s++){
+                        int nx=i-dx*s,ny=j-dy*s;
+                        if(!check(nx,ny))break;
+                        a[nx][ny]++;
+                    }
+                }
+            return;
+        }
+}
+
+int main(){
+    //freopen("ACM/in.in","r",stdin);
+    init();
+
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        ret=14,sum=0;
+        scanf("%d%d",&n,&m);
+        n++,m++;
+        for(int i=1;i<=n;i++)
+            for(int j=1;j<=m;j++){
+                scanf("%d",&a[i][j]);
+                sum+=a[i][j];
+            }
+        ret=min(ret,sum/3);
+        dfs(0,0);
+        printf("%d\n",ret);
+    }
+    return 0;
+}
