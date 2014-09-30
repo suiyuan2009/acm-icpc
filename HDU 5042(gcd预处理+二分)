@@ -1,0 +1,137 @@
+/*
+题意：一段区间的gcd定义为f(l,r)，每段区间的rank是(x,y),x是比(l,r)的gcd小的段的gcd值的种类，
+y是和(l,r)gcd一样的区间个数，并且区间的字典序小于当前区间字典序（按左右端点排序）。两种询问，问(l,r)和(x,y)
+
+预处理出以每个i为左端点的gcd值一样的段，然后二分离线处理询问
+*/
+//#pragma comment(linker,"/STACK:10240000000,10240000000")
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+using namespace std;
+const int maxn = 100005;
+const int inf = 0x3fffffff;
+typedef __int64 ll;
+
+int n,a[maxn],m;
+vector<int>ep[maxn],eg[maxn];
+ll ans[maxn][2],sum[maxn],c[maxn];
+int d[maxn];
+struct P{
+    int id;
+    ll x,y;
+    P(int id,ll x,ll y):id(id),x(x),y(y){}
+    bool operator<(const P&a)const{
+        if(x==a.x)return y<a.y;
+        return x<a.x;
+    }
+};
+vector<P>sel,rk;
+
+int gcd(int x,int y){
+    return y==0?x:gcd(y,x%y);
+}
+
+void init(){
+    sort(rk.begin(),rk.end());
+    sort(sel.begin(),sel.end());
+    memset(ans,-1,sizeof(ans));
+    memset(sum,0,sizeof(sum));
+    ep[n+1].clear(),eg[n+1].clear();
+    for(int i=n;i>=1;i--){
+        eg[i].clear(),ep[i].clear();
+        int r=i,g=a[i];
+        for(int j=0;j<ep[i+1].size();j++){
+            int tr=ep[i+1][j],tg=gcd(g,eg[i+1][j]);
+            if(tg!=g)eg[i].push_back(g),ep[i].push_back(r);
+            r=tr,g=tg;
+        }
+        eg[i].push_back(g),ep[i].push_back(r);
+        int pre=i;
+        for(int j=0;j<ep[i].size();j++){
+            int tt=ep[i][j]-pre+1;
+            sum[eg[i][j]]+=tt;
+            pre=ep[i][j]+1;
+        }
+    }
+    memset(d,0,sizeof(d));
+    int cur=0;
+    for(int i=1;i<maxn;i++)if(sum[i])d[i]=++cur;
+    //  for(int i=1;i<=6;i++)printf("** %d: %d\n",i,d[i]);
+    for(int i=2;i<maxn;i++)sum[i]+=sum[i-1];
+}
+
+void solve(){
+    memset(c,0,sizeof(c));
+    for(int i=1;i<=n;i++){
+        int pre=i;
+        for(int j=0;j<ep[i].size();j++){
+            int nxt=ep[i][j],val=eg[i][j];
+            int l=0,r=rk.size()-1,ret=-1;
+            while(l<=r){
+                int m=(l+r)>>1;
+                if(rk[m].x>i||(rk[m].x==i&&rk[m].y>=pre)){
+                    ret=m;
+                    r=m-1;
+                }
+                else l=m+1;
+            }
+            if(ret!=-1){
+                //printf("** %d\n",val);
+                for(int k=ret;k<rk.size();k++){
+                    if(rk[k].x>i||(rk[k].x==i&&rk[k].y>nxt))break;
+                    ans[rk[k].id][0]=d[val];
+                    // printf("**%d: %d %lld %lld %d\n",i,rk[k].id,rk[k].x,rk[k].y,d[val]);
+                    ans[rk[k].id][1]=c[val]+rk[k].y-pre+1;
+                }
+            }
+            l=0,r=sel.size()-1,ret=-1;
+            while(l<=r){
+                int m=(l+r)>>1;
+                if(sel[m].x>d[val]||(sel[m].x==d[val]&&sel[m].y>=c[val]+1)){
+                    ret=m;
+                    r=m-1;
+                }
+                else l=m+1;
+            }
+            if(ret!=-1){
+                // printf("**\n");
+                for(int k=ret;k<sel.size();k++){
+                    if(sel[k].x>d[val]||(sel[k].x==d[val]&&sel[k].y>c[val]+nxt-pre+1))break;
+                    ans[sel[k].id][0]=i;
+                    ans[sel[k].id][1]=pre+sel[k].y-c[val]-1;
+                }
+            }
+            c[val]+=nxt-pre+1;
+            pre=nxt+1;
+        }
+    }
+}
+
+int main(){
+    //freopen("ACM/in.in","r",stdin);
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--){
+        scanf("%d%d",&n,&m);
+        for(int i=1;i<=n;i++)scanf("%d",&a[i]); 
+        sel.clear(),rk.clear();
+        char s[15];
+        ll x,y;
+        for(int i=1;i<=m;i++){
+            scanf("%s%I64d%I64d",s,&x,&y);
+            if(s[0]=='S')sel.push_back(P(i,x,y));
+            else rk.push_back(P(i,x,y));
+        }
+        init(),solve();
+        printf("Case #%d:\n",++ncase);
+        for(int i=1;i<=m;i++){
+            if(ans[i][0]==-1)printf("-1\n");
+            else printf("%I64d %I64d\n",ans[i][0],ans[i][1]);
+        }
+    }
+    return 0;
+}
