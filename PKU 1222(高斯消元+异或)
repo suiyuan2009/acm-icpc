@@ -1,0 +1,67 @@
+/*
+有唯一解，需要输出解
+*/
+//#pragma comment(linker,"/STACK:10240000000,10240000000")
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+#include<set>
+#include<ctime>
+using namespace std;
+const int maxn = 35;
+const int inf = 0x3fffffff;
+typedef long long ll;
+
+int b[maxn],ans[maxn];
+
+void init(){
+   // memset(b,0,sizeof(0));
+    for(int i=1;i<=30;i++){
+        int x,y;
+        scanf("%d",&x);
+        b[i]=x;
+        x=(i-1)/6,y=(i-1)%6;
+        for(int j=1;j<=30;j++){
+            int nx=(j-1)/6,ny=(j-1)%6;
+            if(abs(x-nx)+abs(y-ny)<=1)b[i]|=(1<<j);
+        }
+    }
+}
+
+void solve(){
+    int j=1;
+    for(int i=1;i<=30;i++){
+        int k;
+        for(k=j;k<=30&&!((b[k]>>i)&1);k++);
+        if(k<=30){
+            swap(b[k],b[j]);
+            for(k=j+1;k<=30;k++)if((b[k]>>i)&1)b[k]^=b[j];
+        }
+        j++;
+    }
+    for(int i=30;i>=1;i--){
+        ans[i]=(b[i]&1)&((b[i]>>i)&1);
+        for(int j=i+1;j<=30;j++)
+            if((b[i]>>j)&1)ans[i]^=ans[j];
+    }
+}
+
+int main(){
+    //freopen("ACM/in.in","r",stdin); 
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--){
+        init();
+        solve();
+        printf("PUZZLE #%d\n",++ncase);
+        for(int i=0;i<5;i++)
+            for(int j=0;j<6;j++){
+                int now=i*6+j+1;
+                printf("%d%c",ans[now],j==5?'\n':' ');
+            }
+    }
+    return 0;
+}
