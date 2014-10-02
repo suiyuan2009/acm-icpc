@@ -1,0 +1,59 @@
+//#pragma comment(linker,"/STACK:10240000000,10240000000")
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+#include<set>
+#include<ctime>
+using namespace std;
+const int maxn = 35;
+const int inf = 0x3fffffff;
+typedef long long ll;
+
+int a[maxn],n,b[maxn];
+
+int solve(){
+    int ret=0;
+    int j=1;
+    for(int i=1;i<=n;i++){
+        int k;
+        for(k=j;k<=n&&!((a[k]>>i)&1);k++);
+        if(k<=n){
+            swap(a[j],a[k]);
+            for(k=j+1;k<=n;k++)if((a[k]>>i)&1)a[k]^=a[j];
+            j++;
+        }
+        else ret++;
+    }
+    for(int i=1;i<=n;i++)if(a[i]==1)return -1;
+    return 1<<ret;
+}
+
+void init(){
+    memset(a,0,sizeof(a));
+    scanf("%d",&n);
+    for(int i=1;i<=n;i++)a[i]|=(1<<i);
+    for(int i=1;i<=n;i++)scanf("%d",&b[i]);
+    for(int i=1;i<=n;i++){
+        int m;
+        scanf("%d",&m);
+        a[i]|=(m!=b[i]);
+    }
+    int u,v;
+    while(scanf("%d%d",&u,&v)&&u+v)a[v]|=(1<<u);
+}
+
+int main(){
+    //freopen("ACM/in.in","r",stdin); 
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        init();
+        int ret=solve();
+        if(ret==-1)printf("Oh,it's impossible~!!\n");
+        else printf("%d\n",ret);
+    }
+    return 0;
+}
