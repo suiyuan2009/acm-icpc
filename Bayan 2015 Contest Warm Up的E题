@@ -1,0 +1,122 @@
+/*
+题意：将一个无向联通图的边变成有向边，问(u,v)u能到v的pair最多有多少
+缩点，找树的重心，所有的点要么都能走到重心，要么能从重心走到，在重心处做dp
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+using namespace std;
+typedef long long ll;
+const int maxn=2005;
+
+vector<int> link[maxn]; //记录连边情况
+int mem[maxn], stack[maxn], depth[maxn];
+int sum, num; //sum 表示栈的元素，num 表示分支个数
+bool used[maxn];
+// 最终mem数组记录每个节点属于哪个分支 
+void dfs(int k,int father,int deep) {
+    int min, i;
+    min = depth[k] = deep;
+    used[k] = 1; stack[sum++] = k;
+    for (i = 0; i < link[k].size(); i++)  {
+        if ( !used[link[k][i]] ) dfs(link[k][i],k,deep+1);
+        if (father != link[k][i] && min > depth[link[k][i]]) min = depth[link[k][i]];
+    }
+    if (depth[k] > min) {
+        depth[k] = min;
+        return;
+    }
+    while (stack[sum-1] != k) {
+        mem[stack[sum-1]] = num;
+        sum--;
+    }
+    mem[k] = num; sum--; num++;
+}
+void init() {
+    sum = 0; num = 0;
+    memset(used,0,sizeof(used));
+}
+
+int n,m,c[maxn],tc[maxn];
+vector<int>e[maxn];
+bool vis[maxn][maxn];
+int mx,idx;
+int ret;
+int cs,s[maxn],f[maxn];
+void dfs2(int u,int fa){
+    int tmx=0;
+    for(int i=0;i<e[u].size();i++){
+        int v=e[u][i];
+        if(v==fa)continue;
+        dfs2(v,u);
+        c[u]+=c[v],tmx=max(tmx,c[v]);
+    }
+    tmx=max(n-c[u],tmx);
+    if(mx>tmx){
+        mx=tmx,idx=u;
+    }
+}
+
+void dfs3(int u,int fa,int root){
+    int sum=0,tmp=tc[u];
+    for(int i=0;i<e[u].size();i++){
+        int v=e[u][i];
+        if(v==fa)continue;
+        dfs3(v,u,root);
+        tc[u]+=tc[v];
+        sum+=tc[v];
+    }
+    if(u!=root){
+        ret+=sum*tmp+tmp*tmp;
+        return;
+    }
+    cs=0;
+    for(int i=0;i<e[u].size();i++){
+        int v=e[u][i];
+        if(v==fa)continue;
+        s[++cs]=v;
+    }
+    f[0]=1;
+    for(int i=1;i<=cs;i++)
+        for(int j=maxn-1;j>=0;j--){
+            if(f[j])f[j+tc[s[i]]]=1;
+        }
+    int tt=0;
+    for(int i=0;i<maxn;i++)
+        if(f[i]){
+            tt=max(tt,i*(sum-i)+tmp*tmp+tmp*sum);
+        }
+    ret+=tt;
+}
+int main(){
+    //freopen("ACM/in.in","r",stdin);
+    scanf("%d%d",&n,&m);
+    init();
+    for(int i=1;i<=m;i++){
+        int u,v;
+        scanf("%d%d",&u,&v);
+        link[u].push_back(v);
+        link[v].push_back(u);
+    }
+    dfs(1,0,0);
+    //  for(int i=1;i<=n;i++)printf("** %d: %d\n",i,mem[i]);
+    for(int i=1;i<=n;i++)c[++mem[i]]++;
+    for(int i=1;i<=n;i++)tc[i]=c[i];
+    for(int i=1;i<=n;i++)
+        for(int j=0;j<link[i].size();j++){
+            int v=link[i][j],x=mem[v],y=mem[i];
+            if(x==y)continue;
+            if(vis[x][y]||vis[y][x])continue;
+            vis[x][y]=vis[y][x]=1;
+            e[x].push_back(y),e[y].push_back(x);
+        }
+    mx=n;
+    dfs2(1,0),dfs3(idx,0,idx);
+    printf("%d\n",ret);
+    return 0;
+}
