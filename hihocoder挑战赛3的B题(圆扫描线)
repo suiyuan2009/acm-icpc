@@ -1,7 +1,7 @@
 /*
 题意：给一堆点，有权值，问单位圆最多能覆盖多少点权和
 
-
+枚举点在圆上，圆绕点旋转，扫描线
 */
 #include<cmath>  
 #include<cstdio> 
@@ -10,6 +10,7 @@
 using namespace std;  
 const int mm=2005;
 const double eps=1e-8;
+const double PI=acos(-1.0);
 typedef double diy;  
 struct point  
 {  
@@ -34,7 +35,7 @@ diy SqrDis(point P,point Q)
 }  
 int CircleMaxPoint(int n,diy r)  
 {  
-    int i,j,m,sum,ret=n>0;  
+    int i,j,m,sum,ret=0;  
     double tmp,rad;  
     for(i=0;i<n;++i)  
     {  
@@ -43,7 +44,8 @@ int CircleMaxPoint(int n,diy r)
             if(i!=j&&(tmp=SqrDis(g[i],g[j]))<4+eps)  
             {  
                 rad=acos(sqrt(tmp)/2);  
-                tmp=atan2(g[j].y-g[i].y,g[j].x-g[i].x);  
+                tmp=atan2(g[j].y-g[i].y,g[j].x-g[i].x);
+                if(tmp<-eps)tmp+=2*PI;
                 s[m].idx=j,s[m].angle=tmp-rad,s[m++].flag=1;
                 s[m].idx=j,s[m].angle=tmp+rad,s[m++].flag=0;  
             }  
