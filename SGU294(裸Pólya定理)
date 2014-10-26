@@ -1,0 +1,21 @@
+/*
+题意：环形项链每个位置可以染X或者E，问旋转后本质不同的方案数
+*/
+import java.math.BigInteger;
+import java.util.Scanner;
+
+public class Solution {
+	static int gcd(int x,int y){
+		if(y==0)return x;
+		return gcd(y,x%y);
+	}
+	public static void main(String[] args) {
+		BigInteger two=BigInteger.valueOf(2);
+		Scanner cin = new Scanner(System.in);
+		int n=cin.nextInt();
+		BigInteger ret=BigInteger.ZERO;
+		for(int i=1;i<=n;i++)ret=ret.add(two.pow(gcd(n,i)));
+		ret=ret.divide(BigInteger.valueOf(n));
+		System.out.println(ret);
+	}
+}
