@@ -1,0 +1,60 @@
+/*
+题意：基本上就是转化成a+b位的二进制串中，循环右移b位下本质不同的串有多少种
+n阶置换，循环右移k位后循环节数为gcd(n,k)，本题置换群中的置换的循环节都是gcd(k*g,a+b),1<=k<=(a+b)/g,g=gcd(a,b)
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+using namespace std;
+typedef long long ll;
+const int maxn = 500005;
+const int mod = 1000003;
+
+int gcd(int x,int y){
+    return y==0?x:gcd(y,x%y);
+}
+void gcd(ll a,ll b, ll& d,ll& x,ll& y){  //      已经测试 FZU 1402
+    if(!b) {d=a;x=1;y=0;}
+    else   {	gcd(b,a%b,d,y,x);	y-=a/b*x;}
+}
+ll inv(ll a,ll n)  { //无逆元返回-1
+    ll d,x,y;	gcd(a,n,d,x,y);
+    return d==1?(x%n+n)%(n/d):-1; 
+}
+
+int a,b;
+ll p[maxn];
+
+void init(){
+    p[0]=1;
+    for(int i=1;i<maxn;i++)p[i]=p[i-1]*2%mod;
+}
+
+int main(){
+    //freopen("ACM/in.in","r",stdin);
+    //freopen("ACM/out.out","w",stdout);
+    init();
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        scanf("%d%d",&a,&b);
+        if(a==0||b==0){
+            printf("0\n");
+            continue;
+        }
+        ll ret=p[a+b],ans=0;
+        int g=gcd(a,b);
+        for(int i=1;i<=(a+b)/g;i++)
+            ans=(ans+p[g*gcd(i,(a+b)/g)])%mod;
+        ans=ans*inv((a+b)/g,mod)%mod;
+        ret=(ret+mod-ans)%mod;
+        printf("%lld\n",ret);
+    }
+    return 0;
+}
