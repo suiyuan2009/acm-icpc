@@ -1,0 +1,67 @@
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+/*
+题意：给出3个方向n*n的三视图，要求物体联通，问三视图是否可能
+预处理出可行的位置，只要可行的联通块的三视图可以覆盖原三视图就行
+*/
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+using namespace std;
+typedef long long ll;
+const int maxn = 15;
+const int mod=1000000007;
+
+int n;
+int dir[6][3]={{1,0,0},{-1,0,0},{0,1,0},{0,-1,0},{0,0,1},{0,0,-1}};
+bool vis[maxn][maxn][maxn],can[maxn][maxn][maxn];
+vector<pair<int,pair<int,int> > >a;
+
+void dfs(int x,int y,int z){
+    if(vis[x][y][z]||(!can[x][y][z]))return;
+    vis[x][y][z]=1;
+    a.push_back(make_pair(x,make_pair(y,z)));
+    for(int i=0;i<6;i++){
+        int nx=x+dir[i][0];
+        int ny=y+dir[i][1];
+        int nz=z+dir[i][2];
+        if(nx<0||nx>=n||ny<0||ny>=n||nz<0||nz>=n)continue;
+        dfs(nx,ny,nz);
+    }
+}
+
+class ShadowSculpture{
+    public:
+        string possible(vector <string> XY, vector <string> YZ, vector <string> ZX){
+            n=XY.size();
+            vector<string>tmp=XY;
+            for(int i=0;i<n;i++)
+                for(int j=0;j<n;j++)
+                    tmp[i][j]='N';
+            for(int i=0;i<n;i++)
+                for(int j=0;j<n;j++)
+                    for(int k=0;k<n;k++)
+                        if(XY[i][j]=='Y'&&YZ[j][k]=='Y'&&ZX[k][i]=='Y')can[i][j][k]=1;
+            for(int i=0;i<n;i++)
+                for(int j=0;j<n;j++)
+                    for(int k=0;k<n;k++){
+                        if(vis[i][j][k]||(!can[i][j][k]))continue;
+                        a.clear();
+                        dfs(i,j,k);
+                        vector<string>xy=XY,yz=YZ,zx=ZX;
+                        for(int r=0;r<a.size();r++){
+                            int x=a[r].first;
+                            int y=a[r].second.first;
+                            int z=a[r].second.second;
+                            xy[x][y]=yz[y][z]=zx[z][x]='N';
+                        }
+                        if(xy==yz&&yz==zx&&zx==tmp)return "Possible";
+                    }
+            if(XY==YZ&&YZ==ZX&&ZX==tmp)return "Possible";
+            return "Impossible";
+        }
+};
