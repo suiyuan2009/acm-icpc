@@ -1,10 +1,12 @@
-#include<cstdio>
-#include<cstring>
-#include<algorithm>
 /*
 题意：给出3个方向n*n的三视图，要求物体联通，问三视图是否可能
 预处理出可行的位置，只要可行的联通块的三视图可以覆盖原三视图就行
+PS：把可行的联通块加上绝对不会使得三视图超出原来的三视图，而且也只能使用这些可行的位置填，三视图恢复原型，
+比赛的时候一直想找出矛盾的地方来证明不可行
 */
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
 #include<vector>
 #include<string>
 #include<iostream>
