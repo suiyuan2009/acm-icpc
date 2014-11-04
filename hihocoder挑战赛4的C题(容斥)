@@ -1,0 +1,77 @@
+/*
+题意：点权，统计树中路径gcd为x的条数，输出所有x和条数
+先计算gcd是x的倍数的路径条数g[x]，可以n*sqrt(max{ai})预处理出对于每一个x，有哪些点的权是x的倍数，
+然后对于每个x并查集求出权值是x倍数的点的联通分量大小，最后根据x从大到小就可以算出每个f[x]，算是容斥吧。
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn = 100005;
+const int mod=1000000007;
+const double eps=1e-8;
+
+int n,a[maxn];
+vector<int>e[maxn],vis[maxn];
+
+ll g[maxn],f[maxn];
+
+int pnt[maxn],sz[maxn];
+int pd(int x){
+    if(x!=pnt[x])pnt[x]=pd(pnt[x]);
+    return pnt[x];
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    scanf("%d",&n);
+    for(int i=1;i<=n;i++){
+        scanf("%d",&a[i]);
+        for(int j=1;j*j<=a[i];j++)
+            if(a[i]%j==0){
+                vis[j].push_back(i);
+                if(j*j<a[i])vis[a[i]/j].push_back(i);
+            }
+    }
+    for(int i=1;i<n;i++){
+        int u,v;
+        scanf("%d%d",&u,&v);
+        e[u].push_back(v);
+        e[v].push_back(u);
+    }
+    for(int i=1;i<=n;i++)pnt[i]=i,sz[i]=1;
+    for(int i=1;i<maxn;i++){
+        for(int j=0;j<vis[i].size();j++){
+            int u=vis[i][j];
+            for(int k=0;k<e[u].size();k++){
+                int v=e[u][k];
+                if(a[v]%i==0){
+                    int x=pd(u),y=pd(v);
+                    if(x==y)continue;
+                    pnt[x]=y,sz[y]+=sz[x],sz[x]=0;
+                }
+            }
+        }
+        for(int j=0;j<vis[i].size();j++){
+            int u=vis[i][j];
+            g[i]+=sz[u]*(ll)(sz[u]+1)/2;
+            pnt[u]=u,sz[u]=1;
+        }
+    }
+    for(int i=maxn-1;i>=1;i--){
+        f[i]=g[i];
+        for(int j=i+i;j<maxn;j+=i)
+            f[i]-=f[j];
+    }
+    for(int i=1;i<maxn;i++)
+        if(f[i])printf("%d %lld\n",i,f[i]);
+    return 0;
+}
