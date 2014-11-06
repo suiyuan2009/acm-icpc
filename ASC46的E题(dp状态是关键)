@@ -1,0 +1,67 @@
+/*
+题意：n个村庄，第i个村庄每天死ai个人，一个医生第一天在第1个村庄，一个医生可以化一天的时间救这个村庄，或者化一天的时间去下一个村庄，
+医生只能从i到i+1或者i-1，假如医生想从第x个村庄到第x-k个村庄，那么医生必须把1到x这些村庄都救了，问最少死多少人
+
+预处理g[i][j]代表第一天在村庄i，处理完[i,j]这些村庄时[i,j]这些村庄最少死多少人，注意村庄i一定是最后救的。我们从大往小枚举第二维，
+就可以很快推出转移，转移的时候只需要考虑第i+1个村庄是倒数第2个救还是第1个救。处理完之后，记f[i]为[1,i]都救了的死人数加上这段时间里[i+1,n]
+的死人数就可以算出答案。
+
+PS:这题训练的时候想好久没想出来，主要是不知道子问题是什么，以为没法dp，不过应该想到一定是一段一段的，所以要先处理区间最优值，而区间最优值的计算
+训练的时候以为没法处理，因为不知道怎么选择是在来的时候还是回的时候救，其实从后往前推的时候就能发现i的选择不会影响i+1到j这段的最优值。
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn = 3005;
+
+int n,a[maxn];
+ll g[maxn][maxn],f[maxn],s[maxn];
+
+void pd(ll&ret,ll val){
+    if(ret==-1||ret>val)ret=val;
+}
+
+int main() {
+   // freopen("ACM/in.in", "r", stdin);
+    freopen("ebola.in","r",stdin);
+ freopen("ebola.out","w",stdout);
+    while(scanf("%d",&n)&&n){
+        for(int i=1;i<=n;i++)scanf("%d",&a[i]);
+        s[n+1]=0;
+        for(int i=n;i>=1;i--)s[i]=s[i+1]+a[i];
+        /*for(int i=1;i<=n;i++){
+          g[i][i]=0;
+          for(int j=i+1;j<=n;j++){
+          ll sum=a[i]*(ll)(j-i)*3;
+          for(int k=i+1;k<=j;k++)
+          sum+=a[k]*(ll)((k-i)*2-1);
+          for(int k=i+1;k<j;k++)
+          sum=min(sum,sum+a[k]*(ll)(j-k)*3-(s[k+1]-s[j+1]));
+        //g[i][j]=sum+((j-i)*4+1)*s[j+1];
+        g[i][j]=sum;
+        }
+        }*/
+        for(int j=n;j>=2;j--){
+            g[j-1][j]=a[j]+3*(ll)a[j-1];
+            for(int i=j-2;i>=1;i--)
+                g[i][j]=min(g[i+1][j]+s[i+1]-s[j+1]+a[i]*(ll)(j-i)*3,
+                        g[i+1][j]-a[i+1]*(ll)(j-i-1)*3+s[i+2]-s[j+1]+s[i+1]-s[j+1]+a[i]*(ll)(j-i)*3);
+        }
+        memset(f,-1,sizeof(f));
+        f[0]=0;
+        for(int i=0;i<n;i++)
+            for(int j=i+1;j<=n;j++)
+                pd(f[j],f[i]+g[i+1][j]+s[i+1]+((j-i-1)*4+1)*s[j+1]);
+        printf("%lld\n",f[n]-s[1]);
+    }
+    return 0;
+}
