@@ -1,0 +1,84 @@
+/*
+题意：在n<=10e9的数中找m<=10个数，使得所有数的lcm最大
+爆搜，选的数一定两两互质，数大概在[n-45,n]之间，并且可以使用最大的m个质数作为初始解，再加上最优化剪枝
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn = 105;
+const int inf = 0x3fffffff;
+const double eps = 1e-8;
+const int mod = 1000000007;
+
+int n, m;
+int stk[maxn], top;
+double mx;
+ll ret;
+
+int gcd(int x, int y) {
+    return y == 0 ? x : gcd(y, x % y);
+}
+
+void init() {
+    top = 0;
+    for(int i = n; i >= 2; i--) {
+        bool sign = 0;
+        for(int j = 2; j * j <= i; j++)
+            if(i % j == 0) {
+                sign = 1;
+                break;
+            }
+        if(!sign) {
+            stk[top++] = i;
+            if(top == m)break;
+        }
+    }
+    while(top < m)stk[top++] = 1;
+    ret = 1, mx = 0;
+    for(int i = 0; i < m; i++) {
+        ret = ret * stk[i] % mod;
+        mx += log(stk[i]);
+    }
+}
+
+void dfs(int cnt, int now, double lcm, ll ans) {
+    double tt = log(now) * (m - cnt);
+    if(tt + lcm <= mx)return;
+    if(cnt == m || now == 0) {
+        if(lcm > mx) {
+            mx = lcm, ret = ans;
+        }
+        return;
+    }
+    for(int i = now; i >= 1; i--) {
+        if(n - i > 45)break;
+        bool sign = 0;
+        for(int j = 0; j < cnt; j++)
+            if(gcd(stk[j], i) > 1) {
+                sign = 1;
+                break;
+            }
+        if(sign)continue;
+        stk[cnt] = i;
+        dfs(cnt + 1, i -1, lcm + log(i), ans * i % mod);
+    }
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    scanf("%d%d", &n, &m);
+    init();
+    mx = -1;
+    dfs(0, n, 0, 1);
+    printf("%lld\n", ret);
+    return 0;
+}
