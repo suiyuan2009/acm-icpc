@@ -1,0 +1,92 @@
+/*
+题意：求[0,R)之间二进制表示中有n个1的数的和
+这题数位dp来dfs会T，转而求出每个位置如果是1，有多少个合法的数会包含这个位置上的1
+可以用f[i][j]表示到R的第i个二进制时，有多少数二进制表示里有j个1且不紧贴上界，
+还要求从第i个二进制位到最后这段有j个1并不紧贴上界的方案数。
+枚举哪一位是1，假如之前的已经不紧贴上界，那么后面就无所谓了，如果之前紧贴上界，后面就必须用dp预处理出来的值了
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn=1005;
+const int mod = 1000000007;
+
+int n,m;
+char str[maxn];
+ll p[maxn],f[maxn][maxn],c[maxn][maxn];
+
+void init(){
+    p[0]=1;
+    for(int i=1;i<maxn;i++)p[i]=p[i-1]*2%mod;
+    for(int i=0;i<maxn;i++)c[i][0]=c[i][i]=1;
+    for(int i=1;i<maxn;i++)
+        for(int j=1;j<i;j++){
+            c[i][j]=c[i-1][j-1]+c[i-1][j];
+            if(c[i][j]>=mod)c[i][j]-=mod;
+        }
+}
+
+void pd(ll&ret,ll val){
+    ret+=val;
+    if(ret>=mod)ret-=mod;
+}
+
+int main() {
+   // freopen("ACM/in.in", "r", stdin);
+  //  freopen("ACM/out2.out","w",stdout);
+    init();
+    while(~scanf("%d%s",&n,str)){
+        m=strlen(str);
+        for(int i=0;i<=m;i++)
+            for(int j=0;j<=n;j++)
+                f[i][j]=0;
+        int cnt=0;
+        for(int i=0;i<m;i++){
+            for(int j=0;j<=n;j++){
+                pd(f[i+1][j],f[i][j]);
+                pd(f[i+1][j+1],f[i][j]);
+            }
+            if(str[i]=='1')pd(f[i+1][cnt],1);
+            cnt+=str[i]-'0';
+        }
+        ll ret=0;
+        for(int i=0;i<m;i++)
+            for(int j=0;j<n;j++){
+                pd(ret,p[m-i-1]*f[i][j]%mod*c[m-i-1][n-j-1]%mod);
+            }
+         // printf("** %lld\n",ret);
+        for(int i=0;i<=m+1;i++)
+            for(int j=0;j<=n;j++)
+                f[i][j]=0;
+        cnt=0;
+        for(int i=m+1;i>=2;i--){
+            for(int j=0;j<=n;j++){
+                if(str[i-2]=='0'){
+                    pd(f[i-1][j],f[i][j]);
+                }else{
+                    pd(f[i-1][j+1],f[i][j]);
+                    pd(f[i-1][j],c[m+1-i][j]);
+                }
+            }
+            //if(str[i-2]=='1')pd(f[i-1][cnt],1);
+            cnt+=str[i-2]-'0';
+        }
+        // printf("**&&** %lld\n",f[3][0]);
+        cnt=0;
+        for(int i=1;i<m;i++){
+            if(n-cnt-1>=0&&str[i-1]=='1')pd(ret,f[i+1][n-cnt-1]*p[m-i]%mod);
+            cnt+=str[i-1]-'0';
+        }
+        printf("%I64d\n",ret);
+    }
+    return 0;
+}
