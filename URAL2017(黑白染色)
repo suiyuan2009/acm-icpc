@@ -1,0 +1,81 @@
+/*
+题意：两拨人，同一拨的说话不矛盾，问较少的一拨最少可能的人数
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn = 405;
+
+int n,e[maxn][maxn];
+vector<int>a[maxn],ans,tmp;
+string s[maxn];
+int vis[maxn],c[3],b[maxn][maxn];
+
+void init(){
+    ans.clear();
+    memset(b,0,sizeof(b));
+    memset(vis,0,sizeof(vis));
+    memset(e,0,sizeof(e));
+    for(int i=1;i<=n;i++)a[i].clear();
+    for(int i=1;i<=n;i++){
+        cin>>s[i];
+        int x;
+        scanf("%d",&x);
+        for(int j=0;j<x;j++){
+            int y;
+            scanf("%d",&y);
+            a[i].push_back(y);
+            b[i][y]=1;
+        }
+    }
+    for(int i=1;i<=n;i++)
+        for(int j=0;j<a[i].size();j++){
+            int tt=a[i][j];
+            if(s[i]!=s[tt])e[i][tt]=e[tt][i]=1;
+        }
+    for(int i=1;i<=n;i++)
+        for(int j=i+1;j<=n;j++)
+            if(s[i]!=s[j]){
+                for(int k=1;k<=n;k++)
+                    if(b[i][k]&&b[j][k])e[i][j]=e[j][i]=1;
+            }
+}
+
+void dfs(int u,int sign){
+    vis[u]=sign;
+    c[sign]++;
+    tmp.push_back(u);
+    for(int i=1;i<=n;i++)
+        if(e[u][i]&&(!vis[i]))dfs(i,3-sign);
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    while(~scanf("%d",&n)){
+        init();
+        for(int i=1;i<=n;i++){
+            if(vis[i])continue;
+            tmp.clear();
+            c[2]=c[1]=0;
+            dfs(i,1);
+            int tt=1;
+            if(c[2]<c[1])tt=2;
+            for(int j=0;j<tmp.size();j++)
+                if(vis[tmp[j]]==tt)ans.push_back(tmp[j]);
+        }
+        if(ans.size()==0)ans.push_back(1);
+        printf("%d\n",(int)ans.size());
+        for(int i=0;i<ans.size();i++)
+            printf("%d%c",ans[i],i==(int)ans.size()-1?'\n':' ');
+    }
+    return 0;
+}
