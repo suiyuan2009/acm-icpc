@@ -1,0 +1,90 @@
+/*
+题意：给出一个n*m的.X矩阵，多次询问在点(x,y)上一个左右45度视线里sigma{第x-i*d行X的数量}
+假如d<sqrt(m)，用预处理的前缀和，否则暴力（需要求每一行的前缀和）
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+#include<bitset>
+using namespace std;
+typedef long long ll;
+const int maxn = 1005;
+const int maxm = 33;
+
+int n,m,Q;
+char str[maxn][maxn];
+int a[maxm][maxn][maxn],L[maxn][maxn],R[maxn][maxn],b[maxn][maxn];
+
+int lim;
+
+void init(){
+    for(int i=0;i<n;i++)scanf("%s",str[i]);
+    for(int i=0;i<n;i++)
+        for(int j=0;j<m;j++){
+            b[i][j]=(str[i][j]=='X');
+            if(j)b[i][j]+=b[i][j-1];
+        }
+    for(int k=1;k<lim;k++)
+        for(int i=0;i<n;i++){
+            int cur=0;
+            for(int j=i;j>=0;j-=k){
+                int r=i-j;
+                if(r>=m)r=m-1;
+                cur+=b[j][r];
+            }
+            a[k][i][0]=cur;
+            for(int j=0;j<m;j++){
+                L[i][j]=R[i][j]=(str[i][j]=='X');
+                if(i-k>=0){
+                    if(j-k>=0)L[i][j]+=L[i-k][j-k];
+                    if(j+k<m)R[i][j]+=R[i-k][j+k];
+                }
+                if(!j)a[k][i][j]=cur;
+                else a[k][i][j]=a[k][i][j-1]-L[i][j-1]+R[i][j];
+            }
+        }
+    //printf("** %d\n",a[1][0][1]);
+}
+
+int getval() {
+    int ret(0);
+    char c;
+    while((c = getchar()) == ' ' || c == '\n' || c == '\r');
+    ret = c - '0';
+    while((c = getchar()) != ' ' && c != '\n' && c != '\r')
+        ret = ret * 10 + c - '0';
+    return ret;
+}//快速输入数字
+
+int main() {
+    //freopen("in.in", "r", stdin);
+    //freopen("out2.out","w",stdout);
+    while(~scanf("%d%d%d",&n,&m,&Q)){
+        lim=(int)sqrt((double)m)+1;
+        init();
+        while(Q--){
+            int x,y,d;
+            //scanf("%d%d%d",&x,&y,&d);
+            x=getval(),y=getval(),d=getval();
+            x--,y--;
+            if(d<lim)printf("%d\n",a[d][x][y]);
+            else{
+                int ret=0;
+                for(int i=x;i>=0;i-=d){
+                    int l=y-(x-i),r=y+(x-i);
+                    if(r>=m)r=m-1;
+                    ret+=b[i][r]-(l<=0?0:b[i][l-1]);
+                }
+                printf("%d\n",ret);
+            }
+        }
+    }
+    return 0;
+}
