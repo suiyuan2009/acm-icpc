@@ -1,0 +1,117 @@
+#include<cstdio>
+#include<iostream>
+#include<cstring>
+#include<cmath>
+#include<algorithm>
+#include<string>
+using namespace std;
+typedef long long ll;
+const ll mod = 1000000007;
+
+const int maxn = 55;
+const int maxm = 25;
+
+ll f[maxn][maxn][maxm], g[maxn][35];
+int n, m,L[maxn];
+string s[maxn];
+
+void pd(ll&ret, ll val)
+{
+    ret += val;
+    if(ret >= mod)ret -= mod;
+}
+
+char qu[maxn][maxn];
+void dfs(int x, int y, int z)
+{
+    if(f[x][y][z] != -1)return;
+    if(z == m)
+    {
+        f[x][y][z] = (x == y);
+        return;
+    }
+    for(int i = x; i <= y; i++)
+    {
+        char cur = s[i][z];
+        for(int j = i; j <= y; j++)
+        {
+            if(s[j][z] != '?' && cur != '?' && cur != s[j][z])break;
+            if(s[j][z] != '?')cur = s[j][z];
+            dfs(i, j, z + 1);
+            //printf("**%d %d %d %lld\n", i, j, z + 1, f[i][j][z + 1]);
+        }
+    }
+    for(int i = x; i <= y; i++)
+    {
+        char cur = s[i][z];
+        for(int j = i; j <= y; j++)
+        {
+            if(cur == 'B')
+            {
+                qu[i][j] = cur;
+                continue;
+            }
+            if(cur != '?' && s[j][z] != '?' && cur != s[j][z])cur = 'B';
+            if(cur != 'B')
+            {
+                if(s[j][z] != '?')cur = s[j][z];
+                qu[i][j] = cur;
+            }
+            else qu[i][j] = 'B';
+        }
+    }
+    L[x-1]=x-1;
+    for(int i=x; i<=y; i++)
+        L[i]=(s[i][z]=='?'?i:L[i-1]);
+    for(int i = x; i <= y; i++)
+        for(int j = 0; j <= 27; j++)g[i][j] = 0;
+    for(int j = 0; j <= 27; j++)g[x - 1][j] = 1;
+    for(int i = x; i <= y; i++)
+    {
+        for(int j = i - 1; j >= x - 1; j--)
+        {
+            if(qu[j + 1][i] == 'B')break;
+            if(qu[j+1][i]=='A'&&L[i]>j)break;
+            if(f[j + 1][i][z + 1] <= 0)continue;
+            if(qu[j + 1][i] == '?')
+            {
+                for(int r = 2; r <= 27; r++)
+                {
+                    pd(g[i][r], g[j][r - 1] * f[j + 1][i][z + 1] % mod);
+                    //  g[k][r] = (g[k][r] + g[i][j] * f[i + 1][k][z + 1] % mod) % mod;
+                }
+            }
+            else
+            {
+                int c = qu[j + 1][i] - 'a' + 2;
+                if(qu[j + 1][i] == 'A')c = 1;
+                pd(g[i][c], g[j][c - 1] * f[j + 1][i][z + 1] % mod);
+                // g[k][c] = (g[k][c] + g[i][j] * f[i + 1][k][z + 1] % mod) % mod;
+            }
+        }
+        for(int j = 1; j <= 27; j++)pd(g[i][j], g[i][j - 1]);
+    }
+    f[x][y][z] = (g[y][27]+mod-g[y][0])%mod;
+}
+
+int main()
+{
+   // freopen("in.cpp","r",stdin);
+    while(cin >> n)
+    {
+        memset(f, -1, sizeof(f));
+        for(int i = 1; i <= n; i++)cin >> s[i];
+        int mx = -1;
+        for(int i = 1; i <= n; i++)mx = max(mx, (int)s[i].size());
+        m = mx;
+        for(int i = 1; i <= n; i++)
+            if(s[i].size() < mx)
+            {
+                int cnt = mx - (int)s[i].size();
+                while(cnt--)s[i] += 'A';
+            }
+        dfs(1, n, 0);
+        cout << f[1][n][0] << endl;
+    }
+    return 0;
+}
