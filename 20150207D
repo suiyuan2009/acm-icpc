@@ -1,0 +1,108 @@
+#include<cstdio>
+#include<iostream>
+#include<cstring>
+#include<cmath>
+#include<algorithm>
+#include<vector>
+#include<string>
+using namespace std;
+typedef long long ll;
+const int inf = 0x3fffffff;
+const int maxn = 105;
+const int mod=1000000007;
+
+void pd(ll&ret,ll val) {
+    ret+=val;
+    if(ret>=mod)ret-=mod;
+}
+
+struct Mat {
+    int n,m;
+    ll a[maxn][maxn];
+    Mat() {}
+    Mat(int _n,int _m,bool sign) {
+        n=_n,m=_m;
+        for(int i=0; i<n; i++)
+            for(int j=0; j<m; j++)
+                a[i][j]=(i==j&&sign);
+    }
+    Mat operator*(const Mat &tt)const {
+        Mat ret=Mat(n,tt.m,0);
+        for(int i=0; i<n; i++)
+            for(int j=0; j<tt.m; j++) {
+                for(int k=0; k<m; k++)
+                    pd(ret.a[i][j],a[i][k]*tt.a[k][j]%mod);
+            }
+        return ret;
+    }
+    void print() {
+        printf("** %d %d\n",n,m);
+        for(int i=0; i<n; i++) {
+            for(int j=0; j<m; j++)
+                printf("%lld ",a[i][j]);
+            printf("\n");
+        }
+    }
+};
+
+ll f[4][maxn],n;
+int a[]= {1,5,10,25};
+
+void init() {
+    f[0][0]=1;
+    for(int i=0; i<4; i++)
+        for(int j=a[i]; j<maxn; j++)
+            for(int k=0; k<=i; k++)
+                pd(f[i][j],f[k][j-a[i]]);
+    /*ll ret=0;
+    for(int i=0; i<=3; i++)pd(ret,f[i][25]);
+    printf("** %lld\n",ret);*/
+}
+
+int main() {
+    //freopen("in.cpp","r",stdin);
+    //freopen("out2.cpp","w",stdout);
+
+    init();
+    scanf("%lld",&n);
+    if(n<25) {
+        ll ret=0;
+        for(int i=0; i<4; i++)pd(ret,f[i][n]);
+        printf("%lld\n",ret);
+    } else {
+        Mat tt=Mat(100,100,0);
+        for(int i=0; i<4; i++)
+            for(int j=0; j<25; j++) {
+                int now=i*25+j;
+                if(j<24) {
+                    tt.a[now][now+1]=1;
+                    continue;
+                }
+                for(int k=0; k<=i; k++) {
+                    int pre=k*25+j+1-a[i];
+                    tt.a[now][pre]=1;
+                    // printf("** %d %d\n",now,pre);
+                }
+            }
+        //tt.print();
+        Mat ret=Mat(100,1,0);
+        for(int i=0; i<4; i++)
+            for(int j=0; j<25; j++) {
+                int now=i*25+j;
+                ret.a[now][0]=f[i][j];
+            }
+        //ret.print();
+        n-=24;
+        Mat mul=Mat(100,100,1);
+        while(n) {
+            if(n&1)mul=tt*mul;
+            tt=tt*tt;
+            n>>=1;
+        }
+        ret=mul*ret;
+        ll ans=0;
+        for(int i=0; i<4; i++)pd(ans,ret.a[i*25+24][0]);
+        printf("%lld\n",ans);
+    }
+    return 0;
+}
