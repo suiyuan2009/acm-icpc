@@ -1,0 +1,165 @@
+//#pragma comment(linker,"/STACK:102400000,102400000")
+#include<stdio.h>
+#include<iostream>
+#include<string.h>
+#include<math.h>
+#include<algorithm>
+#include<vector>
+#include<map>
+#include<set>
+#include<queue>
+#include<string>
+#define ll long long
+#define db double
+#define PB push_back
+#define lson k<<1
+#define rson k<<1|1
+using namespace std;
+const int inf = 0x3fffffff;
+
+const int maxn = 200005;
+
+int nxt[maxn], extend[maxn];
+void get_nxt(char *T) {
+    int i = 0, j, k;
+    nxt[0] = 0;
+    while(T[i] == T[i + 1])i++;
+    nxt[1] = i;
+    for(k = 1, i = 2; T[i]; i++) {
+        if(nxt[i - k] + i < nxt[k] + k)nxt[i] = nxt[i - k];
+        else {
+            j = nxt[k] + k - i;
+            if(j < 0)j = 0;
+            while( T[j + i] && T[j + i] == T[j])j++;
+            nxt[i] = j;
+            k = i;
+        }
+    }
+}
+void get_extend(char*S, char*T) {
+    int i = 0, j, k;
+    while(S[i] && T[i] && S[i] == T[i])i++;
+    extend[0] = i;
+    for(k = 0, i = 1; S[i]; i++) {
+        if(nxt[i - k] + i < extend[k] + k)
+            extend[i] = nxt[i - k];
+        else {
+            j = extend[k] + k - i;
+            if(j < 0)j = 0;
+            while(S[j + i] && T[j] && S[j + i] == T[j] )j++;
+            extend[i] = j;
+            k = i;
+        }
+    }
+}
+
+char s[2][maxn];
+int n, m;
+
+struct ST {
+    int l, r, c, val;
+} st[maxn * 4];
+void build(int id, int l, int r) {
+    st[id].l = l, st[id].r = r;
+    st[id].c = 0, st[id].val = 0;
+    if(l == r)return;
+    int m = (l + r) >> 1;
+    build(id << 1, l, m);
+    build(id << 1 | 1, m + 1, r);
+}
+void down(int id) {
+    if(!st[id].c)return;
+    st[id << 1 | 1].val = st[id << 1].val = st[id].val;
+    st[id << 1 | 1].c = st[id << 1].c = 1;
+    st[id].c = 0;
+}
+void up(int id) {
+    st[id].val = min(st[id << 1].val, st[id << 1 | 1].val);
+}
+void upd(int id, int l, int r, int val) {
+    if(l > r)return;
+    if(st[id].l == l && st[id].r == r) {
+        st[id].c = 1;
+        st[id].val = val;
+        return;
+    }
+    down(id);
+    int m = (st[id].l + st[id].r) >> 1;
+    if(r <= m)upd(id << 1, l, r, val);
+    else if(l > m)upd(id << 1 | 1, l, r, val);
+    else {
+        upd(id << 1, l, m, val);
+        upd(id << 1 | 1, m + 1, r, val);
+    }
+    up(id);
+}
+int query(int id, int l, int r) {
+    if(l > r)return 0;
+    if(st[id].l == l && st[id].r == r)return st[id].val;
+    down(id);
+    int m = (st[id].l + st[id].r) >> 1;
+    if(r <= m)return query(id << 1, l, r);
+    if(l > m)return query(id << 1 | 1, l, r);
+    return min(query(id << 1, l, m), query(id << 1 | 1, m + 1, r));
+}
+
+struct P {
+    int x, y;
+    P() {}
+    P(int x, int y): x(x), y(y) {}
+    bool operator<(const P&a)const {
+        return x == a.x ? y <a.y : x > a.x;
+    }
+};
+vector<P>a, b;
+
+bool cmp(P a, P b) {
+    return a.y < b.y;
+}
+
+int c[30];
+int main() {
+    //freopen("in.cpp","r",stdin);
+    scanf("%s", s[0]);
+    m = strlen(s[0]);
+    scanf("%d", &n);
+    for(int i = 1; i <= n; i++) {
+        scanf("%s", s[1]);
+        get_nxt(s[1]);
+        get_extend(s[0], s[1]);
+        int len = strlen(s[1]);
+        for(int j = 0; j < m; j++) {
+            //printf("%d ",extend[j]);
+            if(extend[j] >= len)
+                a.push_back(P(j + 1, j + len));
+        }
+    }
+    for(int i = 0; i < 26; i++)scanf("%d", &c[i]);
+    if(a.size() == 0) {
+        printf("0\n");
+        return 0;
+    }
+    sort(a.begin(), a.end());
+    int far = inf;
+    for(int i = 0; i < a.size(); i++) {
+        if(a[i].y >= far)continue;
+        b.push_back(a[i]);
+        far = a[i].y;
+    }
+    sort(b.begin(), b.end(), cmp);
+    //for(int i = 0; i < b.size(); i++)
+    //  printf("**%d %d\n", b[i].x, b[i].y);
+    int r = -1;
+    build(1, 0, m);
+    for(int i = 1; i <= m; i++) {
+        int l = -1;
+        while(r + 1 < b.size() && b[r + 1].y < i)r++;
+        if(r + 1 < b.size() && b[r + 1].y == i)l = b[r + 1].x;
+        int mi = query(1, 0, i - 1);
+        upd(1, i, i, mi + c[s[0][i - 1] - 'a']);
+        if(l != -1)upd(1, 0, l - 1, inf);
+    }
+    int sz = b.size();
+    printf("%d\n", query(1, 1, m));
+    return 0;
+}
