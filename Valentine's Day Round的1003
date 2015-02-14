@@ -1,0 +1,77 @@
+/*
+以为并查集合不可做
+*/
+#pragma comment(linker,"/STACK:10240000000,10240000000")
+#include<cstdio>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<cstring>
+#include<cmath>
+#include<queue>
+#include<iostream>
+using namespace std;
+const int maxn=150005;
+typedef unsigned __int64 ll;
+
+int n;
+int pnt[maxn],c[maxn];
+struct E
+{
+    int u,v,w;
+    bool operator<(const E&a)const
+    {
+        return w<a.w;
+    }
+} e[maxn];
+
+int pd(int x)
+{
+    if(x!=pnt[x])pnt[x]=pd(pnt[x]);
+    return pnt[x];
+}
+
+int main()
+{
+    int ncase=0;
+    //freopen("in.cpp","r",stdin);
+    while(~scanf("%d",&n))
+    {
+        for(int i=1; i<=n; i++)
+        {
+            pnt[i]=i;
+            c[i]=1;
+        }
+        for(int i=1; i<n; i++)
+        {
+            int u,v,w;
+            scanf("%d%d%d",&u,&v,&w);
+            e[i].u=u,e[i].v=v,e[i].w=w;
+        }
+        sort(e+1,e+n);
+        ll retx=0,rety=0;
+        for(int i=1; i<n; i++)
+        {
+            int x=pd(e[i].u);
+            int y=pd(e[i].v);
+            rety+=(ll)e[i].w*c[x]*c[y];
+            pnt[x]=y;
+            c[y]+=c[x];
+        }
+        for(int i=1; i<=n; i++)
+        {
+            pnt[i]=i;
+            c[i]=1;
+        }
+        for(int i=n-1; i>=0; i--)
+        {
+            int x=pd(e[i].u);
+            int y=pd(e[i].v);
+            retx+=(ll)e[i].w*c[x]*c[y];
+            pnt[x]=y;
+            c[y]+=c[x];
+        }
+        printf("Case #%d: %I64u\n",++ncase,rety-retx);
+    }
+    return 0;
+}
