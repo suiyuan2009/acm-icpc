@@ -1,0 +1,84 @@
+/*
+大概320个物品，背包容量10e6，需要选的物品尽量少，字典序，物品重量是sum{i^2}形式的，累和可以隔一个。
+最多6个物品，pnt开6个记录最大的6个前驱，二维数组第二维小比较快，可能是连续时间访问的位置相近的原因，uva上这个优化才过。
+*/
+#include<cstdio>
+#include<iostream>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+using namespace std;
+typedef unsigned long long ll;
+typedef double db;
+const int maxn=325;
+const int maxm=1000005;
+
+int n;
+struct P {
+    int x,y,z;
+    P() {}
+    P(int x,int y,int z):x(x),y(y),z(z) {}
+    bool operator<(const P&a)const {
+        return z<a.z;
+    }
+} p[maxn];
+
+int f[maxm],pnt[maxm][6],cur[maxm];
+
+void init() {
+    n=0;
+    for(int i=2; i<=200; i++) {
+        int s=0;
+        if(i-2>=1) {
+            for(int j=i; j>=1; j-=2)s+=j*j;
+            if(s<1000001)p[++n]=P(i,0,s);
+        }
+        s=0;
+        for(int j=i; j>=1; j--)s+=j*j;
+        if(s<1000001)p[++n]=P(i,1,s);
+    }
+    //printf("%d\n",n);
+    sort(p+1,p+n+1);
+    for(int i=1; i<maxm; i++)f[i]=maxm;
+    for(int i=1; i<=n; i++)
+        for(int j=maxm-1-p[i].z; j>=0; j--) {
+            if(f[j]==-1)continue;
+            int tt=j+p[i].z;
+            if(f[tt]>=f[j]+1) {
+                f[tt]=f[j]+1;
+                pnt[tt][cur[tt]]=i;
+                cur[tt]++;
+                if(cur[tt]==6)cur[tt]=0;
+            }
+        }
+}
+
+bool vis[maxn];
+
+int main() {
+    init();
+    //printf("%d\n",n);
+    int m,ncase=0;
+    while(scanf("%d",&m)&&m) {
+        printf("Case %d:",++ncase);
+        if(f[m]==maxm)printf(" impossible\n");
+        else {
+            for(int i=1; i<=n; i++)vis[i]=0;
+            while(m>0) {
+                int tt=cur[m]-1;
+                if(tt==-1)tt=5;
+                while(vis[pnt[m][tt]]) {
+                    tt=tt-1;
+                    if(tt==-1)tt=5;
+                }
+                int tmp=pnt[m][tt];
+                vis[tmp]=1;
+                printf(" %d%c",p[tmp].x,p[tmp].y?'H':'L');
+                m-=p[tmp].z;
+            }
+            printf("\n");
+        }
+    }
+    return 0;
+}
