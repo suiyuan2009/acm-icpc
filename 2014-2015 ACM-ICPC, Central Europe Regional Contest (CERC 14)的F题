@@ -1,0 +1,159 @@
+/*
+给3个串，有些位置是问号，问使得三个串按字典序排列的填问号方案数
+一位一位考虑，dp，写得比较恶心
+*/
+#include<cstdio>
+#include<iostream>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+using namespace std;
+typedef long long ll;
+const int maxn = 1000005;
+const int mod = 1000000009;
+
+char str[3][maxn];
+vector<int>e[4];
+int a[4]= {0,16,20,36};
+int n,c[3];
+ll f[2][4];
+int g[3][27],h[3][27];
+
+void init() {
+    for(int i=0; i<4; i++)
+        e[0].push_back(i);
+    for(int i=1; i<4; i++) {
+        e[i].push_back(i);
+        if(i<3)e[i].push_back(3);
+    }
+}
+
+int dp(int id,int x,int y) {
+    if(x==36) {
+        int ret=1;
+        for(int i=0; i<3; i++)
+            if(str[i][id]=='?')ret*=26;
+        return ret;
+    } else if(x==16) {
+        if(y==16) {
+            int ret=1;
+            if(str[2][id]=='?')ret=26;
+            if(str[0][id]=='?') {
+                if(str[1][id]=='?')ret*=26;
+            } else if(str[1][id]!='?') {
+                ret*=(str[0][id]==str[1][id]);
+            }
+            return ret;
+        } else {
+            int ret=1;
+            if(str[2][id]=='?')ret=26;
+            if(str[0][id]=='?') {
+                if(str[1][id]=='?')ret*=(1+25)*25/2;
+                else ret*=(str[1][id]>'a'?str[1][id]-'a':0);
+            } else if(str[1][id]!='?') {
+                ret*=(str[0][id]<str[1][id]);
+            } else {
+                ret*=(26-(str[0][id]-'a'+1));
+            }
+            return ret;
+        }
+    } else if(x==20) {
+        if(y==20) {
+            int ret=1;
+            if(str[0][id]=='?')ret=26;
+            if(str[1][id]=='?') {
+                if(str[2][id]=='?')ret*=26;
+            } else if(str[2][id]!='?') {
+                ret*=(str[1][id]==str[2][id]);
+            }
+            return ret;
+        } else {
+            int ret=1;
+            if(str[0][id]=='?')ret=26;
+            if(str[1][id]=='?') {
+                if(str[2][id]=='?')ret*=(1+25)*25/2;
+                else ret*=(str[2][id]>'a'?str[2][id]-'a':0);
+            } else if(str[2][id]!='?') {
+                ret*=(str[1][id]<str[2][id]);
+            } else {
+                ret*=(26-(str[1][id]-'a'+1));
+            }
+            return ret;
+        }
+    }
+    for(int i=0; i<3; i++)
+        for(int j=0; j<27; j++)
+            g[i][j]=h[i][j]=0;
+    if(str[0][id]=='?') {
+        for(int i=0; i<27; i++) {
+            g[0][i]=(i>0);
+            h[0][i]=(i?h[0][i-1]:0)+g[0][i];
+        }
+    } else {
+        g[0][str[0][id]-'a'+1]=1;
+        for(int i=0; i<27; i++)h[0][i]=(i?h[0][i-1]:0)+g[0][i];
+    }
+    for(int i=1; i<3; i++)
+        for(int j=0; j<27; j++) {
+            if(((x>>((i-1)*2))&3)!=((x>>(i*2))&3)) {
+                if(str[i][id]=='?')g[i][j]=h[i-1][26]*(j>0);
+                else g[i][j]=h[i-1][26]*(str[i][id]-'a'+1==j);
+            } else {
+                if(((y>>((i-1)*2))&3)!=((y>>(i*2))&3)) {
+                    if(str[i][id]=='?')g[i][j]=(j?h[i-1][j-1]:0);
+                    else g[i][j]=(j?h[i-1][j-1]*(str[i][id]-'a'+1==j):0);
+                } else {
+                    if(str[i][id]=='?')g[i][j]=g[i-1][j]*(j>0);
+                    else g[i][j]=(str[i][id]-'a'+1==j)*g[i-1][j];
+                }
+            }
+            h[i][j]=(j?h[i][j-1]:0)+g[i][j];
+        }
+    return h[2][26];
+}
+
+void pd(ll&ret,ll val) {
+    ret+=val;
+    if(ret>=mod)ret-=mod;
+}
+
+int main() {
+    //freopen("in.cpp","r",stdin);
+    //freopen("out2.cpp","w",stdout);
+    init();
+    int T;
+    scanf("%d",&T);
+    while(T--) {
+        n=-1;
+        for(int i=0; i<3; i++) {
+            scanf("%s",str[i]);
+            c[i]=strlen(str[i]);
+            n=max(c[i],n);
+        }
+        for(int i=0; i<3; i++) {
+            while(c[i]<n) {
+                str[i][c[i]]='a'-1;
+                c[i]++;
+            }
+        }
+        for(int i=0; i<4; i++)f[0][i]=0;
+        f[0][0]=1;
+        for(int i=0; i<n; i++) {
+            int cur=i&1;
+            int nxt=1-cur;
+            for(int j=0; j<4; j++)f[nxt][j]=0;
+            for(int j=0; j<4; j++) {
+                if(f[cur][j]==0LL)continue;
+                for(int r=0; r<e[j].size(); r++) {
+                    int k=e[j][r];
+                    int tt=dp(i,a[j],a[k]);
+                    //printf("** %d\n",h[2][26]);
+                    pd(f[nxt][k],f[cur][j]*tt%mod);
+                }
+            }
+        }
+        // printf("**%lld\n",f[1][2]);
+        printf("%lld\n",f[n&1][3]);
+    }
+    return 0;
+}
