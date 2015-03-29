@@ -1,0 +1,175 @@
+/*
+题意：多次询问[l,r]有多少子区间逆序对数是k，k给定
+数据结构堆代码
+*/
+#include<cstdio>
+#include<algorithm>
+#include<string>
+#include<cmath>
+#include<cstring>
+#include<vector>
+#include<iostream>
+using namespace std;
+const int maxn=100005;
+typedef __int64 ll;
+const int inf=0x3fffffff;
+
+struct BIT {
+    int c[maxn];
+    void init() {
+        for(int i=0; i<maxn; i++)c[i]=0;
+    }
+    int lowbit(int x) {
+        return x&(-x);
+    }
+    void add(int x,int y) {
+        for(; x<maxn; x+=lowbit(x))c[x]+=y;
+    }
+    int sum(int x) {
+        int ret=0;
+        for(; x>0; x-=lowbit(x))ret+=c[x];
+        return ret;
+    }
+} bit;
+
+struct ST {
+    int l,r;
+    ll val,cov;
+} st[maxn*4];
+void build(int id,int l,int r) {
+    st[id].l=l,st[id].r=r,st[id].val=0,st[id].cov=0;
+    if(l==r)return;
+    int m=(l+r)>>1;
+    build(id<<1,l,m);
+    build(id<<1|1,m+1,r);
+}
+void down(int id) {
+    if(st[id].cov) {
+        st[id<<1].val+=(st[id<<1].r-st[id<<1].l+1)*st[id].cov;
+        st[id<<1|1].val+=(st[id<<1|1].r-st[id<<1|1].l+1)*st[id].cov;
+        st[id<<1].cov+=st[id].cov;
+        st[id<<1|1].cov+=st[id].cov;
+        st[id].cov=0;
+    }
+}
+void upd(int id,int l,int r) {
+    if(st[id].l==l&&st[id].r==r) {
+        st[id].val+=(r-l+1);
+        st[id].cov++;
+        return;
+    }
+    down(id);
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)upd(id<<1,l,r);
+    else if(l>m)upd(id<<1|1,l,r);
+    else {
+        upd(id<<1,l,m);
+        upd(id<<1|1,m+1,r);
+    }
+    st[id].val=st[id<<1].val+st[id<<1|1].val;
+}
+ll que(int id,int l,int r) {
+    if(st[id].l==l&&st[id].r==r)return st[id].val;
+    down(id);
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)return que(id<<1,l,r);
+    else if(l>m)return que(id<<1|1,l,r);
+    return que(id<<1,l,m)+que(id<<1|1,m+1,r);
+}
+
+int n,q;
+ll k;
+int a[maxn];
+
+struct P {
+    int x,y,id;
+    P() {}
+    P(int x,int y,int id):x(x),y(y),id(id) {}
+    bool operator<(const P&a)const {
+        return x>a.x;
+    }
+};
+vector<P>seg,query;
+vector<int>vis;
+
+int to[maxn],L[maxn];
+
+void init() {
+    seg.clear();
+    query.clear();
+    bit.init();
+    vis.clear();
+    for(int i=1; i<=n; i++) {
+        scanf("%d",&a[i]);
+        vis.push_back(a[i]);
+    }
+    sort(vis.begin(),vis.end());
+    vis.erase(unique(vis.begin(),vis.end()),vis.end());
+    for(int i=1; i<=n; i++)a[i]=lower_bound(vis.begin(),vis.end(),a[i])-vis.begin()+1;
+    for(int i=1; i<=q; i++) {
+        int x,y;
+        scanf("%d%d",&x,&y);
+        query.push_back(P(x,y,i));
+    }
+    to[n]=n;
+    for(int i=n-1; i>=1; i--) {
+        if(a[i]<=a[i+1])to[i]=to[i+1];
+        else to[i]=i;
+    }
+    a[0]=inf;
+    for(int i=1; i<=n; i++) {
+        L[i]=i-1;
+        while(a[L[i]]<=a[i])L[i]=L[L[i]];
+    }
+}
+ll ans[maxn];
+int main() {
+    //freopen("in.cpp","r",stdin);
+    //freopen("out3.cpp","w",stdout);
+    while(~scanf("%d%d%I64d",&n,&q,&k)) {
+        init();
+        ll inv=0;
+        int r=1;
+        bit.add(a[1],1);
+        for(int i=1; i<=n; i++) {
+            while(r+1<=n) {
+                int tt=bit.sum(maxn-1)-bit.sum(a[r+1]);
+                if(inv>k-tt)break;
+                r++;
+                bit.add(a[r],1);
+                inv+=tt;
+            }
+            if(inv==k) {
+                int li=i,ri=r;
+                int ret=-1;
+                while(li<=ri) {
+                    int m=(li+ri)>>1;
+                    if(L[m]<i&&to[m]>=r) {
+                        ret=m;
+                        ri=m-1;
+                    } else li=m+1;
+                }
+                if(ret==-1)ret=r;
+                else if(ret>i)ret--;
+                seg.push_back(P(i,r,ret));
+                //printf("%d %d %d\n",i,r,ret);
+            }
+            int tt=bit.sum(a[i]-1);
+            inv-=tt;
+            bit.add(a[i],-1);
+        }
+        sort(seg.begin(),seg.end());
+        sort(query.begin(),query.end());
+        r=-1;
+        build(1,1,n);
+        for(int i=0; i<query.size(); i++) {
+            while(r+1<seg.size()&&seg[r+1].x>=query[i].x) {
+                r++;
+                upd(1,seg[r].id,seg[r].y);
+            }
+            ans[query[i].id]=que(1,1,query[i].y);
+        }
+        for(int i=1; i<=q; i++)printf("%I64d\n",ans[i]);
+    }
+    return 0;
+}
