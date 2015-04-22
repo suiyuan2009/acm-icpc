@@ -1,0 +1,123 @@
+/*
+题意：给出n个圆，圆要么切要么离，求面积并
+圆扫描线求每个圆的嵌套次数，注意排序规则，特别是set
+*/
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+#include<set>
+using namespace std;
+const int maxn =100005;
+const int inf = 0x3fffffff;
+typedef long long ll;
+const double PI=acos(-1.0);
+const double eps=1e-8;
+
+int n,now,f[maxn];
+struct C {
+    int x,y,r;
+} c[maxn];
+struct E {
+    int x,y,z,id;
+    E() {}
+    E(int x,int y,int z,int id):x(x),y(y),z(z),id(id) {}
+    bool operator<(const E&a)const {
+        //return x<a.x||(x==a.x&&y<a.y);
+        if(x==a.x) {
+            if(y==a.y) {
+                if(z==a.z) {
+                    if(z)return c[id].r<c[a.id].r;
+                    return c[a.id].r<c[id].r;
+                }
+                return a.z<z;
+            }
+            return y<a.y;
+        }
+        return x<a.x;
+    }
+} e[maxn+maxn];
+struct P {
+    int id,z;
+    P() {}
+    P(int id,int z):id(id),z(z) {}
+    bool operator<(const P&a)const {
+        double tt=sqrt((double)c[id].r*c[id].r-(double)(now-c[id].x)*(now-c[id].x));
+        double y1=c[id].y+(z?tt:-tt);
+        tt=sqrt((double)c[a.id].r*c[a.id].r-(double)(now-c[a.id].x)*(now-c[a.id].x));
+        double y2=c[a.id].y+(a.z?tt:-tt);
+        //return y1<y2||(y1==y2&&z<a.z);
+        if(fabs(y1-y2)<eps) {
+            if(z==a.z) {
+                if(z)return c[id].r<c[a.id].r;
+                return c[id].r>c[a.id].r;
+            }
+            return z<a.z;
+        }
+        return y1<y2;
+    }
+};
+set<P>s;
+set<P>::iterator it,l,r;
+
+void init() {
+    for(int i=1; i<=n; i++) {
+        int x,y,r;
+        scanf("%d%d%d",&x,&y,&r);
+        c[i].x=x,c[i].y=y,c[i].r=r;
+        e[i*2-1]=E(c[i].x-c[i].r,c[i].y,0,i);
+        e[i*2]=E(c[i].x+c[i].r,c[i].y,1,i);
+    }
+    sort(e+1,e+n+n+1);
+
+    //for(int i=1; i<=n+n; i++)
+    //  printf("%d %d\n",e[i].id,e[i].z);
+    s.clear();
+}
+
+void solve() {
+    for(int i=1; i<=n+n; i++) {
+        now=e[i].x;
+
+        // for(it=s.begin(); it!=s.end(); it++)
+        //   printf("~~~~%d: %d %d\n",i,(*it).id,(*it).z);
+
+        if(e[i].z) {
+            s.erase(P(e[i].id,0));
+            s.erase(P(e[i].id,1));
+        } else {
+            it=s.insert(P(e[i].id,0)).first;
+            l=r=it;
+            r++;
+            if(it==s.begin()||r==s.end()) {
+                f[e[i].id]=1;
+                //printf("**^^ %d\n",e[i].id);
+            } else {
+                l--;
+                // printf("** %d\n",e[i].id);
+                if(l->id==r->id)f[e[i].id]=f[l->id]+1;
+                else f[e[i].id]=max(f[l->id],f[r->id]);
+            }
+            s.insert(P(e[i].id,1));
+        }
+        // for(it=s.begin();it!=s.end();it++)
+        //printf("~~%d: %d %d\n",i,(*it).id,(*it).z);
+    }
+}
+
+int main() {
+    freopen("circles.in","r",stdin);
+    freopen("circles.out","w",stdout);
+    scanf("%d",&n);
+    init();
+    solve();
+    ll ret=0;
+    for(int i=1; i<=n; i++) {
+        // printf("%d: %d\n",i,f[i]);
+        if(f[i]==1)ret+=c[i].r*(ll)c[i].r;
+    }
+    printf("%.12f\n",PI*ret);
+    return 0;
+}
