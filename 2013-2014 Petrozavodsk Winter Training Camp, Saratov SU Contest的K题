@@ -1,0 +1,68 @@
+/*
+题意：有n个任务，每个任务分成01两个部分，从做0/1转移到做1/0有花费，最好要使得延迟时间最长的延迟得最少
+贪心，按deadline排，然后每次选尽量多的任务一起先做第一部分
+*/
+#include<cstdio>
+#include<iostream>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+using namespace std;
+typedef long long ll;
+const int maxn = 200005;
+
+int n;
+ll f0,f1;
+struct P {
+    ll x,y,z;
+    int id;
+    P() {}
+    P(ll x,ll y,ll z,int id):x(x),y(y),z(z),id(id) {}
+    bool operator<(const P&a)const {
+        return z<a.z;
+    }
+} p[maxn];
+
+vector<int>ans;
+bool test(ll add) {
+    ans.clear();
+    ll cur=0;
+    for(int i=0,j; i<n; i=j) {
+        cur+=f1+f0;
+        ll mx=-1LL<<60;
+        vector<int>tt;
+        for(j=i; j<n; j++) {
+            mx=max(mx+p[j].x,cur+p[j].x+p[j].y-p[j].z);
+            if(mx>add)break;
+            tt.push_back(p[j].id);
+            cur+=p[j].x+p[j].y;
+        }
+        for(int k=0; k<tt.size(); k++)ans.push_back(-tt[k]);
+        for(int k=0; k<tt.size(); k++)ans.push_back(tt[k]);
+        if(i==j)return 0;
+    }
+    return 1;
+}
+
+int main() {
+    //freopen("in.cpp","r",stdin);
+    scanf("%d%I64d%I64d",&n,&f0,&f1);
+    for(int i=0; i<n; i++) {
+        ll x,y,z;
+        scanf("%I64d%I64d%I64d",&x,&y,&z);
+        p[i]=P(x,y,z,i+1);
+    }
+    sort(p,p+n);
+    ll l=0,r=1000000000000000LL,ret=r;
+    while(l<=r) {
+        ll m=(l+r)>>1;
+        if(test(m)) {
+            ret=m;
+            r=m-1;
+        } else l=m+1;
+    }
+    test(ret);
+    printf("%I64d\n",ret);
+    for(int i=0; i<n+n; i++)printf("%d%c",ans[i],i==n+n-1?'\n':' ');
+    return 0;
+}
