@@ -1,0 +1,76 @@
+/*
+题意：等差三元组计数
+fft
+*/
+#include <iostream>
+#include <vector>
+#include <stdio.h>
+#include <algorithm>
+#include <map>
+#include <utility>
+#include <cassert>
+#include <cstring>
+#include <list>
+#include <complex>
+#include <math.h>
+
+#define FOR(i, n) for(int i = 0; i < (n); i++)
+
+using namespace std;
+
+typedef long long LL;
+typedef pair<int, int> pii;
+
+#define mp make_pair
+#define pb push_back
+#define db double
+
+#define REP(i,n) for(int i=0;i<(n);++i)
+
+typedef vector<int> vi;
+typedef long long ll;
+typedef complex<double> cd;
+cd W[1 << 18];
+const db PI = acos(-1.0);
+
+template<class S>void fft(S p, cd*y, int n, int k = 1) {
+    if (n > 1) {
+        cd q;
+        fft(p, y, n /= 2, k * 2), fft(p + k, y + n, n, k * 2);
+        for(int i = 0, j = 0; i < n; ++i, j += k)
+            y[i + n] = y[i] - (q = y[i + n] * W[j]), y[i] += q;
+    } else *y = *p;
+}
+
+vi mul(vector<int> a, vector<int> b) {
+    int n = a.size() + b.size();
+    for(; n & n - 1; ++n);
+    a.resize(n), b.resize(n);
+    vector<cd> Y(n), Z(n);
+    REP(i, n)W[i] = polar(1., 2 * i * PI / n);
+    fft(&a[0], &Y[0], n), fft(&b[0], &Z[0], n);
+    REP(i, n)Z[i] *= Y[i], W[i] = cd(real(W[i]), -imag(W[i]));
+    fft(&Z[0], &Y[0], n);
+    REP(i, n) a[i] = (real(Y[i]) + 0.5) / n;
+    for(; a.size() && !a.back(); a.erase(a.end() - 1));
+    return a;
+}
+
+
+#define MAXN 200005
+char s[MAXN];
+int main() {
+   freopen("duel.in","r",stdin);
+    freopen("duel.out","w",stdout);
+    scanf("%s", &s[0]);
+    int N = strlen(s);
+    vi a(N);
+    FOR(i, N) a[i] = s[i] - '0';
+
+    vi z = mul(a, a);
+    int M = z.size();
+    ll ans = 0;
+    FOR(i, N) if (a[i] && 2 * i < M) ans += (z[2 * i] - 1) / 2;
+    cout << ans << endl;
+    return 0;
+}
