@@ -1,3 +1,6 @@
+/*
+f[i][j][k]前i个怪兽都打死，用了j个9k个3最少用多少1
+*/
 #include<cstdio>
 #include<cstring>
 #include<iostream>
