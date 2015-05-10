@@ -1,0 +1,62 @@
+/*
+题意：16种颜色的10^5的序列，每次相邻交换，最少交换次数
+g[i][j]预处理出颜色j交换到颜色i之前的次数
+*/
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+#include<queue>
+using namespace std;
+const int maxn = 100005;
+const int maxm = 16;
+const int inf = 0x3fffffff;
+typedef long long ll;
+
+int n,a[maxn],m;
+ll g[maxm][maxm],f[1<<maxm];
+
+vector<int>vis;
+void pd(ll&ret,ll val) {
+    if(ret==-1||ret>val)ret=val;
+}
+int main() {
+    //freopen("in.cpp","r",stdin);
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--) {
+        scanf("%d%d",&n,&m);
+        vis.clear();
+        for(int i=1; i<=n; i++) {
+            scanf("%d",&a[i]);
+            vis.push_back(a[i]);
+        }
+        sort(vis.begin(),vis.end());
+        vis.erase(unique(vis.begin(),vis.end()),vis.end());
+        for(int i=1; i<=n; i++)a[i]=lower_bound(vis.begin(),vis.end(),a[i])-vis.begin();
+        m=vis.size();
+        for(int i=0; i<m; i++)
+            for(int j=0; j<m; j++) {
+                g[i][j]=0;
+                int cur=0;
+                for(int k=n; k>=1; k--) {
+                    if(a[k]==j)cur++;
+                    else if(a[k]==i)g[i][j]+=cur;
+                }
+            }
+        memset(f,-1,sizeof(f));
+        f[0]=0;
+        for(int i=0; i<(1<<m); i++)
+            for(int j=0; j<m; j++)
+                if(!(i&(1<<j))) {
+                    ll tt=0;
+                    for(int k=0; k<m; k++)
+                        if(i&(1<<k))tt+=g[j][k];
+                    pd(f[i|(1<<j)],f[i]+tt);
+                }
+        printf("Case #%d: %lld\n",++ncase,f[(1<<m)-1]);
+    }
+    return 0;
+}
