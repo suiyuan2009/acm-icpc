@@ -1,0 +1,82 @@
+/*
+求所有长度为m的区间的次小值，次小值严格大于最小值，并且要求是最左边的
+两个单调队列，第二个队列接收第一个队列弹出的，并且第二个队列里没有第一个队列里的最小值
+取得时候比较一个第一个队列的次小值和第二个队列的最小值
+*/
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+#include<queue>
+#include<deque>
+using namespace std;
+const int maxn = 1000005;
+const int inf = 0x3fffffff;
+typedef long long ll;
+
+int n,m,A,B,a[maxn],b[maxn];
+struct P {
+    int x,y;
+    P() {}
+    P(int x,int y):x(x),y(y) {}
+};
+
+int main() {
+    //freopen("in.cpp","r",stdin);
+    while(~scanf("%d%d%d%d",&n,&m,&A,&B)) {
+        for(int i=1; i<=n; i++)scanf("%d",&a[i]),b[i]=0;
+        deque<P>q,q1,q2;
+        for(int i=1; i<=n; i++) {
+            while((!q.empty())&&q.back().y<=a[i]) {
+                q.pop_back();
+            }
+            q.push_back(P(i,a[i]));
+            while(q.front().x<=i-m)q.pop_front();
+            if(i>=m) {
+                b[q.front().x]+=A;
+                // printf("&&** %d %d\n",i,q.front().x);
+            }
+        }
+        for(int i=n; i>=1; i--) {
+            while(!q1.empty()) {
+                if(q1.back().y==a[i])q1.pop_back();
+                else if(q1.back().y>a[i]) {
+                    while((!q2.empty())&&q1.back().y<=q2.back().y)q2.pop_back();
+                    q2.push_back(q1.back());
+                    q1.pop_back();
+                } else break;
+            }
+            q1.push_back(P(i,a[i]));
+            while((!q2.empty())&&q2.front().x>=i+m)q2.pop_front();
+            while((!q1.empty())&&q1.front().x>=i+m)q1.pop_front();
+            if(i<=n-m+1) {
+                if(q1.size()>1) {
+                    P tt=q1.front();
+                    q1.pop_front();
+                    int tret=q1.front().x;
+                    if((!q2.empty())&&(q2.front().y<q1.front().y||
+                                       (q2.front().y==q1.front().y&&q2.front().x<q1.front().x)))
+                        tret=q2.front().x;
+                    b[tret]+=B;
+                    // printf("&& %d %d\n",i,q1.front().x);
+                    q1.push_front(tt);
+                } else {
+                    if(!q2.empty()) {
+                        b[q2.front().x]+=B;
+                        // printf("&& %d %d\n",i,q2.front().x);
+                    }
+                }
+            }
+        }
+        int ret=0,sum=0;
+        for(int i=1; i<=n; i++)if(b[i])ret++,sum+=b[i];//printf("** %d %d\n",i,b[i]);
+        long double ans=0;
+        for(int i=1; i<=n; i++)
+            if(b[i])ans+=(sum-b[i]*(long double)ret)*(sum-b[i]*(long double)ret);
+        ans=ans/ret/ret/(n-m+1)/(n-m+1)/ret;
+        printf("%d %.4f\n",ret,(double)ans);
+    }
+    return 0;
+}
