@@ -1,0 +1,90 @@
+/*
+给三个不相交圆，求大圆内切三个圆
+解三元二次方程组，尽量乘法
+*/
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+#include<queue>
+#include<deque>
+using namespace std;
+const int maxn = 105;
+const int inf = 0x3fffffff;
+typedef long long ll;
+typedef long double db;
+const db eps=1e-12;
+
+struct P {
+    db x,y,z;
+    P() {}
+    P(db x,db y,db z):x(x),y(y),z(z) {}
+} p[maxn];
+db sqr(db x) {
+    return x*x;
+}
+
+struct Q {
+    db a,b,c,d;
+    Q() {}
+    Q(db a,db b,db c,db d):a(a),b(b),c(c),d(d) {}
+};
+
+bool solve() {
+    Q q1=Q(2*(p[1].x-p[0].x),2*(p[1].y-p[0].y),2*(p[0].z-p[1].z),sqr(p[0].x)
+           +sqr(p[0].y)-sqr(p[1].y)-sqr(p[1].x)-sqr(p[0].z)+sqr(p[1].z));
+    Q q2=Q(2*(p[2].x-p[0].x),2*(p[2].y-p[0].y),2*(p[0].z-p[2].z),sqr(p[0].x)
+           +sqr(p[0].y)-sqr(p[2].y)-sqr(p[2].x)-sqr(p[0].z)+sqr(p[2].z));
+
+    Q t1,t2;
+    if(fabs(q1.b)<eps) {
+        t1=Q(q1.a*q2.b-q2.a*q1.b,0,q1.c*q2.b-q2.c*q1.b,q1.d*q2.b-q2.d*q1.b);
+    } else {
+        t1=Q(q2.a*q1.b-q1.a*q2.b,0,q2.c*q1.b-q1.c*q2.b,q2.d*q1.b-q1.d*q2.b);
+    }
+    if(fabs(q1.a)<eps) {
+        t2=Q(0,q1.b*q2.a-q2.b*q1.a,q1.c*q2.a-q2.c*q1.a,q1.d*q2.a-q2.d*q1.a);
+    } else {
+        t2=Q(0,q2.b*q1.a-q1.b*q2.a,q2.c*q1.a-q1.c*q2.a,q2.d*q1.a-q1.d*q2.a);
+    }
+    Q tt=Q(0,sqr(t1.c)*sqr(t2.b)+sqr(t2.c)*sqr(t1.a)-sqr(t1.a)*sqr(t2.b),
+           2*t1.c*t1.d*sqr(t2.b)+2*t1.c*p[0].x*t1.a*sqr(t2.b)+
+           2*t2.c*t2.d*sqr(t1.a)+2*t2.c*t2.b*p[0].y*sqr(t1.a)
+           +2*p[0].z*sqr(t1.a)*sqr(t2.b),
+           sqr(t1.d*t2.b+p[0].x*t1.a*t2.b)+sqr(t2.d*t1.a+p[0].y*t1.a*t2.b)-sqr(p[0].z)*sqr(t1.a)*sqr(t2.b));
+    if(fabs(tt.b)<eps) {
+        if(fabs(tt.c)<eps||fabs(tt.d)<eps)return 0;
+        db r=-tt.d/tt.c;
+        if(r<eps)return 0;
+        db x=-(t1.c*r+t1.d)/t1.a;
+        db y=-(t2.c*r+t2.d)/t2.b;
+        printf("%.12f %.12f %.12f\n",(double)x,(double)y,(double)r);
+        return 1;
+    } else {
+        db tmp=tt.c*tt.c-4*tt.b*tt.d;
+        if(tmp<-eps)return 0;
+        db r=(-tt.c+(tt.b<-eps?-sqrt(tmp):sqrt(tmp)))/(2*tt.b);
+        if(r<eps)return 0;
+        db x=-(t1.c*r+t1.d)/t1.a;
+        db y=-(t2.c*r+t2.d)/t2.b;
+        printf("%.12f %.12f %.12f\n",(double)x,(double)y,(double)r);
+        return 1;
+    }
+}
+
+int main() {
+    //freopen("in.cpp","r",stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--) {
+        for(int i=0; i<3; i++) {
+            db x,y,z;
+            cin>>x>>y>>z;
+            p[i]=P(x,y,z);
+        }
+        if(!solve())printf("no solution\n");
+    }
+    return 0;
+}
