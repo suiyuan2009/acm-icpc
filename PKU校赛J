@@ -1,0 +1,129 @@
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+#include<queue>
+#include<deque>
+#include<map>
+#include<hash_map>
+using namespace std;
+const int maxn = 100005;
+const int inf = 0x3fffffff;
+typedef long long ll;
+typedef long double db;
+const db eps=1e-12;
+const int mod =200003;
+
+int n,m;
+struct P {
+    int x,y;
+    P() {}
+    P(int x,int y):x(x),y(y) {}
+    bool operator<(const P&a)const {
+        return x==a.x?y<a.y:x<a.x;
+    }
+} p[maxn];
+vector<int>vis,vis2;
+
+struct HM {
+    pair<pair<int,int>,int>mp[mod];
+    void init() {
+        for(int i=0; i<mod; i++) {
+            mp[i]=make_pair(make_pair(-1,-1),-1);
+        }
+    }
+    void add(int x,int y,int tt) {
+        int pos=tt;
+        while(mp[pos].second!=-1) {
+            if(mp[pos].first.first==x&&mp[pos].first.second==y) {
+                mp[pos].second++;
+                return;
+            }
+            pos++;
+            if(pos==mod)pos=0;
+        }
+        mp[pos]=make_pair(make_pair(x,y),1);
+    }
+    int query(int x,int y,int tt) {
+        int pos=tt;
+        while(mp[pos].second!=-1) {
+            if(mp[pos].first.first==x&&mp[pos].first.second==y)return mp[pos].second;
+            pos++;
+            if(pos==mod)pos=0;
+        }
+        return 0;
+    }
+} hm;
+int c[maxn];
+pair<int,int>b[maxn];
+void init() {
+    m=sqrt(n);
+    vis.clear();
+    vis2.clear();
+    for(int i=1; i<=n; i++) {
+        int x,y;
+        scanf("%d%d",&x,&y);
+        p[i]=P(x,y);
+        vis.push_back(x);
+        vis2.push_back(y);
+    }
+    sort(vis.begin(),vis.end());
+    sort(vis2.begin(),vis2.end());
+    vis.erase(unique(vis.begin(),vis.end()),vis.end());
+    vis2.erase(unique(vis2.begin(),vis2.end()),vis2.end());
+    for(int i=1; i<=n; i++) {
+        p[i].x=lower_bound(vis.begin(),vis.end(),p[i].x)-vis.begin()+1;
+        p[i].y=lower_bound(vis2.begin(),vis2.end(),p[i].y)-vis2.begin()+1;
+    }
+    hm.init();
+    sort(p+1,p+n+1);
+    int cc=0;
+    for(int i=1; i<=n; i++) {
+        int j=i;
+        for(int k=i+1; k<=n; k++) {
+            if(p[k].x!=p[i].x)break;
+            j=k;
+        }
+        b[++cc]=make_pair(i,j);
+        i=j;
+    }
+}
+
+int cal(int x,int y) {
+    int ret=(int)((x*(ll)vis2.size()+y)%mod);
+    return ret;
+}
+
+int main() {
+
+    //freopen("in.cpp","r",stdin);
+    while(~scanf("%d",&n)) {
+        init();
+        ll ret=0;
+        for(int i=1; i<=vis.size(); i++) {
+            if(b[i].second-b[i].first+1<=m) {
+                for(int j=b[i].first; j<b[i].second; j++)
+                    for(int k=j+1; k<=b[i].second; k++) {
+                        int tt=cal(p[j].y,p[k].y);
+                        ret+=hm.query(p[j].y,p[k].y,tt);
+                        hm.add(p[j].y,p[k].y,tt);
+                    }
+            } else {
+                for(int j=b[i].first; j<=b[i].second; j++)c[p[j].y]++;
+                //printf("** %d %d %d\n",vis.size(),vis2.size(),m);
+                for(int j=1; j<=vis.size(); j++) {
+                    if(j<=i&&b[j].second-b[j].first>=m)continue;
+                    ll cnt=0;
+                    for(int k=b[j].first; k<=b[j].second; k++)if(c[p[k].y])cnt++;
+                    // printf("** %lld\n",cnt);
+                    if(cnt)ret+=(cnt-1)*cnt/2;
+                }
+                for(int j=b[i].first; j<=b[i].second; j++)c[p[j].y]--;
+            }
+        }
+        printf("%lld\n",ret);
+    }
+    return 0;
+}
