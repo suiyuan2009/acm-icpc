@@ -1,3 +1,6 @@
+/*
+2007国家队论文《一类算法复合的方法》
+*/
 #include<cstdio>
 #include<cstring>
 #include<iostream>
