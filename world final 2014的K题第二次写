@@ -1,0 +1,174 @@
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+#include<queue>
+#include<deque>
+#include<map>
+#include<hash_map>
+using namespace std;
+const int maxn = 1000005;
+const int maxm = 21;
+const int inf = 0x3fffffff;
+typedef long long ll;
+
+int n,m;
+int f[maxm][maxn],nxt[maxn],pnt[maxm][maxn];
+struct P {
+    int x,y;
+    P() {}
+    P(int x,int y):x(x),y(y) {}
+} p[maxn];
+
+struct ST {
+    int l,r,idx,val;
+} st[maxn*6];
+void build(int id,int l,int r) {
+    st[id].l=l,st[id].r=r,st[id].val=-1,st[id].idx=-1;
+    if(l==r)return;
+    int m=(l+r)>>1;
+    build(id<<1,l,m);
+    build(id<<1|1,m+1,r);
+}
+void upd(int id,int pos,int idx,int val) {
+    if(st[id].val<val) {
+        st[id].idx=idx;
+        st[id].val=val;
+    }
+    if(st[id].l==st[id].r)return;
+    int m=(st[id].l+st[id].r)>>1;
+    if(pos<=m)upd(id<<1,pos,idx,val);
+    else upd(id<<1|1,pos,idx,val);
+}
+P query(int id,int l,int r) {
+    if(st[id].l==l&&st[id].r==r)return P(st[id].idx,st[id].val);
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)return query(id<<1,l,r);
+    else if(l>m)return query(id<<1|1,l,r);
+    else {
+        P tt=query(id<<1,l,m);
+        P tt2=query(id<<1|1,m+1,r);
+        if(tt.y<tt2.y)return tt2;
+        return tt;
+    }
+}
+
+int cal(P l,P r) {
+    if(l.x>l.y)l.y+=n;
+    if(r.x>r.y)r.y+=n;
+    while(r.x<l.x) {
+        r.x+=n,r.y+=n;
+    }
+    return r.y-l.y;
+}
+int cal2(P l) {
+    if(l.x>l.y)l.y+=n;
+    return l.y-l.x+1;
+}
+int cal3(P l,int x) {
+    if(l.x<=l.y)return l.x<=x&&x<=l.y;
+    return x>=l.x||x<=l.y;
+}
+
+int main() {
+    //freopen("in.cpp","r",stdin);
+    while(~scanf("%d%d",&n,&m)) {
+        bool sign=0;
+        for(int i=1; i<=m; i++) {
+            int x,y;
+            scanf("%d%d",&x,&y);
+            int ny=y+1;
+            if(ny>n)ny=1;
+            if(x==ny)sign=1;
+            p[i]=P(x,ny);
+        }
+        if(sign) {
+            printf("1\n");
+            continue;
+        }
+        build(1,1,n);
+        for(int i=1; i<=m; i++) {
+            nxt[i]=-1;
+            for(int j=0; j<maxm; j++)f[j][i]=pnt[j][i]=-1;
+            int ny=p[i].y;
+            if(p[i].x>p[i].y)ny+=n;
+            upd(1,p[i].x,i,ny);
+        }
+        for(int i=1; i<=m; i++) {
+            if(p[i].x<=p[i].y) {
+                P tt=query(1,p[i].x,p[i].y);
+                if(tt.x!=-1&&tt.x!=i&&tt.y>p[i].y)nxt[i]=tt.x;
+            } else {
+                P tt=query(1,p[i].x,n);
+                if(tt.x!=-1&&tt.x!=i&&tt.y>p[i].y+n)nxt[i]=tt.x;
+                P tt2=query(1,1,p[i].y);
+                if(tt2.y>p[i].y&&tt2.x!=i) {
+                    if(tt.x==-1)nxt[i]=tt2.x;
+                    else {
+                        int tmp1=cal(p[i],p[tt.x]);
+                        int tmp2=cal(p[i],p[tt2.x]);
+                        if(tmp1>tmp2)nxt[i]=tt.x;
+                        else nxt[i]=tt2.x;
+                    }
+                }
+            }
+            if(nxt[i]!=-1) {
+                pnt[0][i]=nxt[i];
+                f[0][i]=cal(p[i],p[nxt[i]]);
+            }
+        }
+
+        //   for(int i=1; i<=m; i++)printf("%d: %d %d %d\n",i,p[i].x,p[i].y,nxt[i]);
+
+        for(int j=1; j<maxm; j++)
+            for(int i=1; i<=m; i++)
+                if(pnt[j-1][i]!=-1&&pnt[j-1][pnt[j-1][i]]!=-1) {
+                    pnt[j][i]=pnt[j-1][pnt[j-1][i]];
+                    f[j][i]=f[j-1][i]+f[j-1][pnt[j-1][i]];
+                }
+        int ret=-1;
+        int mx=-1,idx=-1;
+        for(int i=1; i<=m; i++) {
+            int tt=cal2(p[i]);
+            if(mx<tt) {
+                mx=tt;
+                idx=i;
+            }
+        }
+        int cur=idx,cnt=1;
+        sign=0;
+        while(1) {
+            cnt++;
+            cur=nxt[cur];
+            if(cur==-1)break;
+            if(cal3(p[idx],p[cur].y)) {
+                sign=1;
+                break;
+            }
+            if(cnt>n)break;
+        }
+        if(sign) {
+            ret=cnt;
+            //printf("** %d\n",ret);
+            for(int i=1; i<=m; i++) {
+                int len=0;
+                int cur=i;
+                for(int j=0; j<maxm; j++)
+                    if((ret-2)&(1<<j)) {
+                        if(f[j][cur]==-1)break;
+                        len+=f[j][cur],cur=pnt[j][cur];
+                        if(cur==-1)break;
+                    }
+                //printf("** %d %d %d %d\n",len,p[i].x,p[i].y,cal2(p[i]));
+                if(len+cal2(p[i])>n) {
+                    ret--;
+                    break;
+                }
+            }
+            printf("%d\n",ret);
+        } else printf("impossible\n");
+    }
+    return 0;
+}
