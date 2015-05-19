@@ -1,3 +1,7 @@
+/*
+题意：环上n条线段，n<10^6，最少需要多少条线段覆盖环
+又写了一次，用线段树处理出每个区间的严格后继，然后先找一次，在用倍增看看-1的是否可以
+*/
 #include<cstdio>
 #include<cstring>
 #include<iostream>
