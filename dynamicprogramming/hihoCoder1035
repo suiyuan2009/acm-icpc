@@ -1,0 +1,185 @@
+/*
+题意：一个人从顶点1出发，有一辆车，每一条边走路和驾车分别具有花费，问走完指定的几个点之后最小花费
+记f[i][j][k][r]为走到第i个点，开始遍历以i为根的子树时，车子是否在第i个点上，并且最后人是否回到第i个点上，以及车子是否回到第i个点上。
+*/
+#include <cstdio>
+#include <algorithm>
+#include <vector>
+#include <cmath>
+#include <cstring>
+#include <string>
+#include <queue>
+using namespace std;
+typedef long long ll;
+const int maxn = 1000005;
+const int maxm = maxn + maxn;
+const int inf = 0x3fffffff;
+const int mod = 1000000007;
+
+int c[maxn], n, a[maxn], m;
+ll f[maxn][2][2][2];
+int head[maxn], ew0[maxm], ew1[maxm], nxt[maxm], num, ev[maxm];
+
+void addedge(int u, int v, int w0, int w1)
+{
+    nxt[++num] = head[u];
+    head[u] = num;
+    ev[num] = v;
+    ew0[num] = w0;
+    ew1[num] = w1;
+}
+
+void pd(int &id1, int &id2, ll &val1, ll &val2, int id, ll val)
+{
+    if (id1 == -1)
+    {
+        id1 = id;
+        val1 = val;
+    }
+    else
+    {
+        if (val1 > val)
+        {
+            id2 = id1;
+            val2 = val1;
+            id1 = id;
+            val1 = val;
+        }
+        else
+        {
+            if (id2 == -1 || val2 > val)
+            {
+                id2 = id;
+                val2 = val;
+            }
+        }
+    }
+}
+
+void dfs(int u, int fa)
+{
+    c[u] += a[u];
+    for (int i = head[u]; i; i = nxt[i])
+    {
+        int v = ev[i];
+        if (v == fa)continue;
+        int w0 = ew0[i];
+        int w1 = ew1[i];
+        dfs(v, u);
+        if (c[v])
+        {
+            f[u][0][0][0] += f[v][0][1][0] + w0 + w0;
+            f[u][0][1][0] += f[v][0][1][0] + w0 + w0;
+            f[u][1][1][1] += min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0);
+            f[u][1][1][0] += min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0);
+            f[u][1][0][0] += min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0);
+        }
+        c[u] += c[v];
+    }
+    ll t00 = f[u][0][0][0], t10 = f[u][1][0][0], t11 = f[u][1][1][0];
+    for (int i = head[u]; i; i = nxt[i])
+    {
+        int v = ev[i];
+        if (v == fa)continue;
+        int w0 = ew0[i];
+        int w1 = ew1[i];
+        if (c[v])
+        {
+            //f[u][0][0][0] += f[v][0][1][0] + w0 + w0;
+            f[u][0][0][0] = min(f[u][0][0][0], t00 - f[v][0][1][0] - w0 - w0 + f[v][0][0][0] + w0);
+            //f[u][1][1][0] += min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0);
+            f[u][1][1][0] = min(f[u][1][1][0], t11 - min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0) + f[v][1][1][0] + w1 + w0);
+            //f[u][1][0][0] += min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0);
+            f[u][1][0][0] = min(f[u][1][0][0], t10 - min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0) + f[v][1][0][0] + w1);
+            f[u][1][0][0] = min(f[u][1][0][0], t10 - min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0) + f[v][0][0][0] + w0);
+        }
+    }
+    int id11 = -1, id12 = -1, id21 = -1, id22 = -1, id31 = -1, id32 = -1;
+    ll val11, val12, val21, val22, val31, val32;
+    for (int i = head[u]; i; i = nxt[i])
+    {
+        int v = ev[i];
+        if (v == fa)continue;
+        if (!c[v])continue;
+        int w0 = ew0[i];
+        int w1 = ew1[i];
+        pd(id11, id12, val11, val12, v, t10 - min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0) + f[v][1][1][0] + w1 + w0);
+        pd(id21, id22, val21, val22, v, t10 - min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0) + f[v][1][1][1] + w1 + w1);
+        pd(id31, id32, val31, val32, v, t10 - min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0) + f[v][0][0][0] + w0);
+    }
+    if (id11 != -1 && id31 != -1 && id11 != id31)
+    {
+        f[u][1][0][0] = min(f[u][1][0][0], val11 + val31 - t10);
+    }
+    else
+    {
+        if (id11 != -1 && id32 != -1)
+        {
+            f[u][1][0][0] = min(f[u][1][0][0], val11 + val32 - t10);
+        }
+        if (id12 != -1 && id31 != -1)
+        {
+            f[u][1][0][0] = min(f[u][1][0][0], val12 + val31 - t10);
+        }
+    }
+
+    if (id21 != -1 && id31 != -1 && id21 != id31)
+    {
+        f[u][1][0][0] = min(f[u][1][0][0], val21 + val31 - t10);
+    }
+    else
+    {
+        if (id21 != -1 && id32 != -1)
+        {
+            f[u][1][0][0] = min(f[u][1][0][0], val21 + val32 - t10);
+        }
+        if (id22 != -1 && id31 != -1)
+        {
+            f[u][1][0][0] = min(f[u][1][0][0], val22 + val31 - t10);
+        }
+    }
+    /*for (int i = head[u]; i; i = nxt[i])
+    {
+        int v = ev[i];
+        if (v == fa)continue;
+        if (!c[v])continue;
+        int w0 = ew0[i];
+        int w1 = ew1[i];
+        for (int j = head[u]; j; j = nxt[j])
+        {
+            int vv = ev[j];
+            if (vv == v || vv == fa || !c[vv])continue;
+            int w00 = ew0[j];
+            int w11 = ew1[j];
+            f[u][1][0][0] = min(f[u][1][0][0], t10 - min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0) - min(f[vv][1][1][1] + w11 + w11, f[vv][0][1][0] + w00 + w00) + f[v][1][1][0] + w1 + w0 + f[vv][0][0][0] + w00);
+            f[u][1][0][0] = min(f[u][1][0][0], t10 - min(f[v][1][1][1] + w1 + w1, f[v][0][1][0] + w0 + w0) - min(f[vv][1][1][1] + w11 + w11, f[vv][0][1][0] + w00 + w00) + f[v][1][1][1] + w1 + w1 + f[vv][0][0][0] + w00);
+        }
+    }*/
+}
+
+int main()
+{
+    //freopen("in.cpp", "r", stdin);
+    //freopen("out.cpp", "w", stdout);
+    scanf("%d", &n);
+    for (int i = 1; i < n; i++)
+    {
+        int u, v, w0, w1;
+        scanf("%d%d%d%d", &u, &v, &w0, &w1);
+        addedge(u, v, w0, w1);
+        addedge(v, u, w0, w1);
+    }
+    scanf("%d", &m);
+    for (int i = 1; i <= m; i++)
+    {
+        int x;
+        scanf("%d", &x);
+        a[x] = 1;
+    }
+    dfs(1, 0);
+
+    //printf("*** %lld %lld\n", f[2][0][0][0], f[5][1][1][0]);
+
+    printf("%lld\n", f[1][1][0][0]);
+    return 0;
+}

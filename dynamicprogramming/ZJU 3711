@@ -1,0 +1,112 @@
+/*
+题意：共K个人，A在寝室T分钟后或者在寝室被警告后T分钟后会做坏事，
+只有B在寝室时才会警告A，并且消耗M个“手”中的一个，现在有N个寝室进出活动，
+给出时间，每个活动属于K个人的概率一样，问1440分钟后手的期望是多少只。
+记f[i][j][k][4]为到第i个时刻且此时还有j只手，且离上次A被警告或者进入寝室的时间为k，
+且此时AB是否在寝室的概率
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+#include<deque>
+using namespace std;
+#define eps 1e-18
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=105;
+
+int T,n,m,K;
+double f[maxn][maxn][maxn][4];
+int ti[maxn];
+
+void init()
+{
+    memset(f,0,sizeof(f));
+    f[0][m][0][0]=1;
+}
+
+bool sig(double x)
+{
+    return fabs(x)<eps;
+}
+
+double solve()
+{
+    //ti[++n]=1440;
+    for(int i=0; i<n; i++)
+        for(int j=0; j<=m; j++)
+            for(int k=0; k<=T; k++)
+                for(int r=0; r<4; r++)
+                {
+                    if(sig(f[i][j][k][r]))continue;
+                    if(r==0)
+                    {
+                        f[i+1][j][0][0]+=f[i][j][k][r]*(K-2)/K;
+                        f[i+1][j][0][1]+=f[i][j][k][r]/K;
+                        f[i+1][j][0][2]+=f[i][j][k][r]/K;
+                    }
+                    else if(r==1)
+                    {
+                        int tt=ti[i+1]-ti[i];
+                        f[i+1][j][min(k+tt,T)][r]+=f[i][j][k][r]*(K-2)/K;
+                        f[i+1][j][0][0]+=f[i][j][k][r]/K;
+                        int tmp=(k+tt>=T?T:k+tt);
+                        f[i+1][max(0,j-(tmp==T))][(tmp==T?0:tmp)][3]+=f[i][j][k][r]/K;
+                    }
+                    else if(r==2)
+                    {
+                        f[i+1][j][0][r]+=f[i][j][k][r]*(K-2)/K;
+                        f[i+1][j][0][0]+=f[i][j][k][r]/K;
+                        f[i+1][j][0][3]+=f[i][j][k][r]/K;
+                    }
+                    else
+                    {
+                        int tt=ti[i+1]-ti[i];
+                        f[i+1][max(j-(k+tt)/T,0)][(k+tt)%T][r]+=f[i][j][k][r]*(K-2)/K;
+                        f[i+1][max(j-(k+tt)/T,0)][0][2]+=f[i][j][k][r]/K;
+                        f[i+1][max(j-(k+tt)/T,0)][(k+tt)%T][1]+=f[i][j][k][r]/K;
+                    }
+                }
+    double ret=0;
+
+    // printf("** %lf\n",f[2][9][0][1]);
+
+    for(int j=0; j<=m; j++)
+        for(int k=0; k<=T; k++)
+            for(int r=0; r<4; r++)
+            {
+                if(sig(f[n][j][k][r]))continue;
+                int tj=j;
+                if(r==3)tj=max(0,j-(k+1440-ti[n])/T);
+
+                // printf("** %d %d %d %d: %d %lf\n",n,j,k,r,tj,f[n][j][k][r]);
+
+                ret+=f[n][j][k][r]*tj;
+            }
+    return ret;
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    int ncase;
+    scanf("%d",&ncase);
+    while(ncase--)
+    {
+        scanf("%d%d%d%d",&T,&n,&m,&K);
+        for(int i=1; i<=n; i++)scanf("%d",&ti[i]);
+        init();
+        printf("%.6f\n",solve());
+    }
+    return 0;
+}

@@ -1,0 +1,32 @@
+/*
+题意：统计不同的子序列个数
+记f[i]为当前以数字i结尾的子序列的个数，sum=sigma{f[i]}，顺序更新f[i]和sum就行，答案就是最后的sum
+*/
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+#include <cmath>
+#include <queue>
+#include <ctime>
+using namespace std ;
+const int maxn=1000005;
+const int mod=1000000007;
+
+int n,a[maxn],c[maxn],sum;
+
+int main () {
+    //freopen("ACM/in.in","r",stdin);
+    while(~scanf("%d",&n)){
+        memset(c,0,sizeof(c));
+        sum=0;
+        for(int i=1;i<=n;i++)scanf("%d",&a[i]);
+        for(int i=1;i<=n;i++){
+            int tt=c[a[i]];
+            c[a[i]]=(sum+1)%mod;
+            sum=((sum+mod-tt)%mod+c[a[i]])%mod;
+            //printf("** 1:%d 2:%d\n",c[1],c[2]);
+        }
+        printf("%d\n",sum);
+    }
+    return 0 ;
+}

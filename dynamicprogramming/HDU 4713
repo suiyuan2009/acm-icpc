@@ -1,0 +1,112 @@
+/*
+题意：构造n的排列中阶数最大且字典序最小的排列
+阶数最大其实就是把n划分成几个数，使得他们的最小公倍数最大
+记f[i][j]为到第i个素数为止，和不超过j的数的划分的最小公倍数的最大值
+素数取到前100个即可
+1越多越好，取的数越小越好
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+typedef double ldb;
+const int inf=0x3f3f3f3f;
+const int maxn=10005;
+const int maxm=75;
+const int mod=1000000007;
+
+bool notp[maxn];
+int p[maxn],cp;
+double f[maxm][maxn];
+double mylog[maxn];
+int pnt[maxm][maxn];
+int n;
+
+void init()
+{
+    for(int i=2; i<maxn; i++)
+        if(!notp[i])
+        {
+            p[++cp]=i;
+            for(int j=i+i; j<maxn; j+=i)
+                notp[j]=1;
+        }
+    for(int i=1; i<maxn; i++)
+        mylog[i]=log((double)i);
+    cp=maxm-1;
+    for(int i=0; i<cp; i++)
+    {
+        double tt=log((double)p[i+1]);
+        for(int j=0; j<maxn; j++)
+        {
+            if(f[i+1][j]+eps<f[i][j])
+            {
+                f[i+1][j]=f[i][j];
+                pnt[i+1][j]=j;
+            }
+            double c=0;
+            for(int k=p[i+1]; k+j<maxn; k*=p[i+1])
+            {
+                c+=tt;
+                if(f[i+1][k+j]+eps<f[i][j]+mylog[k])
+                {
+                    f[i+1][k+j]=f[i][j]+c;
+                    pnt[i+1][k+j]=j;
+                }
+            }
+        }
+    }
+}
+
+vector<int>ans;
+int main()
+{
+    init();
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%d",&n);
+        ans.clear();
+        int x=cp,y=n;
+        while(x)
+        {
+            //printf("** %d %d: %d\n",x,y,pnt[x][y]);
+            if(y!=pnt[x][y])ans.push_back(y-pnt[x][y]);
+            y=pnt[x][y];
+            x--;
+        }
+        for(int i=0; i<y; i++)ans.push_back(1);
+        sort(ans.begin(),ans.end());
+        bool sign=0;
+        int sum=0;
+        for(int i=0; i<ans.size(); i++)
+        {
+            int len=ans[i];
+            int l=sum+1,r=sum+ans[i];
+            for(int j=l+1; j<=r; j++)
+            {
+                if(sign)printf(" ");
+                else sign=1;
+                printf("%d",j);
+            }
+            if(sign)printf(" ");
+            else sign=1;
+            printf("%d",l);
+            sum+=ans[i];
+        }
+        printf("\n");
+    }
+    return 0;
+}

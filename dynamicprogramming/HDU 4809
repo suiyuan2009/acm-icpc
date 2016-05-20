@@ -1,0 +1,192 @@
+/*
+题意：一棵树，每个点属于3个人的概率相当，每个领地会形成联通区域，每个人的得分是max（0,奇数点联通区域-偶数点联通区域），
+问三个人得分的期望和
+根据对称性,1个人得分的期望的3倍就是3个人的得分期望，注意dp优化
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+using namespace std;
+typedef long long ll;
+const int maxn=305;
+const int maxm=611;
+const int mod=1000000007;
+
+ll f[maxn][maxm][2][2];
+int n;
+int head[maxn],ev[maxm],nxt[maxm],num;
+int L[maxn],R[maxn];
+
+void init()
+{
+    memset(f,0,sizeof(f));
+    num=0;
+    //memset(head,-1,sizeof(head));
+    for(int i=0;i<maxn;i++)head[i]=-1;
+}
+
+void addedge(int u,int v)
+{
+    nxt[++num]=head[u];
+    head[u]=num;
+    ev[num]=v;
+}
+
+void pd(ll &ret,ll val)
+{
+    ret+=val;
+    if(ret>=mod)ret-=mod;
+}
+
+int s[maxn],cs;
+ll g[maxn][maxm][2];
+void dfs(int u,int fa)
+{
+    for(int i=head[u];i+1;i=nxt[i])
+    {
+        int v=ev[i];
+        if(v==fa)continue;
+        dfs(v,u);
+    }
+    cs=0;
+    for(int i=head[u];i+1;i=nxt[i])
+    {
+        int v=ev[i];
+        if(v==fa)continue;
+        s[++cs]=v;
+    }
+    if(cs==0)
+    {
+        f[u][maxn][0][1]=2;
+        f[u][maxn][1][1]=1;
+        R[u]=L[u]=0;
+    }
+    else
+    {
+        R[u]=L[u]=0;
+         for(int i=0;i<=cs;i++)
+            for(int j=0;j<maxm;j++)
+                g[i][j][0]=0;
+        g[0][maxn][0]=1;
+        for(int i=0;i<cs;i++)
+        {
+            int v=s[i+1];
+            int tL=L[u],tR=R[u];
+            for(int j=L[u];j<=R[u];j++)
+            {
+                if(g[i][j+maxn][0]==0)continue;    
+                for(int k=L[v];k<=R[v];k++)
+                {
+                    int to=j+k+maxn;
+                    if(to<0||to>=maxm)continue;
+                    if(f[v][k+maxn][0][1])
+                    {
+                        pd(g[i+1][to][0],f[v][k+maxn][0][1]*g[i][j+maxn][0]%mod);
+                        if(tR<to-maxn)tR=to-maxn;
+                        if(tL>to-maxn)tL=to-maxn;
+                    }
+                    if(to+1<maxm&&f[v][k+maxn][1][1])
+                    {
+                         if(tR<to+1-maxn)tR=to+1-maxn;
+                        if(tL>to+1-maxn)tL=to+1-maxn;
+                        pd(g[i+1][to+1][0],f[v][k+maxn][1][1]*g[i][j+maxn][0]%mod);
+                    }
+                    if(to-1>=0&&f[v][k+maxn][1][0])
+                    {
+                         if(tR<to-1-maxn)tR=to-1-maxn;
+                        if(tL>to-1-maxn)tL=to-1-maxn;
+                        pd(g[i+1][to-1][0],f[v][k+maxn][1][0]*g[i][j+maxn][0]%mod);
+                    }
+                }  
+            }
+            R[u]=tR,L[u]=tL;
+        }
+        for(int i=0;i<maxm;i++)
+        {
+            pd(g[cs][i][0],g[cs][i][0]);
+            f[u][i][0][1]=g[cs][i][0];
+        }
+        for(int i=0;i<=cs;i++)
+           for(int j=0;j<maxm;j++)
+               g[i][j][0]=g[i][j][1]=0;
+        g[0][maxn][1]=1;
+        int ttR=R[u],ttL=L[u];
+        R[u]=L[u]=0;
+        for(int i=0;i<cs;i++)
+        {
+            int v=s[i+1];
+            int tL=L[u],tR=R[u];
+            for(int j=L[u];j<=R[u];j++)
+            {
+                //if(g[i][j][0]==0&&g[i][j][1]==0)continue;
+                for(int r=0;r<2;r++)
+                {
+                    if(g[i][j+maxn][r]==0)continue;
+                    for(int k=L[v];k<=R[v];k++)
+                    {
+                        int to=j+k+maxn;
+                        if(to<0||to>=maxm)continue;
+                        if(f[v][k+maxn][0][1])
+                        {
+                            if(tL>to-maxn)tL=to-maxn;
+                            if(tR<to-maxn)tR=to-maxn;
+                            pd(g[i+1][to][r],g[i][j+maxn][r]*f[v][k+maxn][0][1]%mod);
+                        }
+                        if(f[v][k+maxn][1][0])
+                        {
+                            if(tL>to-maxn)tL=to-maxn;
+                            if(tR<to-maxn)tR=to-maxn;
+                            pd(g[i+1][to][r],g[i][j+maxn][r]*f[v][k+maxn][1][0]%mod);
+                        }
+                        if(f[v][k+maxn][1][1])
+                        {
+                            if(tL>to-maxn)tL=to-maxn;
+                            if(tR<to-maxn)tR=to-maxn;
+                            pd(g[i+1][to][1-r],g[i][j+maxn][r]*f[v][k+maxn][1][1]%mod);
+                        }
+                    }
+                }
+            }
+            R[u]=tR,L[u]=tL;
+        }
+        L[u]=min(ttL,L[u]);
+        R[u]=max(ttR,R[u]);
+        for(int i=0;i<maxm;i++)
+            for(int j=0;j<2;j++)
+                f[u][i][1][j]=g[cs][i][j];
+    }
+}
+
+int main()
+{
+   // freopen("ACM/in.in","r",stdin);
+    while(~scanf("%d",&n))
+    {
+        init();
+       // int m;scanf("%d",&m);
+        for(int i=1;i<n;i++)
+        {
+            int u,v;
+            scanf("%d%d",&u,&v);
+         //   scanf("%d",&m);
+            addedge(u,v);
+            addedge(v,u);
+        }
+        //for(int i=0;i<n;i++)scanf("%d",&m);
+        dfs(1,0);
+        ll ret=0;
+        for(int i=0;i<maxm;i++)
+        {
+            pd(ret,f[1][i][0][1]*(max(0,i-maxn))%mod);
+            if(i-1>=0&&f[1][i][1][0])
+                pd(ret,f[1][i][1][0]*(max(0,i-1-maxn))%mod);
+            if(i+1<maxm&&f[1][i][1][1])
+                pd(ret,f[1][i][1][1]*(max(0,i+1-maxn))%mod);
+        }
+        printf("%I64d\n",ret*3%mod);
+    }
+    return 0;
+}

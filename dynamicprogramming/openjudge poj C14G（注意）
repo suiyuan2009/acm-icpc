@@ -1,0 +1,134 @@
+/*
+The n cities (numbered from 0 to n-1) in your province are connected by m single-lane roads. Each road is labeled with an integer. You may obtain a ticket, return a ticket or do nothing if you are driving on a road. More specifically, when driving along a road started from city x to city y with label t, you will
+1. Receive a ticket with a t-th type of stamp before you hit the road if t > 0;
+2. Be allowed to drive freely on the road if t = 0;
+3. Be asked to return a specified ticket before you hit the road if t < 0. That ticket should be the most recently obtained ticket in your hands which is marked with a t-th type of stamp.
+
+For example, you are allowed to drive along a sequence of roads labelled with 1 2 0 -2 -1 1. However, you are not allowed to drive along the roads labelled with 1 2 0 -1 -2 1. For the first example, you will have only one ticket in your hands when finishing the 6th road. For the second example, you are not allowed to drive on the 4th road because you cannot return the ticket with a 1st type of stamp because that ticket in your hands is not the most recently obtained one.
+
+You are planning to test your newly purchased car on the road in the province. You can depart from any city and end your journey in any city. You do not have any ticket before the journey. You may have several tickets with the same type during the journey. The length of your journey is d, that is to say, you need to pass exactly d roads.
+
+Your task is to calculate the number of different paths of your journey. In this task, a path is defined as a sequence of roads you are allowed to drive. Since the answer will be extremely large, you need to output the reminder of the answer divided by 32 768, i.e. the result of “answer mod 32 768”.
+
+记f[i][j][k]为长度为k，起点终点为i和j，且对消后值为0的路径条数
+记g[i][j][k]为对消后存在若干正值的路径条数
+*/
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+#include <iostream>
+#include <vector>
+#include <cmath>
+using namespace std;
+typedef long long ll;
+const int maxn = 30;
+const int maxm = 205;
+const int inf = 0x3fffffff;
+const ll mod = 32768;
+
+int n, m, D;
+int head[maxn], num, ev[maxm], ew[maxm], nxt[maxm];
+ll f[maxn][maxn][40], g[maxn][maxn][40];
+
+void init()
+{
+    num = 0;
+    memset(f, 0, sizeof(f));
+    memset(g, 0, sizeof(g));
+    memset(head, -1, sizeof(head));
+    for (int i = 0; i < maxn; i++)
+        f[i][i][0] = 1;
+}
+
+void add(int u, int v, int w)
+{
+    nxt[num] = head[u];
+    head[u] = num;
+    ev[num] = v;
+    ew[num] = w;
+    num++;
+}
+
+void pd(ll &ret, ll val)
+{
+    ret += val;
+    if (ret >= mod)ret -= mod;
+}
+
+int main()
+{
+    //  freopen("in.cpp", "r", stdin);
+    int T, ncase = 0;
+    scanf("%d", &T);
+    while (T--)
+    {
+        init();
+        scanf("%d%d%d", &n, &m, &D);
+        for (int i = 1; i <= m; i++)
+        {
+            int u, v, w;
+            scanf("%d%d%d", &u, &v, &w);
+            add(u, v, w);
+        }
+        for (int i = 0; i < n; i++)
+            for (int j = head[i]; j != -1; j = nxt[j])
+            {
+                int v = ev[j], w = ew[j];
+                if (w == 0)f[i][v][1]++;
+                else if (w > 0)g[i][v][1]++;
+            }
+        for (int d = 2; d <= D; d++)
+        {
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < n; j++)
+                    for (int k = head[i]; k != -1; k = nxt[k])
+                    {
+                        int v = ev[k], w = ew[k];
+                        if (w == 0)pd(f[i][j][d], f[v][j][d - 1]);
+                        else if (w > 0)
+                        {
+                            for (int r = 0; r < n; r++)
+                                for (int s = head[r]; s != -1; s = nxt[s])
+                                {
+                                    int vv = ev[s], ww = ew[s];
+                                    if (w + ww == 0)
+                                    {
+                                        for (int dd = 0; dd <= d - 2; dd++)
+                                            pd(f[i][j][d], f[v][r][dd]*f[vv][j][d - 2 - dd] % mod);
+                                    }
+                                }
+                        }
+                    }
+        }
+        for (int d = 2; d <= D; d++)
+        {
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < n; j++)
+                    for (int k = head[i]; k != -1; k = nxt[k])
+                    {
+                        int v = ev[k], w = ew[k];
+                        if (w == 0)pd(g[i][j][d], g[v][j][d - 1]);
+                        else if (w > 0)
+                        {
+                            pd(g[i][j][d], (g[v][j][d - 1] + f[v][j][d - 1]) % mod);
+                            for (int r = 0; r < n; r++)
+                                for (int s = head[r]; s != -1; s = nxt[s])
+                                {
+                                    int vv = ev[s], ww = ew[s];
+                                    if (w + ww == 0)
+                                    {
+                                        for (int dd = 0; dd <= d - 2; dd++)
+                                            pd(g[i][j][d], f[v][r][dd]*g[vv][j][d - 2 - dd] % mod);
+                                    }
+                                }
+                        }
+                    }
+        }
+        ll ret = 0;
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                pd(ret, (f[i][j][D] + g[i][j][D]) % mod);
+        printf("%lld\n", ret);
+    }
+    return 0;
+}

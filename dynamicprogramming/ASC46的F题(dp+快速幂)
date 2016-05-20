@@ -1,0 +1,65 @@
+/*
+题意比较复杂，大概是某句子是由某句子如何构成之类
+一开始状态里有前缀和，结果搞得很复杂，其实这题要意识到自己也可以转移到自己
+
+PS:貌似用前缀和的话会重复
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn = 4;
+const int inf=0x3fffffff;
+const int mod=998244353;
+
+struct Mat{
+    int n,m;
+    ll a[maxn][maxn];
+    Mat(int _n,int _m,bool flag=0){
+        n=_n,m=_m;
+        for(int i=0;i<n;i++)
+            for(int j=0;j<m;j++)
+                a[i][j]=((i==j)&&flag);
+    }
+    Mat operator*(const Mat&tt)const{
+        Mat ret=Mat(n,tt.m,0);
+        for(int i=0;i<n;i++)
+            for(int j=0;j<tt.m;j++)
+                for(int k=0;k<m;k++)
+                  ret.a[i][j]=(ret.a[i][j]+a[i][k]*tt.a[k][j])%mod;
+        return ret;
+    }
+};
+
+int main() {
+  //  freopen("ACM/in.in", "r", stdin);
+    freopen("figure.in","r",stdin);
+    freopen("figure.out","w",stdout);
+    int n;
+    while(scanf("%d",&n)&&n){
+        Mat ret=Mat(4,1);
+        ret.a[0][0]=1;
+        Mat mul=Mat(4,4);
+        mul.a[0][0]=1,mul.a[0][1]=1,mul.a[0][2]=1;
+        mul.a[1][0]=1,mul.a[1][2]=2,mul.a[1][1]=2;
+        mul.a[2][2]=1,mul.a[2][3]=1;
+        mul.a[3][3]=1,mul.a[3][1]=1,mul.a[3][2]=2;
+        Mat tt=Mat(4,4,1);
+        while(n){
+            if(n&1)tt=mul*tt;
+            mul=mul*mul;
+            n>>=1;
+        }
+        ret=tt*ret;
+        printf("%lld\n",ret.a[0][0]);
+    }
+    return 0;
+}

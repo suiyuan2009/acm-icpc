@@ -1,0 +1,135 @@
+/*
+题意：连接所有的H到G上，求最小花费，在.和W上打桩有花费
+记f[i][j][mask]为到(i,j)时状态是mask的最小花费，然后做spfa
+*/
+/*
+1
+0 10
+........
+...H....
+...W....
+.HWGWH..
+...W....
+...H....
+........
+........
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<stdio.h>
+#include<string.h>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+using namespace std;
+#define eps 1e-7
+typedef unsigned long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=8;
+const int mod=1000000007;
+
+int f[maxn][maxn][1<<maxn];
+bool in[maxn][maxn][1<<maxn];
+char str[maxn+5][maxn+5];
+int w1,w2;
+int rx,ry;
+int n;
+
+struct E
+{
+    int x,y;
+    int state;
+};
+int dir[4][2]= {{1,0},{-1,0},{0,1},{0,-1}};
+void bfs()
+{
+    //int fr=0,rr=0;
+    queue<E>que;
+    for(int i=0; i<8; i++)
+        for(int j=0; j<8; j++)
+        {
+            f[i][j][0]=0;
+            for(int k=1; k<(1<<8); k++)
+                f[i][j][k]=-1;
+            for(int k=0; k<(1<<8); k++)
+                in[i][j][k]=0;
+        }
+    n=0;
+    for(int i=0; i<8; i++)
+        for(int j=0; j<8; j++)
+        {
+            if(str[i][j]=='G')rx=i,ry=j;
+            else if(str[i][j]=='H')
+            {
+                E tt;
+                tt.x=i,tt.y=j;
+                tt.state=(1<<n);
+                que.push(tt);
+                f[i][j][tt.state]=0;
+                in[i][j][tt.state]=1;
+                n++;
+            }
+        }
+    E u,v;
+    while(!que.empty())
+    {
+        u=que.front();
+        que.pop();
+        in[u.x][u.y][u.state]=0;
+        for(int i=0; i<4; i++)
+        {
+            v.x=u.x+dir[i][0];
+            v.y=u.y+dir[i][1];
+            v.state=u.state;
+            if(v.x<0||v.x>=8||v.y<0||v.y>=8)continue;
+            int tt=(((1<<n)-1)^u.state);
+            for(int j=tt;; j=((j-1)&tt))
+            {
+                if(f[v.x][v.y][j]!=-1)
+                {
+                    v.state=(u.state|j);
+                    int dis=f[u.x][u.y][u.state]+1;
+                    if(str[v.x][v.y]=='.'&&j==0)dis+=w1;
+                    else if(str[v.x][v.y]=='W'&&j==0)dis+=w2;
+
+                    if(f[v.x][v.y][v.state]==-1||f[v.x][v.y][v.state]>dis+f[v.x][v.y][j])
+                    {
+                        /*if(v.x==3&&v.y==2&&v.state==3)
+                        {
+                            if(u.state==1)printf("** %d %d\n",dis,f[v.x][v.y][j]);
+                        }*/
+
+                        f[v.x][v.y][v.state]=dis+f[v.x][v.y][j];
+                        if(!in[v.x][v.y][v.state])
+                        {
+                            in[v.x][v.y][v.state]=1;
+                            que.push(v);
+                        }
+                    }
+                }
+                if(j==0)break;
+            }
+        }
+    }
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%d%d",&w1,&w2);
+        for(int i=0; i<8; i++)scanf("%s",str[i]);
+        bfs();
+
+
+       // printf("****** %d\n",f[3][2][3]);
+
+        printf("Case %d: %d\n",++ncase,f[rx][ry][(1<<n)-1]);
+    }
+    return 0;
+}

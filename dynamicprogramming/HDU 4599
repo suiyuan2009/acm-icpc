@@ -1,0 +1,133 @@
+/*
+题意：求骰子投出连续N个1的期望次数，连续投出N个相同的数的期望次数，投出N个1的期望次数
+直接记f[i],h[i],g[i]即可
+或者可以记dp[i]代表已经有i个连续相同还需要的次数期望
+思路：
+
+1.求f[n];dp[i]表示i个连续相同时的期望
+
+则 dp[0]=1+dp[1]
+
+    dp[1]=1+(5dp[1]+dp[2])/6
+
+    ……
+
+    dp[i]=1+(5dp[1]+dp[i+1])/6
+
+    ……
+
+    dp[n]=0
+
+可以求得f[n]=(6^n-1)/5.
+
+2.求h[n];dp[i]表示i个连续相同的1时的期望
+
+则 dp[0]=1+(5dp[0]+dp[1])/6
+
+    dp[1]=1+(5dp[0]+dp[2])/6
+
+    ……
+
+    dp[i]=1+(5dp[0]+dp[i+1])/6
+
+    ……
+
+    dp[n]=0
+
+可以求得h[n]=(6^(n+1)-6)/5.
+
+3.求g[m];dp[i]表示i个1时的期望
+
+则 dp[0]=1+(5dp[0]+dp[1])/6
+
+    dp[1]=1+(5dp[1]+dp[2])/6
+
+    ……
+
+    dp[i]=1+(5dp[i]+dp[i+1])/6
+
+    ……
+
+    dp[n]=0
+
+可以求得g[m]=6*m.
+
+这样就有 m1>=(6^n-1)/30;m2>=(6^n-1)/5
+
+分析易知(6^n-1)/30不能整除,所以m1=(6^n+24)/30 ; m2=(6^n-1)/5 .
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-8
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+const int maxn=105;
+const int mod=2011;
+
+int n;
+
+void gcd(ll a,ll b, ll& d,ll& x,ll& y)   //      已经测试 FZU 1402
+{
+    if(!b)
+    {
+        d=a;
+        x=1;
+        y=0;
+    }
+    else
+    {
+        gcd(b,a%b,d,y,x);
+        y-=a/b*x;
+    }
+}
+
+
+ll inv(ll a,ll n)    //无逆元返回-1
+{
+    ll d,x,y;
+    gcd(a,n,d,x,y);
+    return d==1?(x%n+n)%(n/d):-1;
+}
+
+ll power(int n)
+{
+    ll ret=1,t=6;
+    while(n)
+    {
+        if(n&1)ret=(ret*t)%mod;
+        t=(t*t)%mod;
+        n>>=1;
+    }
+    return ret;
+}
+
+int main()
+{
+    // freopen("in.cpp","r",stdin);
+    ll inv5=inv(5,mod);
+    ll inv30=inv(30,mod);
+
+    // cout<<inv5<<" "<<inv30<<endl;
+
+    int n;
+    while(scanf("%d",&n)&&n)
+    {
+        ll ret=(power(n)+24)*inv30%mod;
+        printf("%I64d",ret);
+        ret=(power(n)-1)*inv5%mod;
+        printf(" %I64d\n",ret);
+    }
+    return 0;
+}

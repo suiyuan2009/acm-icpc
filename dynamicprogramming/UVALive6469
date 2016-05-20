@@ -1,0 +1,82 @@
+/*
+题意：n个数，前k个数必须错排，问方案数
+记f[i][j]为直接的答案，f[i][j]=f[i][j-1]-f[i-1][j-1];
+PS：能记f[i][j]代表前i个数，j个数要往后放这种状态，考虑往前放的时候只能是当前i这个数往前放。
+错排公式为dp[i]=(i-1)*(dp[i-1]+dp[i-2])，首先选择某个位置k放第i个数，然后如果k放n，那么就是dp[i-2]，否则k不能放到n，
+其他数约束不变，相当i-1个数的错排。
+*/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+typedef long long ll;
+const int maxn=18;
+
+ll a[maxn],f[maxn][maxn];
+void init()
+{
+    a[0]=1;
+    for(int i=1;i<maxn;i++)a[i]=i*a[i-1];
+    for(int i=0;i<maxn;i++)f[i][0]=a[i];
+    for(int i=1;i<maxn;i++)
+        for(int j=1;j<=i;j++)
+            f[i][j]=f[i][j-1]-f[i-1][j-1];
+}
+
+int main()
+{
+    //freopen("ACM/in.in","r",stdin);
+    init();
+    int cas,n,m;
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+       scanf("%d%d%d",&cas,&n,&m);
+       printf("%d %lld\n",cas,f[n][m]);
+    }
+    return 0;
+}
+
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<stack>
+#include<cmath>
+using namespace std;
+typedef long long ll;
+const int maxn=20;
+const int mod=1000000007;
+
+ll f[maxn][maxn];
+int n,m;
+
+int main()
+{
+ //   freopen("ACM/in.in","r",stdin);
+    // freopen("ACM/out.out","w",stdout);
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        int ncase;
+        scanf("%d%d%d",&ncase,&n,&m);
+        memset(f,0,sizeof(f));
+        f[0][0]=1;
+        for(int i=0;i<n;i++)
+            for(int j=0;j<=i;j++){
+                if(f[i][j]==0LL)continue;
+                f[i+1][j+1]+=f[i][j];
+                f[i+1][j]+=f[i][j]*j;
+                f[i+1][j]+=f[i][j]*j;
+                if(j)f[i+1][j-1]+=f[i][j]*j*j;
+                if(i+1>m)f[i+1][j]+=f[i][j];
+            }
+       printf("%d %lld\n",ncase,f[n][0]);
+    }
+    return 0;
+}

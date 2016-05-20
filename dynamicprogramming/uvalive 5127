@@ -1,0 +1,209 @@
+/*
+题意：team1在abc房间，team2在def房间，共6个人，要求每次只能移动一个人到空房间，且两队交替移动，问team1到def，team2到abc的最小步数
+f[i][j][2]代表team1在i，team2在j且此时哪个team移动的最优值，由于C(20,3)=1140，所以将2^20的状态hash到数组里，O(1)查询
+实在找不出错，rand几组大数据
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=20+5;
+const int maxm=1140+5;
+
+int f[maxm][maxm][2];
+int h[1<<20],g[maxm];
+int yc[1<<20][5];
+vector<int>e[maxn];
+int st,nd;
+void init()
+{
+    int num=0;
+    for(int i=0; i<(1<<20); i++)
+    {
+        int cnt=0;
+        for(int j=0; j<20; j++)
+            if(i&(1<<j))
+            {
+                if(cnt<3)yc[i][cnt]=j;
+                cnt++;
+            }
+        if(cnt==3)
+        {
+            h[i]=++num;
+            g[num]=i;
+        }
+    }
+    // printf("** %d\n",num);
+    st|=(1<<0),st|=(1<<1),st|=(1<<2);
+    nd|=(1<<3),nd|=(1<<4),nd|=(1<<5);
+}
+
+struct P
+{
+    int x,y,z;
+    P() {}
+    P(int _x,int _y,int _z)
+    {
+        x=_x,y=_y,z=_z;
+    }
+};
+queue<P>que;
+int bfs()
+{
+    //printf("**\n");
+    while(!que.empty())que.pop();
+    memset(f,-1,sizeof(f));
+    // queue<P>que;
+    P u,v;
+    u=P(st,nd,0);
+    que.push(u);
+    u=P(st,nd,1);
+    que.push(u);
+    f[h[st]][h[nd]][0]=0;
+    f[h[st]][h[nd]][1]=0;
+    while(!que.empty())
+    {
+        //printf("TMD\n");
+        u=que.front();
+        que.pop();
+        if(u.x==nd&&u.y==st)return f[h[u.x]][h[u.y]][u.z];
+        if(u.z==0)
+        {
+           // printf("**\n");
+            for(int i=0; i<3; i++)
+            {
+                int l=yc[u.x][i];
+
+               // printf("** %d\n",l);
+
+                for(int j=0; j<e[l].size(); j++)
+                {
+                    //printf("*****\n");
+                    int r=e[l][j];
+                 //   printf("ok: %d\n",r);
+                    if(u.y&(1<<r))continue;
+                    if(u.x&(1<<r))continue;
+                    v.x=u.x-(1<<l)+(1<<r);
+                    v.y=u.y;
+                    v.z=1-u.z;
+
+                 //   printf("%d %d %d: %d %d\n",v.x,v.y,v.z,h[v.x],h[v.y]);
+
+                    if(f[h[v.x]][h[v.y]][v.z]==-1)
+                    {
+                  //      printf("$\n");
+                        f[h[v.x]][h[v.y]][v.z]=f[h[u.x]][h[u.y]][u.z]+1;
+                        que.push(v);
+                    }
+                 //   printf("$$\n");
+                }
+
+              //  printf("&& %d\n",l);
+            }
+          //  printf("**\n");
+        }
+        else
+        {
+            for(int i=0; i<3; i++)
+            {
+                int l=yc[u.y][i];
+                for(int j=0; j<e[l].size(); j++)
+                {
+                    int r=e[l][j];
+                    if(u.y&(1<<r))continue;
+                    if(u.x&(1<<r))continue;
+                    v.y=u.y-(1<<l)+(1<<r);
+                    v.x=u.x;
+                    v.z=1-u.z;
+                    if(f[h[v.x]][h[v.y]][v.z]==-1)
+                    {
+                        f[h[v.x]][h[v.y]][v.z]=f[h[u.x]][h[u.y]][u.z]+1;
+                        que.push(v);
+                    }
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+char str[100000];
+string ss;
+int main()
+{
+    init();
+
+    //printf("** %d\n",h[2051]);
+
+   //freopen("in.cpp","r",stdin);
+    //freopen("out.cpp","w",stdout);
+    while(gets(str))
+    {
+        for(int i=0; i<maxn; i++)e[i].clear();
+        istringstream in(str);
+        while(in>>ss)
+        {
+            for(int i=1; i<ss.size(); i++)
+            {
+                int u=ss[0]-'a';
+                int v=ss[i]-'a';
+                e[u].push_back(v);
+                e[v].push_back(u);
+            }
+        }
+        int ret=bfs();
+        /* bfs();
+         int ret=f[h[nd]][h[st]][0];
+         if(ret==-1)ret=f[h[nd]][h[st]][1];
+         else if(ret>f[h[nd]][h[st]][1])
+             ret=f[h[nd]][h[st]][1];*/
+        if(ret==-1)printf("No solution.\n");
+        else printf("%d\n",ret);
+    }
+    return 0;
+}
+/*
+abcehijort bacehjkmnopqrst cabegklnpqrst defgklmnt eabcdghilmpr fdgqt gcdefjmnor habejklmnoqt iaejnst jabghimno kbcdhmoq lcdehnopq mbdeghjknoqrt nbcdghijlmort oabghjklmnpr pbcelort qbcfhklmt rabcegmnopst sbcir tabcdfhimnpqr
+afgjkmqr bejklmot cefknpqrs deghjopqst ebcdjmpq faciknopqrt gadhiklmp hdgiklpqrs ifghkqrt jabdelos kabcfghilnopqr lbghjknopr mabegnorst ncfklmoprst obdfjklmnps pcdefghklnoqrst qacdefhikps racfhiklmnpst scdhjmnopqr tbdfimnpr
+afhijklmopt befgklors cgilopqst defgjlnopqrst ebdfiklpr fabdeghms gbcdfijmpqrt hafilmoqs iaceghjkmnpq jadgiklpr kabeijns labcdehjmnoq mafghilopqrst ndiklopst oabcdhlmnst pacdegijmnst qcdghilmr rbdegjmqst sbcdfhkmnoprt tacdgmnoprs
+abcefhjklpst badegijlmqst cagijkmnors dbefghijmnopq eabdgikmq fadghiknopst gbcdefhnoqrt hadfgilnopt ibcdefhjkmnost jabcdiklmnos kacefijnopqrs labhjmnprs mbcdeijlpqt ncdfghijklrt ocdfghijks padfhklmqrt qbdegkmprt rcgklnpq sabcfijklot tabfghimnpqs
+adhmoqr bdfhjklpt cfghkmopst dabelmnopqr edghjlmqs fbcghopqrst gcefjmnop habceflqrst ikmpr jbegmopq kbcimnprt lbdehop macdegijkpq ndgkqrst oacdfgjlpqt pbcdfgijklmo qadefhjmnot radfhiknst scefhnr tbcfhknoqr
+acdfgijprt bcefhjmno cabdghikmqrt dacjkmqst ebhjkloprst fabghjnoqr gacfklmopt hbceflors iacjklnopst jabdefiklopqt kcdegijlmnpqrs leghijkmnors mbcdgklnqr nbfiklmoqst obefghijlnqrt paegijks qcdfjkmnot racefhklmot sdehiklnpt tacdegijnoqrs
+ainpqrst bcijlmnpqrt cbjoqrs dfghjkprs egkopqr fdhinoq gdehijklnprt hdfgjklnopq iabfglnqrst jbcdghlnpqt kdeghlmnopst lbghijkpt mbkopqs nabfghijkopqrs ocefhkmnprt pabdeghjklmnors qabcefhijmnrs rabcdeginopq sacdikmnpqt tabgijklos
+aeghjkloqs bcdelmnpqrt cbefghiklmop dbefiknopst eabcdfgjmnst fcdegijmpqrs gacefikoqt hacijkmnqrs icdfghjnoprt jaefhiklnoprs kacdghjlmpqrst labcjkmnpqs mbcefhklopqrt nbdehijlqt oacdgijmqrst pbcdfijklm qabfghklmnort rbfhijkmoqst sadefhjklor tbdegikmnoqr
+acdfmnpt begijlmnopqt cadfghjknop dacfglnopqrs ebfghjklmn facdeijknopqrs gbcdehikloqrst hcegjlmnopqst ibfgopqt jbcefhmops kcefgmoqt lbdeghnqrt mabehjkops nabcdefhlqst obcdfghijkmrs pabcdfhijmrst qbdfghiklnrt rdfglopqs sdfghjmnopr tabghiklnpq
+abcdeilmnpst baghilqst caefgijlort daefghijlnrs eacdfhijprt fcdehiopqs gbcdhijkmp hbdefgklmprs iabcdefgpq jcdegkmoq kghjlmpr labcdhknp maghjknrst nadlmoqt ocfjnps paefghiklost qbfijnt rcdehkmst sabdfhmopr tabcemnpqr
+abdhilmnp bacefhkmnst cbgijkmnoprt daehiklnpqst ebdfghlpqrs fbehilmnpr gcelmorst habdefimp iacdfhjort jcilnqst kbcdmoprst ladefgjmnqst mabcfghklnpqrs nabcdfjlmrs ocgikqrt pacdefhkmqrst qdejlmops rcefgikmnops sbdegjklmnpqr tbcdgijklop
+abcdefgjkloqrs bacdefgjlnpqr cabdgnopq dabcfgjkpqrs eabghipqr fabdghiot gabcdefjkmps hefipqr iefhjmnors jabdgikopr kadgjrs labnprst mgio nbcilors oacfijmnst pbcdeghjlrt qabcdehrt rabdehijklnpqt sadgiklno tflopqr
+abcefghjklnpqrst bacdfgijkmnot cabeghlmnopt dbefhiknoqrs eacdfhmnors fabdelnrst gabchjlnop hacdegimoq ibdhjmos jabgimnost kabdlmnoqrs lacfgkmoq mbcehijklopr nabcdefgjkpqst obcdeghijklms pacgmns qadhklns radefkm sadefijknopqt tabcfjns
+abefghilnopt bacdghijklnot cbdghijknoprst dbcefghiprs eadjklnot fadjkmopr gabcdjknpst habcdjlnqt iabcdjklmpqst jbcefghiklmpqrs kbcefgijlqrst labehijkopqr mfijp nabceghst oabceflprst pacdfgijlmoqt qhijklprs rcdfjkloqst scdgijknoqrt tabceghiknoprs
+adfgiklmnpq bejkorst ceghknors daeghijlnopqst ebcdghik fagnpqrt gacdefiklmnoqs hcdeimpqst iadeghklnopt jbdkprt kabcegijlnrs ladgikmnors maghloqrst nacdfgiklpqrt obcdgilmpqrt padfhijnoqrst qadfghmnopr rbcfjklmnopqs sbcdghklmprt tbdfhijmnops
+acdeijkmpq begjlnopt cadegijnqr dacehjlmopt eabcdfhjklmnopqt fegklns gbcfkopqr hdeknoqrt iacmop jabcdeklqt kaefghjlmnor lbdefjkmnpr madeiklnopst nbcefhklmqrt obdeghikmprs pabdegilmost qaceghjnrt rcghklnoq sfmop tbdehjmnpq
+abdfgijklmnpst badehilnopr cfhklnoqr dabeghijlns ebdijkpqrst facghiklnoqrst gadfhjklnorst hbcdfgikrs iabdefhlmoqrst jadeglmnpst kacefghlmnqst labcdfgijkmoqst maijklnopt nabcdfgjkmopqrs obcfgilmnps pabejmnos qcefiklnt rbcefghinst sadefghijklnopr taefgijklmqr
+aehiknqrt bclnps cbdehimopqt dcfhimnrt eachjnst fdhijmors ghkmpqrst hacdefgiot iacdfhjlmns jefiknoqrs kagjlnt lbikst mcdfgiq nabdeijkoprst ocfhjnqrst pbcgnqrt qacgjmoprs radfgjnopq sbefgijlnoq tacdeghklnop
+adfhikqt bcdfgjmnort cbdfhjklopqst dabcefhkmrt edfghiklrs fabcdeghijkrs gbefilnopr hacdefjklnort iaefgkmopt jbcfhklpqs kacdefhijmqst lceghjmnoqs mbdiklnqr nbghlmpq obcghilprs pcgijnoq qacjklmnprt rbdefghmoqs scefjklort tabcdhikqs
+abfgmqrst badfhijkmns cfjoprs dbefhijklnpr edfgjlmrt fabcdegijmoprt gaefipqst hbdikmprst ibdfghjklpqr jbcdefiklnqr kbdhijmnoqr ldeijort mabefhkpqr nbdjkrst ocfklprs pcdfghimot qagijkmr racdefhijklmnoq sabcghno taefghlnp
+adhijkmpqst befijlmnrst ceghiqt dafijlnopqrs ebcgjor fbdhipqrst gceklmnpqs hacfijklmnop iabcdfhjlnpqs jabdehint kaghlnort lbdghikmp mabghloprt nbdghijkprst odehkmqt padfghilmnq qacdfgiops rbdefkmnt sabdfginq tabcfjkmnor
+acijmnqs bdfgilmnost cadfijklnt dbclmnopqr eimot fbcghimnpqst gbfhimors hfgknqr iabcefgjkmnqrst jacikpq kchijlmrs lbcdkopqr mabdefgiknors nabcdfhimpt obdeglm pdfjlnq qadfhijlprs rdghiklmqst sabfgikmqr tbcefinr
+adfglmnpt bcdfijknqst cbdiklprs dabcefgijklmrst edgkmnoqst fabdt gadeikloprs hijmnpqrt ibcdghkmnopqrt jbdhknoprt kbcdegijlnopqt lacdgkmnoqst madehilqst nabehijklpt oegijklprt pacghijknoqrst qbehiklmp rcdghijopt sbcdeglmpt tabdefhijklmnoprs
+adfijkor bcefmno cbefiklopqrt daefijoprst ebcdhijlmorst fabcdhijkmnoqr ghiklnopqrt hefgikloqst iacdefghkmnrt jadefkmn kacfghijqr lceghnpqst mbefijnopr nbfgijlmopq oabcdefghmnqs pcdglmnqt qcfghklnop racdefgikm sdehlo tcdeghilp
+abdhjkmops baefhkmnopqr cdfjkprt daceghimps ebdghijlnrst fbcilnost gdehijkmoqr habdegjkloprt idefgort jaceghkmopqst kabcghjmnp lefhmoprt mabdgjklnqrs nbefkmpqrst oabfghijlprst pabcdhjklnoqrs qbgjmnpr rbceghilmnopqst sadefjmnoprt tcefhijlnors
+abdeghimoqr bagklmps cijklmopqrst daefghimnqrs eadghlort fdhmpst gabdehimopq hadefgklnopqst iacdgknpqrs jclmost kbchipqst lbcehjmqrt mabcdfgjlno ndhimps oaceghjmqst pbcfghiknqt qacdghikloprst racdeilq sbcdfhijknoqt tcefhjklopqs
+abefjprs baeghijkqrst cehikmpqrs dfhijklmnpqs eabcghijklmpqrs fadikopqrt gbehijklmoqrst hbcdegijlmnqt ibcdefghjkmopqr jabdeghiklmnoqst kbcdefgijpq ldeghjmnps mcdeghijlnopr ndhjlmpqst ofgijmpqt pacdefiklmnoqs qbcdefghijknops rabcefgimst sabcdegjlnpqrt tbfghjnors
+abceghijkmoqst bacejklno cabghinprt deghlmnprt eabdfhijkmnort fehkpqs gacdhjklmprt hacdefgjklmnoqrs iacejlmq jabeghilqrs kabefgho lbdghijmqrt madeghilnoprs nbcdehmqrt oabehkmr pcdfgmq qafhijlnps rcdeghjlmnost safhjmqrt tacdeglnrs
+adehimnpqt bcdfhkrs cbefhimoqs dabfklot eacfgilmnpqs fbcdemnpst gejklrs habcjklor iaceko jghlmnost kbdghinot ldeghjmnqrs macefjlnpst naefjklmops ocdhijknqr paefmnqrst qacelops rbghlopst sbcefgjlmnpqr tadfjkmpr
+acefgjklnpr bceflmnst cabdghklmqst dcfhlopqst eabfghklrst fabdehijkmnopqrst gacehiknpq hcdefgjnr ifgjlmnpr jafhiknort kacefgjnps labcdeiqs mbcfioqt nabfghijkprst odfjm padfgiknqrst qcdfglmps raefhijnps sbcdefklnpqr tbcdefjmnp
+*/

@@ -1,0 +1,133 @@
+/*
+题意：从树的n个顶点中选k个点，使得没有祖先关系，并且权值最大
+记f[i][j]为到第i层且选了j个点的最大权值，
+在处理字树i时，同一层的其他子树的f[i][j]传给i的后代，
+更新的时候反着更新，防止本层重复更新。
+*/
+#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=150001;
+const int maxm=301;
+const int mod=1000000007;
+
+int n,m;
+int f[10005][maxm];
+vector<int>g[maxn];
+int a[maxn];
+
+void init()
+{
+    for(int i=0; i<=n; i++)g[i].clear();
+}
+
+void dfs(int u,int d)
+{
+    for(int i=1; i<=m; i++)f[d+1][i]=f[d][i];
+    for(int i=0; i<g[u].size(); i++)
+        dfs(g[u][i],d+1);
+    for(int i=m; i>=1; i--)
+        f[d][i]=max(f[d+1][i],f[d][i-1]+a[u]);
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    while(~scanf("%d%d",&n,&m))
+    {
+        init();
+        for(int i=1; i<=n; i++)
+        {
+            int fa,val;
+            scanf("%d%d",&fa,&val);
+            g[fa].push_back(i);
+            a[i]=val;
+        }
+        for(int i=1; i<=m; i++)f[0][i]=-inf;
+        dfs(g[0][0],0);
+        // for(int i=1;i<=n;i++)
+        //    for(int j=0;j<=m;j++)
+        //     printf("** %d %d:%d\n",i,j,f[i][j]);
+        if(f[0][m]<=0)printf("impossible\n");
+        else printf("%d\n",f[0][m]);
+    }
+    return 0;
+}
+
+#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=150001;
+const int maxm=301;
+const int mod=1000000007;
+
+int n,m;
+int f[maxm];
+vector<int>g[maxn];
+int a[maxn];
+
+void init()
+{
+    for(int i=0; i<=n; i++)g[i].clear();
+}
+
+void dfs(int u,int d,int f[])
+{
+    int t[maxm];
+    //for(int i=1; i<=m; i++)f[d+1][i]=f[d][i];
+    for(int i=0; i<=m; i++)t[i]=f[i];
+    for(int i=0; i<g[u].size(); i++)
+        dfs(g[u][i],d+1,t);
+    for(int i=m; i>=1; i--)
+        f[i]=max(t[i],f[i-1]+a[u]);
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    while(~scanf("%d%d",&n,&m))
+    {
+        init();
+        for(int i=1; i<=n; i++)
+        {
+            int fa,val;
+            scanf("%d%d",&fa,&val);
+            g[fa].push_back(i);
+            a[i]=val;
+        }
+        for(int i=1; i<=m; i++)f[i]=-inf;
+        dfs(g[0][0],0,f);
+        // for(int i=1;i<=n;i++)
+        //    for(int j=0;j<=m;j++)
+        //     printf("** %d %d:%d\n",i,j,f[i][j]);
+        if(f[m]<=0)printf("impossible\n");
+        else printf("%d\n",f[m]);
+    }
+    return 0;
+}

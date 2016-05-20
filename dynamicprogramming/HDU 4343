@@ -1,0 +1,105 @@
+/*
+询问区间中不相交的区间最多有几条
+记f[i][j]为从i向后第2^j的区间的右端点最左可以是多少
+*/
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+#include <iostream>
+#include <cmath>
+#include <string>
+#include <vector>
+#include <map>
+using namespace std;
+typedef long long ll;
+const int maxn = 100005;
+const int maxm = 17;
+
+int n, m;
+struct  P
+{
+    int l, r;
+    bool operator<(const P &a)const
+    {
+        if (r == a.r)return l < a.l;
+        return r < a.r;
+    }
+} p[maxn], q[maxn];
+
+int f[maxn * 4][maxm];
+void pd(int &ret, int val)
+{
+    if (ret == -1 || ret > val)ret = val;
+}
+
+vector<int>vis;
+int main()
+{
+    //freopen("in.txt", "r", stdin);
+    while (scanf("%d%d", &n, &m) == 2)
+    {
+        vis.clear();
+        for (int i = 1; i <= n; i++)
+        {
+            scanf("%d%d", &p[i].l, &p[i].r);
+            vis.push_back(p[i].l);
+            vis.push_back(p[i].r);
+        }
+        for (int i = 1; i <= m; i++)
+        {
+            scanf("%d%d", &q[i].l, &q[i].r);
+            vis.push_back(q[i].l);
+            vis.push_back(q[i].r);
+        }
+        sort(vis.begin(), vis.end());
+        vis.erase(unique(vis.begin(), vis.end()), vis.end());
+        for (int i = 1; i <= n; i++)
+        {
+            p[i].l = lower_bound(vis.begin(), vis.end(), p[i].l) - vis.begin() + 1;
+            p[i].r = lower_bound(vis.begin(), vis.end(), p[i].r) - vis.begin() + 1;
+        }
+        for (int i = 1; i <= m; i++)
+        {
+            q[i].l = lower_bound(vis.begin(), vis.end(), q[i].l) - vis.begin() + 1;
+            q[i].r = lower_bound(vis.begin(), vis.end(), q[i].r) - vis.begin() + 1;
+        }
+        for (int i = 1; i <= vis.size(); i++)
+            for (int j = 0; j < maxm; j++)
+                f[i][j] = -1;
+        int l = 0;
+        sort(p + 1, p + n + 1);
+        for (int i = 1; i <= n; i++)
+        {
+            for (int j = l + 1; j <= p[i].l; j++)
+                pd(f[j][0], p[i].r);
+            if (l < p[i].l)l = p[i].l;
+        }
+        for (int i = 1; i <= vis.size(); i++)
+            for (int j = 1; j < maxm; j++)
+            {
+                if (f[i][j - 1] == -1)continue;
+                f[i][j] = f[f[i][j - 1]][j - 1];
+            }
+        for (int i = 1; i <= m; i++)
+        {
+            int ret = 0;
+            int cur = q[i].l;
+            while (1)
+            {
+                int tcur = cur;
+                int tj = -1;
+                for (int j = 0; j < maxm; j++)
+                {
+                    if (f[cur][j] == -1 || f[cur][j] > q[i].r)break;
+                    tcur = f[cur][j];
+                    tj = j;
+                }
+                if (tj != -1)ret += (1 << tj);
+                if (tcur == cur)break;
+                cur = tcur;
+            }
+            printf("%d\n", ret);
+        }
+    }
+    return 0;
+}

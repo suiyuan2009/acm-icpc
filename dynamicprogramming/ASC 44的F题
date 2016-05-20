@@ -1,0 +1,88 @@
+/*
+题意：把10^5的数组分成100个连续段，每一个段的值是本段里数字的最多重复次数，求最大和值
+
+dp过程中记一个数组g[i]代表数字i结尾的{f[x][y]+k个i}的最大值
+*/
+#include<cstdio>
+#include<algorithm>
+#include<string>
+#include<cmath>
+#include<cstring>
+#include<vector>
+#include<queue>
+using namespace std;
+typedef long long ll;
+const int maxn = 105;
+const int maxm = 100005;
+
+int n, m;
+int a[maxm];
+
+vector<int>vis;
+int f[maxn][maxm], g[maxm], pg[maxm], pnt[maxn][maxm];
+void init() {
+	vis.clear();
+	for (int i = 1; i <= n; i++) {
+		scanf("%d", &a[i]);
+		vis.push_back(a[i]);
+	}
+	sort(vis.begin(), vis.end());
+	vis.erase(unique(vis.begin(), vis.end()), vis.end());
+	for (int i = 1; i <= n; i++)a[i] = lower_bound(vis.begin(), vis.end(), a[i]) - vis.begin();
+}
+
+vector<int>ans;
+int main() {
+	freopen("funny.in", "r", stdin);
+	freopen("funny.out", "w", stdout);
+	//freopen("in.cpp", "r", stdin);
+	while (scanf("%d%d", &n, &m)) {
+		if (n == 0 && m == 0)break;
+		init();
+		for (int i = 1; i <= m; i++) {
+			int mx = 0, pre = -1;
+			for (int j = 0; j < vis.size(); j++)g[j] = pg[j] = 0;
+			for (int j = 1; j <= n; j++) {
+				if (f[i - 1][j - 1] + 1 > mx) {
+					mx = f[i - 1][j - 1] + 1;
+					pre = j - 1;
+				}
+				g[a[j]]++;
+				if (g[a[j]] > mx) {
+					mx = g[a[j]];
+					pre = pg[a[j]];
+				}
+				if (g[a[j]] < f[i - 1][j - 1] + 1) {
+					g[a[j]] = f[i - 1][j - 1] + 1;
+					pg[a[j]] = j - 1;
+				}
+				//if (i == 2 && j == 2)printf("** %d\n", f[i - 1][j - 1]);
+				f[i][j] = mx;
+				pnt[i][j] = pre;
+			}
+		}
+
+
+		//printf("** %d\n", f[2][2]);
+
+		int ret = 0, idx = -1;
+		for (int j = 1; j <= n; j++)
+			if (ret < f[m][j]) {
+				ret = f[m][j];
+				idx = j;
+			}
+		int x = m, y = idx;
+		ans.clear();
+		while (x) {
+			if (pnt[x][y] > 0)
+				ans.push_back(pnt[x][y]);
+			y = pnt[x][y];
+			x--;
+		}
+		sort(ans.begin(), ans.end());
+		printf("%d\n", ret);
+		for (int i = 0; i < ans.size(); i++)
+			printf("%d%c", ans[i], i == ans.size() - 1 ? '\n' : ' ');
+	}
+	return 0;
+}

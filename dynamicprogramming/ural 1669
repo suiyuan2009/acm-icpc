@@ -1,0 +1,55 @@
+/*
+题意：给出串s,整数n，问s中是否包含所有前n个字母的排列
+f[i]代表状态i中所有排列都得到时的最早下标
+预处理出串中每个位置之后字母i的最近位置
+同样的状态，时间复杂度不同，怎么会MLE呢
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+const int maxn=26;
+const int maxm=305;
+
+int n;
+char str[maxm];
+short nxt[maxm][maxn];
+short f[1<<maxn];
+
+int main()
+{
+    scanf("%d%s",&n,str);
+    int m=strlen(str);
+    for(int i=0; i<n; i++)nxt[m+1][i]=m+1;
+    for(int i=m; i>=1; i--)
+        for(int j=0; j<n; j++)
+            nxt[i][j]=(str[i-1]-'a'==j?i:nxt[i+1][j]);
+    for(int i=0; i<maxn; i++)
+        nxt[0][i]=nxt[1][i];
+
+        /*for(int i=0;i<=m;i++)
+        {
+            for(int j=0;j<n;j++)
+                printf("** %d: %d\n",i,nxt[i][j]);
+        }*/
+
+    bool no=0;
+    for(int i=0; i<(1<<n); i++)
+    {
+        if(f[i]>m)
+        {
+            //printf("*** %d\n",i);
+            no=1;
+            break;
+        }
+        for(int j=0; j<n; j++)
+        {
+            if(i&(1<<j))continue;
+            int cur=i|(1<<j);
+            f[cur]=max(f[cur],nxt[f[i]][j]);
+        }
+    }
+    if(no||f[(1<<n)-1]>m)printf("NO\n");
+    else printf("YES\n");
+    return 0;
+}

@@ -1,0 +1,73 @@
+/*
+有很多从磁盘读取数据的需求，包括顺序读取、随机读取。为了提高效率，需要人为安排磁盘读取。然而，在现实中，这种做法很复杂。我们考虑一个相对简单的场景。
+磁盘有许多轨道，每个轨道有许多扇区，用于存储数据。当我们想在特定扇区来读取数据时，磁头需要跳转到特定的轨道、具体扇区进行读取操作。为了简单，我们假设磁头可以在某个轨道顺时针或逆时针匀速旋转，旋转一周的时间是360个单位时间。磁头也可以随意移动到某个轨道进行读取，每跳转到一个相邻轨道的时间为400个单位时间，跳转前后磁头所在扇区位置不变。一次读取数据的时间为10个单位时间，读取前后磁头所在的扇区位置不变。磁头同时只能做一件事：跳转轨道，旋转或读取。
+现在，需要在磁盘读取一组数据，假设每个轨道至多有一个读取请求，这个读取的扇区是轨道上分布在 0到359内的一个整数点扇区，即轨道的某个360等分点。磁头的起始点在0轨道0扇区，此时没有数据读取。在完成所有读取后，磁头需要回到0轨道0扇区的始点位置。请问完成给定的读取所需的最小时间。
+*/
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+#include <iostream>
+#include <vector>
+#include <cmath>
+using namespace std;
+typedef long long ll;
+const int maxn = 1005;
+const int inf = 0x3fffffff;
+
+int n;
+struct  P
+{
+    int t, s;
+} p[maxn];
+int f[maxn][maxn];
+
+int dist(P a, P b)
+{
+    int ret = abs(a.t - b.t) * 400;
+    ret += min(abs(a.s - b.s), 360 - abs(a.s - b.s));
+    return ret;
+}
+
+void pd(int &ret, int val)
+{
+    if (val == -1)return;
+    if (ret == -1 || ret > val)ret = val;
+}
+
+int main()
+{
+    // freopen("in.cpp", "r", stdin);
+    int T;
+    scanf("%d", &T);
+    while (T--)
+    {
+        scanf("%d", &n);
+        for (int i = n; i >= 1; i--)
+            scanf("%d%d", &p[i].t, &p[i].s);
+        p[n + 1].s = p[n + 1].t = 0;
+        n++;
+        memset(f, -1, sizeof(f));
+        pd(f[1][1], 10);
+        //printf("** %d\n", n);
+        for (int i = 1; i <= n; i++)
+            for (int j = 1; j <= n; j++)
+            {
+                if (f[i][j] == -1)continue;
+                if ((!(i + j == 2)) && i == j)continue;
+                int to = max(i, j) + 1;
+                if (to > n)break;
+                int tt1 = dist(p[to], p[i]) + 10;
+                int tt2 = dist(p[to], p[j]) + 10;
+                pd(f[to][j], f[i][j] + tt1);
+                pd(f[i][to], f[i][j] + tt2);
+            }
+        int ret = -1;
+        for (int i = 1; i < n; i++)
+        {
+            if (f[n][i] == -1)continue;
+            pd(ret, f[n][i] + dist(p[n], p[i]) );
+        }
+        printf("%d\n", ret - 10);
+    }
+    return 0;
+}

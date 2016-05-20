@@ -1,0 +1,121 @@
+/*
+题意：树上有若干点是敌人据点，一个点属于最近的据点，自己最多放m个据点，问自己最多控制多少点
+
+f[i][j][k]代表点i为根的子树，放了j个据点，且点i被k控制，最多控制多少点，转移是背包
+*/
+#include <cstdio>
+#include <algorithm>
+#include <vector>
+#include <cmath>
+#include <cstring>
+#include <string>
+#include <queue>
+#include <stack>
+#include <iostream>
+#include <map>
+using namespace std;
+typedef long long ll;
+const int maxn = 205;
+const int inf = 0x3fffffff;
+
+int n,m,a[maxn],d[maxn][maxn],e[maxn][maxn],id[maxn];
+int f[maxn][maxn][maxn],c[maxn];
+
+void init(){
+    for(int i=0;i<maxn;i++){
+        id[i]=-1;
+        for(int j=0;j<maxn;j++)
+            e[i][j]=d[i][j]=-1;
+    }
+    for(int i=0;i<maxn;i++)d[i][i]=0;
+}
+
+int s[maxn],cs,g[maxn][maxn],t[maxn][maxn],R[maxn],cr;
+void dfs(int u,int fa){
+    for(int i=1;i<=n;i++){
+        if(i==u||i==fa||e[u][i]==-1)continue;
+        dfs(i,u);
+    }
+    c[u]=1;
+    cs=0;
+    for(int i=1;i<=n;i++){
+        if(i==u||i==fa||e[u][i]==-1)continue;
+        s[++cs]=i;
+        c[u]+=c[i];
+    }
+    for(int i=0;i<=c[u];i++)
+        for(int j=1;j<=n;j++)
+            f[u][i][j]=-1;
+    for(int i=1;i<=n;i++){
+        if(a[u]&&i!=u)continue;
+        if(id[u]!=-1&&(d[u][id[u]]<d[u][i]||(d[u][i]==d[u][id[u]]&&id[u]<i)))continue;
+        for(int j=1;j<=cs;j++){
+            int v=s[j];
+            cr=0;
+            for(int r=1;r<=n;r++)
+                if((d[r][u]>d[i][u]||(d[r][u]==d[i][u]&&r>i)||r==i)
+                        &&(d[r][v]<d[i][v]||(d[r][v]==d[i][v]&&r<i)||r==i))
+                    R[++cr]=r;
+            for(int k=0;k<=c[v];k++){
+                g[v][k]=-1;
+                for(int r=1;r<=cr;r++)
+                    if(f[v][k][R[r]]>g[v][k])
+                        g[v][k]=f[v][k][R[r]];
+            }
+        }
+        for(int j=0;j<=cs;j++)
+            for(int k=0;k<=c[u];k++)
+                t[j][k]=-1;
+        t[0][0]=0;
+        for(int j=0;j<cs;j++)
+            for(int k=0;k<c[u];k++){
+                if(t[j][k]==-1)continue;
+                int v=s[j+1];
+                for(int r=0;r<=c[v];r++){
+                    if(g[v][r]==-1)continue;
+                    t[j+1][k+r]=max(t[j+1][k+r],t[j][k]+g[v][r]);
+                }
+            }
+        for(int j=0;j<c[u];j++)
+            f[u][j+((!a[u])&&i==u)][i]=t[cs][j]+(t[cs][j]==-1?0:((!a[u])&&(!a[i])));
+    }
+}
+
+int main(){
+    //freopen("ACM/in.in", "r", stdin);
+    //freopen("ACM/out.cpp","w",stdout);
+    while(~scanf("%d%d",&n,&m)){
+        init();
+        for(int i=1;i<n;i++){
+            int u,v,w;
+            scanf("%d%d%d",&u,&v,&w);
+            d[u][v]=d[v][u]=w;
+            e[u][v]=e[v][u]=w;
+        }
+        for(int i=1;i<=n;i++)scanf("%d",&a[i]);
+        for(int k=1;k<=n;k++)
+            for(int i=1;i<=n;i++)
+                for(int j=1;j<=n;j++)
+                    if(d[i][k]!=-1&&d[k][j]!=-1){
+                        if(d[i][j]==-1)d[i][j]=d[i][k]+d[k][j];
+                        else d[i][j]=min(d[i][j],d[i][k]+d[k][j]);
+                    }
+        for(int i=1;i<=n;i++)
+            for(int j=1;j<=n;j++){
+                if(!a[j])continue;
+                if(id[i]==-1)id[i]=j;
+                else{
+                    if(d[id[i]][i]>d[j][i]||(d[id[i]][i]==d[j][i]&&id[i]>j))
+                        id[i]=j;
+                }
+            }
+        dfs(1,0);
+        // printf("** %d\n",f[2][0][1]);
+        int ret=0;
+        for(int i=0;i<=m;i++)
+            for(int j=1;j<=n;j++)
+                ret=max(ret,f[1][i][j]);
+        printf("%d\n",ret);
+    }
+    return 0;
+}

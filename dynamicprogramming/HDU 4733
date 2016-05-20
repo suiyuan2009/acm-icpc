@@ -1,0 +1,128 @@
+/*
+枚举位dp
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef double ldb;
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+const int maxn=100005;
+const int mod=1000000007;
+
+int n;
+char s[maxn],y[maxn];
+int a[maxn],b[maxn];
+int f[maxn][2][2];
+int pnt[maxn][2][2][2];
+
+int tr(char ch)
+{
+    if(ch=='0')return 0;
+    if(ch=='1')return 1;
+    return 2;
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--)
+    {
+        int xx,yy;
+        ++ncase;
+        scanf("%s%s",s,y);
+        n=strlen(s);
+        for(int i=1; i<=n; i++)
+        {
+            a[i]=tr(s[n-i]);
+            b[i]=tr(y[n-i]);
+        }
+        if(n==1)
+        {
+            ++n;
+            a[n]=b[n]=0;
+        }
+        memset(f,0,sizeof(f));
+        f[1][0][1]=f[1][1][0]=1;
+        for(int i=1; i<n; i++)
+            for(int j=0; j<2; j++)
+                for(int k=0; k<2; k++)
+                {
+                    if(!f[i][j][k])continue;
+                    for(int r=0; r<2; r++)
+                    {
+                        if(i==n-1&&1-r==a[i+1])continue;
+                        int tt=(r^j);
+                        if(a[i]==1-tt)continue;
+                        for(int s=0; s<2; s++)
+                        {
+                            if(i==n-1&&1-s==b[i+1])continue;
+                            tt=(k^s);
+                            if(b[i]==1-tt)continue;
+                            if(j==1&&k==0)
+                            {
+                                if(r==s)continue;
+                                f[i+1][r][s]+=f[i][j][k];
+                                pnt[i+1][r][s][0]=j;
+                                pnt[i+1][r][s][1]=k;
+                                xx=r,yy=s;
+                                if(f[i+1][r][s]>=mod)
+                                    f[i+1][r][s]-=mod;
+                            }
+                            else
+                            {
+                                if(r!=s)continue;
+                                f[i+1][r][s]+=f[i][j][k];
+                                pnt[i+1][r][s][0]=j;
+                                pnt[i+1][r][s][1]=k;
+                                xx=r,yy=s;
+                                if(f[i+1][r][s]>=mod)
+                                    f[i+1][r][s]-=mod;
+                            }
+                        }
+                    }
+                }
+        int ret=0;
+        for(int i=0; i<2; i++)
+            for(int j=0; j<2; j++)
+                ret=(ret+f[n][i][j])%mod;
+        //printf("%d\n",ret);
+        printf("Case #%d:\n",ncase);
+        if(ret==0)printf("Impossible\n");
+        else if(ret>1)printf("Ambiguous %d\n",ret);
+        else
+        {
+           int pos=n;
+           while(pos>=1)
+           {
+               a[pos]=xx,b[pos]=yy;
+               int px=pnt[pos][xx][yy][0];
+               int py=pnt[pos][xx][yy][1];
+               pos--;
+               xx=px,yy=py;
+           }
+           if(strlen(s)==1)n--;
+           printf("%d",a[n]);
+           for(int i=n-1;i>=1;i--)printf("%d",a[i+1]^a[i]);
+           printf("\n");
+           printf("%d",b[n]);
+           for(int i=n-1;i>=1;i--)printf("%d",b[i+1]^b[i]);
+           printf("\n");
+        }
+    }
+    return 0;
+}

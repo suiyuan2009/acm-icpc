@@ -1,0 +1,96 @@
+/*
+题意：给出水果出现的时间段，每次切必须把能切的都切了，一次切三个以及以上得分是切的个数，问最大得分
+首先对时间离散化，每一段时间内什么时候切都是一样的，
+f[i]代表切的时间小于等于i能得到的最大值，
+转移的过程中要统计当前能切的水果个数，特别要注意统计个数时不能碰到切不到的水果就break，
+因为不管它不会影响答案，如果break还会使得统计数量偏少
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-7
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=1005;
+const int maxm=maxn+maxn;
+
+int f[maxm];
+int n,m;
+struct P
+{
+    int x,y;
+    bool operator<(const P&a)const
+    {
+        if(x==a.x)return y<a.y;
+        return x<a.x;
+    }
+} p[maxn];
+
+vector<int>vis;
+void init()
+{
+    sort(p+1,p+n+1);
+    memset(f,0,sizeof(f));
+    vis.clear();
+    for(int i=1; i<=n; i++)
+    {
+        vis.push_back(p[i].x);
+        vis.push_back(p[i].y);
+    }
+    sort(vis.begin(),vis.end());
+    vis.erase(unique(vis.begin(),vis.end()),vis.end());
+    m=vis.size();
+}
+
+int main()
+{
+    // freopen("in.cpp","r",stdin);
+    // freopen("out.cpp","w",stdout);
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%d",&n);
+        for(int i=1; i<=n; i++)scanf("%d%d",&p[i].x,&p[i].y);
+        init();
+        int ret=0;
+        for(int i=1; i<=m; i++)
+        {
+            int pos=n;
+            while(pos&&p[pos].x>vis[i-1])pos--;
+            f[i]=f[i-1];
+            int cnt=0;
+            bool sign=0;
+            for(int j=i; j>=1; j--)
+            {
+                while(pos&&p[pos].x>=vis[j-1])
+                {
+                    /*if(p[pos].y<vis[i-1])
+                    {
+                        sign=1;
+                        break;
+                    }*/
+                    if(p[pos].y>=vis[i-1])cnt++;
+                    pos--;
+                    if(cnt<=2)f[i]=max(f[i],f[j-1]);
+                    else f[i]=max(f[i],f[j-1]+cnt);
+                }
+                if(sign)break;
+            }
+            ret=max(ret,f[i]);
+        }
+        printf("Case #%d: %d\n",++ncase,ret);
+    }
+    return 0;
+}
