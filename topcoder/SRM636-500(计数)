@@ -1,0 +1,87 @@
+/*
+题意：n*m的方格上有空地，随机选r个位置放东西，每个东西到它最近的地方连边，问图联通块的期望数量
+
+首先联通块一定是一条链最后两个点形成环，然后就是计数问题了，计算每种可能的联通块在所有方案中的总数目，
+最后累和之后除以总的可能方案数目。
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+using namespace std;
+typedef long long ll;
+const int maxn = 25;
+const int maxm = maxn*maxn;
+
+double c[maxm][maxm];
+int n,m;
+int a[maxn][maxn][maxn][maxn];
+
+void init(){
+    for(int i=0;i<maxm;i++)c[i][i]=c[i][0]=1;
+    for(int i=1;i<maxm;i++)
+        for(int j=1;j<i;j++)
+            c[i][j]=c[i-1][j-1]+c[i-1][j];
+}
+
+
+int dist(int x1,int y1,int x2,int y2){
+    return (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2);
+}
+
+class ClosestRabbit{
+    public:
+        double getExpected(vector <string> b, int rr){
+            int cnt=0;
+            init();
+            n=b.size(),m=b[0].size();
+            for(int i=0;i<n;i++)
+                for(int j=0;j<m;j++)
+                    if(b[i][j]=='.')cnt++;
+            for(int i=0;i<n;i++)
+                for(int j=0;j<m;j++){
+                    if(b[i][j]!='.')continue;
+                    vector<pair<int,pair<int,int> > >v;
+                    for(int k=0;k<n;k++)
+                        for(int r=0;r<m;r++){
+                            if(b[i][j]!='.'||(i==k&&j==r))continue;
+                            v.push_back(make_pair(dist(i,j,k,r),make_pair(k,r)));
+                        }
+                    sort(v.begin(),v.end());
+                    for(int k=0;k<v.size();k++){
+                        int x=v[k].second.first;
+                        int y=v[k].second.second;
+                        a[i][j][x][y]=k;
+                    }
+                }
+            double ret=0;
+            for(int i=0;i<n;i++)
+                for(int j=0;j<m;j++){
+                    if(b[i][j]!='.')continue;
+                    for(int ii=0;ii<n;ii++)
+                        for(int jj=0;jj<m;jj++){
+                            if((ii==i&&jj==j)||b[ii][jj]!='.')continue;
+                            int sum=0;
+                            for(int k=0;k<n;k++)
+                                for(int r=0;r<m;r++){
+                                    if((k==i&&r==j)||(k==ii&&r==jj)||b[k][r]!='.')continue;
+                                    if(a[i][j][k][r]<a[i][j][ii][jj]||a[ii][jj][k][r]<a[ii][jj][i][j])continue;
+                                    sum++;
+                                }
+                            ret+=c[sum][rr-2];
+                        }
+                }
+            return ret/c[cnt][rr]/2;
+        }
+};
+
+
+int main(){
+    freopen("ACM/in.in", "r", stdin);
+
+    return 0;
+}

@@ -1,0 +1,86 @@
+/*
+题意：
+This problem statement contains superscripts and/or subscripts. It may not display properly outside the applet.
+ 
+Today, Bob is trying to count the colorings of a strange graph. It looks like a cycle of cycles.
+ 
+The graph has two types of edges -- solid edges and dashed edges.
+ 
+The edges between the vertices of the original cycles are all solid edges. The edges that connect cycles together are all dashed edges.
+ 
+More precisely, the graph consists of N cycles. The cycles are labelled, in order, as C0, C1, ..., CN-1. You are given a vector <int> vertexCount with N elements. Cycle Ci has vertexCount[i] vertices. The vertices of cycle Ci are labelled, in order, as vi, 0, vi, 1, ..., vi, vertexCount[i]-1. Note that the last vertex in this order is also connected to the first one. All of the edges that form these cycles are solid edges.
+ 
+You are also given two vector <int>s fromVertex and toVertex, with N elements each. These vector <int>s describe the connection between cycle Ci and Ci+1 as follows: The vertex in cycle Ci with label vi, fromVertex[i] and the vertex in cycle Ci+1 with label vi+1, toVertex[i] will be connected with a dashed edge.
+ 
+Bob has K distinct colors. He wants to know how many different ways there are to color the vertices of the graph under the following two rules:
+Vertices connected with a solid edge must be colored using a different color.
+Vertices connected with a dashed edge must be colored using the same color.
+Two colorings are considered different if there is a vertex vi, j which has a different color in each coloring. Let C be the number of colorings that correspond to the given rules. As C can be extremely large, you should compute and return the value (C modulo 1,000,000,007).
+
+记f[i][2]为首尾都确定之后长为i的方案数，g[i][2]为首部确定之后的方案数，第二位代表首尾是否一样。
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+using namespace std;
+typedef long long ll;
+const double eps = 1e-6;
+const double PI = acos(-1);
+const int maxn=105;
+const int maxm=1000005;
+const int inf = 0x3fffffff;
+const int mod=1000000007;
+
+ll f[maxm][2],g[maxm][2];
+
+void init(int K)
+{
+    f[1][0]=0,f[1][1]=1;
+    g[1][0]=0,g[1][1]=1;
+    for(int i=2; i<maxm; i++)
+    {
+        g[i][0]=(g[i-1][1]*(K-1)%mod+g[i-1][0]*(K-2)%mod)%mod;
+        g[i][1]=g[i-1][0];
+        f[i][1]=(g[i-2][1]*(K-1)%mod+g[i-2][0]*(K-2)%mod)%mod;
+        f[i][0]=(g[i-1][1]+f[i-1][0]*(K-2)%mod)%mod;
+    }
+}
+
+class CycleColoring
+{
+public:
+    int countColorings(vector <int> vertexCount, vector <int> fromVertex, vector <int> toVertex, int K)
+    {
+        init(K);
+        int n=vertexCount.size();
+        ll ans[2];
+        ans[0]=0,ans[1]=K;
+        for(int i=1; i<n; i++)
+        {
+            if(toVertex[i-1]==fromVertex[i])
+            {
+                ans[0]=ans[0]*f[vertexCount[i]+1][1]%mod;
+                ans[1]=ans[1]*f[vertexCount[i]+1][1]%mod;
+            }
+            else
+            {
+                int x=abs(toVertex[i-1]-fromVertex[i])+1;
+                int y=vertexCount[i]-x+2;
+                ll t0=ans[0],t1=ans[1];
+                ans[1]=(t1*f[x][1]%mod*f[y][1]%mod+t0*f[x][0]%mod*f[y][0]%mod)%mod;
+                ans[0]=(t0*f[x][1]%mod*f[y][1]%mod+t1*f[x][0]%mod*g[y][0]%mod+t0*f[x][0]%mod*f[y][0]%mod*(K-2)%mod)%mod;
+            }
+        }
+        int x=abs(toVertex[n-1]-fromVertex[0])+1;
+        int y=vertexCount[0]-x+2;
+        ll ret=ans[1]*f[x][1]%mod*f[y][1]%mod;
+        if(toVertex[n-1]!=fromVertex[0])
+            ret=(ret+ans[0]*f[x][0]%mod*f[y][0]%mod)%mod;
+        return ret;
+    }
+};

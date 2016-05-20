@@ -1,0 +1,145 @@
+/*
+题意：给出n个二维点的坐标，把这些点染成白色或者黑色，同种颜色的点可以连边，每条边有收益，不同颜色的边不能相交，问最大收益
+
+最小割，左边的点是染成白色的边，右边是染成黑色的边
+*/
+#include<cstdio>
+#include<cstring>
+#include<cmath>
+#include<vector>
+#include<algorithm>
+#include<stack>
+#include<map>
+using namespace std;
+typedef long long ll;
+const double eps=1e-6;
+const int maxn=405;
+const int maxm=maxn*maxn;
+const int inf=0x3fffffff;
+
+#define cs const
+#define cp const P&
+#define op operator
+inline int sig(double x) {return (x>eps)-(x<-eps);}
+
+struct P{
+    double x, y;
+    P(){}
+    P(double x,double y):x(x),y(y){}
+    P op-(cp a)cs         { return P(x-a.x, y-a.y); }
+    double op^(cp a)cs        { return x*a.y - y*a.x; }    //叉积
+    double op*(cp a)cs { return x*a.x+y*a.y; }
+    double cross(P a, P b)         { return (a-*this) ^ (b-*this); }
+    double dot(P a, P b)        { return (a-*this) * (b-*this); }
+    bool on_seg(P a, P b)    { return !sig(cross(a, b)) && sig(dot(a, b)) <= 0; }//判断是否在点上
+};
+
+bool seg(P a, P b, P c, P d) { //判断相交(a - b)线段 、(c - d)线段
+    if(a.on_seg(c, d) || b.on_seg(c, d) || c.on_seg(a, b) || d.on_seg(a, b))
+        return true;
+    return sig(a.cross(b, c)*a.cross(b, d)) < 0 && sig(c.cross(d, a)*c.cross(d, b)) < 0;
+}
+
+const int maxnode = 40000 + 5;
+const int maxedge = 1000000 + 5;
+const int oo = 1000000000;
+
+int node, src, dest, nedge;
+int head[maxnode], pnt[maxedge], nxt[maxedge], flow[maxedge], capa[maxedge];
+int dist[maxnode], Q[maxnode], work[maxnode];
+
+void init(int _node, int _src, int _dest) {
+    node = _node;
+    src = _src;
+    dest = _dest;
+    for (int i = 0; i < node; i++) head[i] = -1;
+    nedge = 0;
+}
+
+void addedge(int u, int v, int c1, int c2) {
+    pnt[nedge] = v, capa[nedge] = c1, flow[nedge] = 0, nxt[nedge] = head[u], head[u] = (nedge++);
+    pnt[nedge] = u, capa[nedge] = c2, flow[nedge] = 0, nxt[nedge] = head[v], head[v] = (nedge++);
+}
+
+bool dinic_bfs() {
+    memset(dist, 255, sizeof (dist));
+    dist[src] = 0;
+    int sizeQ = 0;
+    Q[sizeQ++] = src;
+    for (int cl = 0; cl < sizeQ; cl++)
+        for (int k = Q[cl], i = head[k]; i >= 0; i = nxt[i])
+            if (flow[i] < capa[i] && dist[pnt[i]] < 0) {
+                dist[pnt[i]] = dist[k] + 1;
+                Q[sizeQ++] = pnt[i];
+            }
+    return dist[dest] >= 0;
+}
+
+int dinic_dfs(int x, int exp) {
+    if (x == dest) return exp;
+    for (int &i = work[x]; i >= 0; i = nxt[i]) {
+        int v = pnt[i], tmp;
+        if (flow[i] < capa[i] && dist[v] == dist[x] + 1 && (tmp = dinic_dfs(v, min(exp, capa[i] - flow[i]))) > 0) {
+            flow[i] += tmp;
+            flow[i^1] -= tmp;
+            return tmp;
+        }
+    }
+    return 0;
+}
+
+int dinic_flow() {
+    int result = 0;
+    while (dinic_bfs()) {
+        for (int i = 0; i < node; i++) work[i] = head[i];
+        while (1) {
+            int delta = dinic_dfs(src, oo);
+            if (delta == 0) break;
+            result += delta;
+        }
+    }
+    return result;
+}
+
+struct T{
+    int x,y;
+    T(){}
+    T(int x,int y):x(x),y(y){}
+    bool operator<(const T&a)const{
+        if(x==a.x)return y<a.y;
+        return x<a.x;
+    }
+};
+map<T,int>mp;
+
+class SegmentDrawing{
+    public:
+        int maxScore(vector <int> x, vector <int> y, vector <int> red, vector <int> blue){
+            int ret=0;
+            int n=(x.size()-1)*x.size()/2;
+            int sz=x.size();
+            mp.clear();
+            int cnt=0;
+            for(int i=0;i<sz;i++)
+                for(int j=i+1;j<sz;j++)
+                    mp[T(i,j)]=++cnt;
+            init(2+n+n,0,n+n+1);
+            for(int i=0;i<sz;i++)
+                for(int j=i+1;j<sz;j++){
+                    ret+=red[i*sz+j]+blue[i*sz+j];
+                    addedge(0,mp[T(i,j)],red[i*sz+j],0);
+                    addedge(mp[T(i,j)]+n,n+n+1,blue[i*sz+j],0);
+                }
+            for(int i=0;i<sz;i++)
+                for(int j=i+1;j<sz;j++){
+                    for(int k=0;k<sz;k++)
+                        for(int r=k+1;r<sz;r++){
+                            if((i==k||i==r||j==k||j==r)||seg(P(x[i],y[i]),P(x[j],y[j]),P(x[k],y[k]),P(x[r],y[r]))){
+                                addedge(mp[T(i,j)],mp[T(k,r)]+n,inf,0);
+                            }
+                        }
+                }
+            ret-=dinic_flow();
+            return ret;
+        }
+};

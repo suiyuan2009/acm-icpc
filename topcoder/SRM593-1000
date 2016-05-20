@@ -1,0 +1,192 @@
+/*
+题意：给出1个01串，有些位置上是?，合法的串是k个连续的1加上k个连续的0，
+或者上述串的连接，问合法串可能的方案数
+dp分成两种情况处理，以i结尾的合法串不含原串中的1和含有1，
+先预处理出pre1/0和next1/0，然后计算下标范围，
+第一种情况树状数组向后更新，查询树状数组，第二种情况用前缀和求，
+复杂度nlogn
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-7
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=1000005;
+const int mod=1000000007;
+
+int s[maxn],n;
+int c[maxn],pre_s[maxn];
+int next_1[maxn],next_0[maxn],pre_0[maxn],pre_1[maxn];
+int que[maxn][2],top;
+
+int lowbit(int x)
+{
+    return x&(-x);
+}
+void add(int x,int val)
+{
+    //debug;
+    while(x<=n)
+    {
+        c[x]=((c[x]+val)%mod+mod)%mod;
+        x+=lowbit(x);
+    }
+    // debug;
+}
+void clr()
+{
+    for(int i=0; i<top; i++)
+        add(que[i][0],-que[i][1]);
+    top=0;
+}
+int sum(int x)
+{
+    int ret=0;
+    while(x)
+    {
+        ret=((ret+c[x])%mod+mod)%mod;;
+        x-=lowbit(x);
+    }
+    return ret;
+}
+
+void init()
+{
+    pre_0[0]=0,pre_1[0]=0;
+    next_0[n+1]=n+1,next_1[n+1]=n+1;
+    for(int i=1; i<=n; i++)
+    {
+        pre_0[i]=pre_0[i-1];
+        pre_1[i]=pre_1[i-1];
+        if(s[i]==0)pre_0[i]=i;
+        else if(s[i]==1)pre_1[i]=i;
+    }
+    for(int i=n; i>=1; i--)
+    {
+        next_0[i]=next_0[i+1];
+        next_1[i]=next_1[i+1];
+        if(s[i]==0)next_0[i]=i;
+        else if(s[i]==1)next_1[i]=i;
+    }
+    next_0[0]=next_0[1];
+    next_1[0]=next_1[1];
+}
+
+class WolfDelaymasterHard
+{
+public:
+    int solve()
+    {
+        int f=1;
+        pre_s[0]=1;
+
+        int y=next_1[0];
+        int z=next_0[0];
+        int r=min(y,z+z+1);
+        add(1,f);
+        //que.push_back(make_pair(1,f));
+        que[top][0]=1;
+        que[top++][1]=f;
+        add(r,-f);
+        // que.push_back(make_pair(r,-f));
+        que[top][0]=r;
+        que[top++][1]=-f;
+
+        for(int i=1; i<=n; i++)
+        {
+            //debug;
+            pre_s[i]=pre_s[i-1];
+            if(s[i]==1)
+            {
+                clr();
+                continue;
+            }
+            if(i&1)continue;
+            f=0;
+            f=((f+sum(i))%mod+mod)%mod;
+
+            // if(i==4)printf("** %d\n",f);
+
+            int y=pre_1[i-1];
+            if(y)
+            {
+                int x=pre_0[y];
+                int z=next_0[y];
+
+                //if(i==2)printf("** %d %d %d\n",x,y,z);
+
+                if(z>i)z=i;
+                int l=max(y+y-i,x);
+                int r=min(y-1,z+z-i-1);
+                int sub=(l==0?0:pre_s[l-1]);
+
+                if(l<=r)
+                {
+                    // printf("** %d %d:%d\n",l,r,pre_s[r]);
+
+                    f=((f+pre_s[r]-sub)%mod+mod)%mod;
+                }
+            }
+
+            // printf("** %d: %d\n",i,f);
+            pre_s[i]=((pre_s[i]+f)%mod+mod)%mod;
+            if(i==n)continue;
+            // debug;
+            y=next_1[i+1];
+            int z=next_0[i+1];
+            int r=min(y,z+z-i);
+            add(i+1,f);
+            // que.push_back(make_pair(i+1,f));
+            que[top][0]=i+1;
+            que[top++][1]=f;
+            // printf("**%d %d %d\n",y,z,i);
+            add(r,-f);
+            // que.push_back(make_pair(r,-f));
+            que[top][0]=r;
+            que[top++][1]=-f;
+
+            //  printf("%d: %d\n",i,f);
+            // debug;
+        }
+        return f;
+    }
+    int countWords(int N, int wlen, int w0, int wmul, int wadd, int olen, int o0, int omul, int oadd)
+    {
+        if(N&1)return 0;
+        memset(s,-1,sizeof(s));
+        n=N;
+        ll x=w0;
+        for(int i=0; i<wlen; i++)
+        {
+            s[((int)x)+1]=1;
+            x=(x*wmul+wadd)%n;
+        }
+        x=o0;
+        for(int i=0; i<olen; i++)
+        {
+            s[((int)x)+1]=0;
+            x=(x*omul+oadd)%n;
+        }
+
+        /*  for(int i=1; i<=n; i++)
+              printf("%d ",s[i]);
+          printf("\n");*/
+
+        init();
+
+        int ret=solve();
+        return ret;
+    }
+};

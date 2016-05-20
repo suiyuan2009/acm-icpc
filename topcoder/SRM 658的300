@@ -1,0 +1,64 @@
+/*
+给出树中每两点距离的奇偶,构造树
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn = 55;
+
+class OddEvenTree
+{
+public:
+    vector <int> getTree(vector <string> x)
+    {
+        int n = x.size();
+        vector<int>ans;
+        bool a[maxn];
+        memset(a,0,sizeof(a));
+        for(int i = 0; i < n; i++)
+            if(x[i][i] != 'E')
+            {
+              ans.push_back(-1);
+              return ans;
+            }
+        vector<int>l,r;
+        for(int i=1;i<n;i++)
+        {
+          if(x[0][i]=='E')r.push_back(i);
+          else l.push_back(i),a[i]=1;
+        }
+        if(r.size()>0&&l.size()==0){
+          ans.push_back(-1);
+          return ans;
+        }
+        ans.push_back(0);
+        ans.push_back(l[0]);
+        for(int i=0;i<r.size();i++){
+          ans.push_back(l[0]);
+          ans.push_back(r[i]);
+        }
+        for(int i=1;i<l.size();i++){
+
+          ans.push_back(0);
+          ans.push_back(l[i]);
+        }
+        for(int i=0;i<n;i++)
+          for(int j=0;j<n;j++){
+            if((a[i]^a[j])==(x[i][j]=='E'?1:0)){
+              ans.clear();
+              ans.push_back(-1);
+              return ans;
+            }
+          }
+        return ans;
+    }
+};

@@ -1,0 +1,96 @@
+/*
+题意：
+给一个有向图，有自环和重边，从1走到n，最多将路径中的m条边的权值取负，问最小距离
+预处理f[i][j][k]为i到j这条路径取反不超过2^k条边的最短路径，最后快速幂
+*/
+#include <stdio.h>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <string.h>
+#include <math.h>
+using namespace std;
+typedef long long ll;
+const int maxn = 55;
+const int maxm = 31;
+const double eps = 1e-8;
+const int inf = 0x3fffffff;
+const ll linf = (1LL << 60);
+
+ll d[maxn][maxn], f[maxn][maxn][maxm], ans[maxn][maxn];
+
+void init()
+{
+    for (int i = 0; i < maxn; i++)
+        for (int j = 0; j < maxn; j++)
+        {
+            d[i][j] = linf;
+            for (int k = 0; k < maxm; k++)
+                f[i][j][k] = linf;
+        }
+    for (int i = 0; i < maxn; i++)d[i][i] = 0;
+}
+
+class NegativeGraphDiv1
+{
+public:
+    long long findMin(int n, vector <int> from, vector <int> to, vector <int> weight, int charges)
+    {
+        init();
+        int m = (int)from.size();
+        for (int i = 0; i < m; i++)
+        {
+            int u = from[i], v = to[i], w = weight[i];
+            if (d[u][v] > w)d[u][v] = w;
+        }
+        for (int k = 1; k <= n; k++)
+            for (int i = 1; i <= n; i++)
+                for (int j = 1; j <= n; j++)
+                    if (d[i][k] < linf && d[k][j] < linf)
+                        d[i][j] = min(d[i][j], d[i][k] + d[k][j]);
+        for (int i = 1; i <= n; i++)
+            for (int j = 1; j <= n; j++)
+                f[i][j][0] = d[i][j];
+        for (int i = 1; i <= n; i++)
+            for (int j = 1; j <= n; j++)
+            {
+                for (int k = 0; k < m; k++)
+                {
+                    int u = from[k], v = to[k], w = weight[k];
+                    if (d[i][u] < linf && d[v][j] < linf)
+                        f[i][j][0] = min(f[i][j][0], d[i][u] + d[v][j] - w);
+                }
+            }
+        for (int k = 1; k < maxm; k++)
+            for (int i = 1; i <= n; i++)
+                for (int j = 1; j <= n; j++)
+                    for (int r = 1; r <= n; r++)
+                    {
+                        if (f[i][j][k - 1] < linf)f[i][j][k] = min(f[i][j][k], f[i][j][k - 1]);
+                        if (f[i][r][k - 1] < linf && f[r][j][k - 1] < linf)
+                        {
+                            f[i][j][k] = min(f[i][j][k], f[i][r][k - 1] + f[r][j][k - 1]);
+                        }
+                    }
+        for (int i = 1; i <= n; i++)
+            for (int j = 1; j <= n; j++)
+                ans[i][j] = d[i][j];
+        for (int r = 0; r < maxm; r++)
+            if (charges & (1 << r))
+            {
+                for (int i = 1; i <= n; i++)
+                    for (int j = 1; j <= n; j++)
+                        for (int k = 1; k <= n; k++)
+                        {
+                            if (d[i][k] < linf && f[k][j][r] < linf)
+                            {
+                                ans[i][j] = min(ans[i][j], d[i][k] + f[k][j][r]);
+                            }
+                        }
+                for (int i = 1; i <= n; i++)
+                    for (int j = 1; j <= n; j++)
+                        d[i][j] = ans[i][j];
+            }
+        return ans[1][n];
+    }
+};

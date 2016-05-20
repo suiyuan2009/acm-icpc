@@ -1,0 +1,84 @@
+/*
+题意：数字锁，可以选择连续若干个一起向上滑动或者向下滑动一下，问最少操作数达到目标态
+把每次滑动看做一个区间，记f[i][j][k]为处理完前i个数字后还有j个方向是k的区间没有闭合，可以用于后方的最小花费
+每次增加区间时，增加尽可能少，闭合区间时也尽可能少
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <iostream>
+using namespace std;
+const double eps = 1e-6;
+typedef long long ll;
+const double PI = acos(-1);
+const int maxn = 2505;
+const int maxm = maxn *9;
+const int inf = 0x3fffffff;
+
+string s, t;
+int n, f[2][maxm][2];
+
+void pd(int &ret, int val)
+{
+    if (val == -1)return;
+    if (ret == -1 || ret > val)ret = val;
+}
+
+class CombinationLockDiv1
+{
+public:
+    int minimumMoves(vector <string> P, vector <string> Q)
+    {
+        for (int i = 0; i < P.size(); i++)s += P[i];
+        for (int i = 0; i < Q.size(); i++)t += Q[i];
+        n = s.size();
+        memset(f, -1, sizeof(f));
+        f[0][0][0] = f[0][0][1] = 0;
+        for (int i = 0; i < n; i++)
+        {
+            int now = (i & 1);
+            int nxt = 1 - now;
+            memset(f[nxt], -1, sizeof(f[nxt]));
+            for (int j = 0; j < maxm; j++)
+            {
+                if (f[now][j][0] != -1)
+                {
+                    int tt = (t[i] - s[i] + 10) % 10;
+                    if (j >= tt)
+                    {
+                        pd(f[nxt][j - (j - tt) % 10][0], f[now][j][0]);
+                        int ans=((tt-j)%10+10)%10;
+                        if(j+ans<maxm)pd(f[nxt][j+ans][0],f[now][j][0]+ans);
+                    }
+                    else pd(f[nxt][tt][0], f[now][j][0] + tt - j);
+                    int tmp=(s[i]-t[i]+10)%10;
+                    pd(f[nxt][tmp][1],f[now][j][0]+tmp);
+                }
+                if (f[now][j][1] != -1)
+                {
+                    int tt=(s[i]-t[i]+10)%10;
+                    if(j>=tt)
+                    {
+                        pd(f[nxt][j-(j-tt)%10][1],f[now][j][1]);
+                        int ans=((tt-j)%10+10)%10;
+                        if(j+ans<maxm)pd(f[nxt][j+ans][1],f[now][j][1]+ans);
+                    }
+                    else pd(f[nxt][tt][1],f[now][j][1]+tt-j);
+                    int tmp=(t[i]-s[i]+10)%10;
+                    pd(f[nxt][tmp][0],f[now][j][1]+tmp);
+                }
+            }
+        }
+        int ret=-1;
+        int now=(n&1);
+        for(int i=0; i<maxm; i++)
+            for(int j=0; j<2; j++)
+                pd(ret,f[now][i][j]);
+        return ret;
+    }
+};

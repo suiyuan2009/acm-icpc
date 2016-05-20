@@ -1,0 +1,39 @@
+/*
+Two intervals are similar if one can be obtained from the other only by 
+translation and scaling by a positive real factor (zooming). 
+Note that both dimensions must be scaled by the same factor.
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+using namespace std;
+typedef long long ll;
+const int maxn = 55;
+
+double cal(double x1,double y1,double x2,double y2){
+    return sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
+}
+class SimilarRatingGraph{
+    public:
+        double maxLength(vector <int> x, vector <int> y){
+            double ret=0;
+            int n=x.size();
+            for(int i=0;i<n;i++)
+                for(int j=0;j<n;j++){
+                    if(i==j)continue;
+                    double tt=0;
+                    for(int k=1;j+k<n&&i+k<n;k++){
+                        if((ll)(x[i+k]-x[i+k-1])*(y[j+k]-y[j+k-1])!=(ll)(x[j+k]-x[j+k-1])*(y[i+k]-y[i+k-1]))break;
+                        if((ll)(x[i+1]-x[i])*(x[j+k]-x[j+k-1])!=(ll)(x[j+1]-x[j])*(x[i+k]-x[i+k-1]))break;
+                        tt+=cal(x[i+k-1],y[i+k-1],x[i+k],y[i+k]);
+                    }
+                    ret=max(ret,tt);
+                }
+            return ret;
+        }
+};

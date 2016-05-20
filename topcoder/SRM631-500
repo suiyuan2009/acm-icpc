@@ -1,0 +1,51 @@
+/*
+题意：给出n个位置，每个位置上的蚂蚁数量，以及时间t，单位时间每只蚂蚁可以左右移动一格或者不动，
+问最后蚂蚁数量大于1的点至少有多少
+
+按坐标排序后贪心，能摊开就摊开，不能摊开的要么合并到之前的堆，或者大家一起呆在能走到的最右边的位置
+*/
+#include<cstdio>
+#include<vector>
+#include<cmath>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+const int maxn = 1005;
+const double eps=1e-6;
+
+struct P
+{
+    int pos,cnt;
+    bool operator<(const P&a)const
+    {
+        return pos<a.pos;
+    }
+}p[maxn];
+
+class CatsOnTheLineDiv1
+{
+    public:
+        int getNumber(vector<int>pos,vector<int>c,int t)
+        {
+            int n=(int)pos.size(),pre=-1e9,bad=0;
+            for(int i=0;i<n;i++)p[i].pos=pos[i],p[i].cnt=c[i];
+            sort(p,p+n);
+            int ret=0;
+            for(int i=0;i<n;i++)
+            {
+                int l=p[i].pos-t,r=p[i].pos+t;
+                if(pre>=l)
+                {
+                    if(bad)continue;
+                    if(r-pre>=p[i].cnt)pre+=p[i].cnt,bad=0;
+                    else pre=r,bad=1,ret++;
+                }
+                else
+                {
+                    if(r-l+1>=p[i].cnt)pre=l+p[i].cnt-1,bad=0;
+                    else pre=r,bad=1,ret++;
+                }
+            }
+            return ret;
+        }
+};

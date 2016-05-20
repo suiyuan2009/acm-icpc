@@ -1,0 +1,46 @@
+/*
+题意：一个管道有直径，相邻两个物体直径和小于等于管道直径时可以交换，问可能的排列的方案数
+一直想用拓扑排序计数，貌似是NP的
+同房间的whd的做法，每次找最小的数，看左右能交换的区间[l,r]，ret=ret*(r-l+1)，然后删掉最小数
+这种做法相当于把最小数合并了，比较大的数能交换的，较小的数一定能交换
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+using namespace std;
+typedef long long ll;
+const int maxn = 55;
+const int mod=1000000007;
+
+class NarrowPassage2{
+    public:
+        int count(vector <int> a, int m){
+            ll ret=1;
+            while(a.size()>1){
+                int mi=a[0],p=0;
+                for(int i=0;i<a.size();i++)
+                    if(mi>a[i]){
+                        mi=a[i];
+                        p=i;
+                    }
+                int l=p,r=p;
+                for(int j=p-1;j>=0;j--){
+                    if(a[j]+a[p]>m)break;
+                    l=j;
+                }
+                for(int j=p+1;j<a.size();j++){
+                    if(a[j]+a[p]>m)break;
+                    r=j;
+                }
+                ret=ret*(r-l+1)%mod;
+                a.erase(a.begin()+p);
+            }
+            return ret;
+        }
+};
