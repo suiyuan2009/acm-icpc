@@ -1,0 +1,65 @@
+/*
+给一个数组，两两不同，相邻元素可以交换，最少需要交换多少次，才能使得数组是先递增再递减或者递增或者递减
+贪心，每次选择最小的数放到两边，只需比较到两边的距离。
+证明就是每次贪心之后，问题重新还原成一个相同的子问题。
+*/
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <algorithm>
+#include <vector>
+#include <map>
+#include <string>
+using namespace std;
+const int maxn = 1005;
+
+int n, a[maxn], b[maxn];
+
+int main()
+{
+    //freopen("in.cpp", "r", stdin);
+    //  freopen("B-large-practice.in", "r", stdin);
+    // freopen("out.out", "w", stdout);
+    int T, ncase = 0;
+    scanf("%d", &T);
+    while (T--)
+    {
+        scanf("%d", &n);
+        for (int i = 1; i <= n; i++)
+        {
+            scanf("%d", &a[i]);
+            b[i] = a[i];
+        }
+        sort(b + 1, b + n + 1);
+        int ret = 0;
+        int l = 0, r = n + 1;
+        for (int i = 1; i <= n; i++)
+        {
+            int pos = -1;
+            for (int j = 1; j <= n; j++)
+                if (a[j] == b[i])
+                {
+                    pos = j;
+                    break;
+                }
+            if (pos - l <= r - pos)
+            {
+                ret += pos - l - 1;
+                for (int j = pos; j > l + 1; j--)
+                    a[j] = a[j - 1];
+                a[l + 1] = b[i];
+                l++;
+            }
+            else
+            {
+                ret += r - pos - 1;
+                for (int j = pos; j < r - 1; j++)
+                    a[j] = a[j + 1];
+                a[r - 1] = b[i];
+                r--;
+            }
+        }
+        printf("Case #%d: %d\n", ++ncase, ret);
+    }
+    return 0;
+}
