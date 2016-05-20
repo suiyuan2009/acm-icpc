@@ -1,0 +1,110 @@
+/*
+题意：给出2*n长的串，分成两个长度为n的相同子序列，每个位置上有权值，求怎么选使得两串权值差绝对值最小
+
+分成两部分状压，最后合并，用dfs加剪枝去掉前缀或者后缀不同的情况，枚举除了公共部分的部分的长度，最后合并
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<stack>
+#include<cmath>
+#include<map>
+using namespace std;
+typedef long long ll;
+const int maxn=21;
+
+char str[105];
+vector<int>c[2][1<<maxn];
+int n,w[2][maxn],s[2][maxn];
+
+void dfs(int cnt,int l,int r,int cl,int cr,int cost,int id,int limit){
+    if(id==0&&cl+(n-cnt)-cr<limit)return;
+    if(id==0&&cl-cr>limit+(n-cnt))return;
+    if(id==1&&cr-cl>limit+(n-cnt))return;
+    if(id==1&&cr+(n-cnt)-cl<limit)return;
+    if(cnt==n){
+        if(id==0){
+            if(cr>cl||cl-cr!=limit)return;
+            c[id][l>>cr].push_back(cost);
+            return;
+        }
+        else{
+            if(cl>cr||cr-cl!=limit)return;
+            int tt=r>>cl,ret=0;
+            for(int i=0;i<cr-cl;i++)
+                if(tt&(1<<(cr-cl-i-1)))ret|=(1<<i);
+            c[id][ret].push_back(cost);
+            return;
+        }
+        return;
+    }
+    if(!(cr>cl&&((r>>cl)&1)!=s[id][cnt]))
+        dfs(cnt+1,l|(s[id][cnt]<<cl),r,cl+1,cr,cost+w[id][cnt],id,limit);
+    if(!(cl>cr&&((l>>cr)&1)!=s[id][cnt]))
+        dfs(cnt+1,l,r|(s[id][cnt]<<cr),cl,cr+1,cost-w[id][cnt],id,limit);
+}
+
+int main(){
+  //  freopen("ACM/in.in","r",stdin);
+    //freopen("ACM/out.out","w",stdout);
+    while(scanf("%d",&n)&&n){
+        scanf("%s",str);
+        for(int i=0;i<n;i++)s[0][i]=str[i]-'a';
+        for(int i=0;i<n;i++)s[1][i]=str[n+n-1-i]-'a';
+        for(int i=0;i<n;i++)scanf("%d",&w[0][i]);
+        for(int i=0;i<n;i++)scanf("%d",&w[1][n-1-i]);
+        int ret=-1;
+        for(int lim=0;lim<=n;lim++){
+            for(int i=0;i<(1<<lim);i++){
+                c[0][i].clear();
+                c[1][i].clear();
+            }
+            dfs(0,0,0,0,0,0,0,lim);
+            dfs(0,0,0,0,0,0,1,lim);
+            for(int i=0;i<(1<<lim);i++){
+                // sort(c[0][i].begin(),c[0][i].end());
+                sort(c[1][i].begin(),c[1][i].end());
+            }
+            for(int i=0;i<(1<<lim);i++){
+                if(c[0][i].size()==0||c[1][i].size()==0)continue;
+                for(int j=0;j<c[0][i].size();j++){
+                    /*int r=-1;
+                      for(int j=c[0][i].size()-1;j>=0;j--){
+                      while(r+1<c[1][i].size()&&c[1][i][r+1]+c[0][i][j]<=0)r++;
+                      if(r!=-1){
+                      int tt=abs(c[1][i][r]+c[0][i][j]);
+                      if(ret==-1||ret>tt)ret=tt;
+                      }
+                      if(r+1<c[1][i].size()){
+                      int tt=abs(c[1][i][r+1]+c[0][i][j]);
+                      if(ret==-1||ret>tt)ret=tt;
+                      }
+                      }*/
+                    int l=0,r=c[1][i].size()-1,ans=-1;
+                    while(l<=r){
+                        int m=(l+r)>>1;
+                        if(c[0][i][j]+c[1][i][m]<=0){
+                            ans=m;
+                            l=m+1;
+                        }
+                        else r=m-1;
+                    }
+                    if(ans!=-1){
+                        int tt=abs(c[0][i][j]+c[1][i][ans]);
+                        if(ret==-1||ret>tt)ret=tt;
+                    }
+                    if(ans+1<c[1][i].size()){
+                        int tt=abs(c[0][i][j]+c[1][i][ans+1]);
+                        if(ret==-1||ret>tt)ret=tt;
+                    }
+                }
+            }
+        }
+        printf("%d\n",ret);
+    }
+    return 0;
+}

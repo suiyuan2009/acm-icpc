@@ -1,0 +1,147 @@
+/*
+题意：两个串中对应位置上的数在两个串中rank一样，两个串匹配
+kmp的过程中如果两个串中所有位置离它最近的小于它的数大于它的数等于它的数的距离一样则匹配
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+const int maxn=100005;
+
+int n,m,kk;
+struct P
+{
+    int x;
+    int l,h,e;
+    bool operator==(const P&a)const
+    {
+        return l==a.l&&h==a.h&&e==a.e;
+    }
+} s[maxn],t[maxn];
+vector<int>choose;
+int fail[maxn];
+
+int pos[26];
+void pd(int &ret,int x)
+{
+    if(ret==-1)ret=x;
+    else ret=min(ret,x);
+}
+void init()
+{
+    for(int i=0; i<n; i++)
+        s[i].h=s[i].e=s[i].l=-1;
+    for(int i=0; i<m; i++)
+        t[i].h=t[i].e=t[i].l=-1;
+    choose.clear();
+
+    memset(pos,-1,sizeof(pos));
+    for(int i=0; i<n; i++)
+    {
+        for(int j=1; j<s[i].x; j++)
+            if(pos[j]!=-1)
+                pd(s[i].l,i-pos[j]);
+        if(pos[s[i].x]!=-1)
+            pd(s[i].e,i-pos[s[i].x]);
+        for(int j=s[i].x+1; j<=kk; j++)
+            if(pos[j]!=-1)
+                pd(s[i].h,i-pos[j]);
+        pos[s[i].x]=i;
+    }
+
+    memset(pos,-1,sizeof(pos));
+    for(int i=0; i<m; i++)
+    {
+        for(int j=1; j<t[i].x; j++)
+            if(pos[j]!=-1)
+                pd(t[i].l,i-pos[j]);
+        if(pos[t[i].x]!=-1)
+            pd(t[i].e,i-pos[t[i].x]);
+        for(int j=t[i].x+1; j<=kk; j++)
+            if(pos[j]!=-1)
+                pd(t[i].h,i-pos[j]);
+        pos[t[i].x]=i;
+    }
+}
+
+bool cmp(P &aa,int idx,int l,P &bb,int idy,int r)
+{
+    P a=aa,b=bb;
+    if(idx-a.l<l)a.l=-1;
+    if(idx-a.e<l)a.e=-1;
+    if(idx-a.h<l)a.h=-1;
+    if(idy-b.l<r)b.l=-1;
+    if(idy-b.e<r)b.e=-1;
+    if(idy-b.h<r)b.h=-1;
+    return a==b;
+}
+
+void makefail()
+{
+    for(int i=0,j=-1; i<m; i++,j++)
+    {
+        fail[i]=j;
+        while(j>=0&&!cmp(t[j],j,0,t[i],i,i-j))
+            j=fail[j];
+    }
+}
+
+void kmp()
+{
+    int j=-1;
+    for(int i=0; i<n; i++)
+    {
+        while(j>-1&&!cmp(t[j+1],j+1,0,s[i],i,i-j-1))j=fail[j];
+        if(cmp(t[j+1],j+1,0,s[i],i,i-j-1))j++;
+        if(j==m-1)
+        {
+            choose.push_back(i-m+1);
+            j=fail[j];
+        }
+    }
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    while(~scanf("%d%d%d",&n,&m,&kk))
+    {
+        for(int i=0; i<n; i++)scanf("%d",&s[i].x);
+        for(int i=0; i<m; i++)scanf("%d",&t[i].x);
+        init();
+        makefail();
+
+        //for(int i=0; i<n; i++)
+        //  printf("%d ",fail[i]);
+        // printf("\n");
+
+        kmp();
+        int pre=-inf;
+        int ret=0;
+        for(int i=0; i<choose.size(); i++)
+        {
+            // printf("**%d ",choose[i]);
+            if(choose[i]-pre>=m)
+            {
+                // printf("**** %d\n",i);
+                pre=choose[i];
+                ret++;
+            }
+        }
+        //printf("\n");
+        printf("%d\n",ret);
+    }
+    return 0;
+}
