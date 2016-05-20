@@ -1,0 +1,64 @@
+/*
+题意：若干堆数，一开始先手选择是选偶数还是奇数，每次可以从一堆中选择一个对应
+奇偶性的数，并且删去不大于他的数，不能操作者输
+经典的Hackenbush问题
+*/
+#pragma comment(linker, "/STACK:1024000000,1024000000")
+#include <map>
+#include <set>
+#include <cmath>
+#include <queue>
+#include <cstdio>
+#include <vector>
+#include <string>
+#include <cassert>
+#include <cstring>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+const int maxn=105;
+const double eps=1e-6;
+typedef long long ll;
+
+int n;
+vector<int>g[maxn];
+
+int main()
+{
+	int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%d",&n);
+        for(int i=1;i<=n;i++)g[i].clear();
+        for(int i=1;i<=n;i++)
+        {
+            int m;
+            scanf("%d",&m);
+            for(int j=1;j<=m;j++)
+            {
+                int x;
+                scanf("%d",&x);
+                g[i].push_back(x);
+            }
+            sort(g[i].begin(),g[i].end());
+        }
+        ll ret=0;
+        for(int i=1;i<=n;i++)
+        {
+            ll cur=(1LL<<45);
+            bool sign=0;
+            for(int j=0;j<g[i].size();j++)
+            {
+                if(j&&(g[i][j]&1)!=(g[i][j-1]&1))sign=1;
+                if(sign)cur>>=1;
+                if(g[i][j]&1)ret-=cur;
+                else ret+=cur;
+            }
+        }
+        if(ret>0)printf("EVEN\n");
+        else if(ret==0)printf("DON'T PLAY\n");
+        else printf("ODD\n");
+    }
+	return 0;
+}

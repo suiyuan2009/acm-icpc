@@ -1,0 +1,54 @@
+/*
+题意：一个数是好的当且仅当这个数的所有字串都能被2整除，都不能被11整除
+广搜，每次扩展个位，只需check新的数是否合法
+*/
+#include<stdio.h>
+#include<string.h>
+#include<queue>
+#include<vector>
+using namespace std;
+const int maxn=18;
+typedef long long ll;
+
+bool check(ll x)
+{
+   int mul=1;
+   int now=0;
+   while(x)
+   {
+      int tt=x%10;
+      x/=10;
+      int t2=mul;
+      mul=mul*10%11;
+      if(tt==0)continue;
+      now=(now+t2*tt)%11;
+      if(now==0)return false;
+   }
+   return true;
+}
+
+vector<ll>ans;
+int main()
+{
+    int fr=0;
+    for(int i=2;i<=8;i+=2)
+      ans.push_back(i);
+    while(ans.size()<1500000&&fr<ans.size())
+    {
+      ll top=ans[fr++];
+      for(int i=0;i<=8;i+=2)
+      {
+        ll tt=top*10+i;
+        if(check(tt))ans.push_back(tt);
+      }
+    }
+	   int T;
+     scanf("%d",&T);
+     while(T--)
+    {
+         int n;
+         scanf("%d",&n);
+         printf("%lld\n",ans[n-1]);
+    }
+    return 0;
+}

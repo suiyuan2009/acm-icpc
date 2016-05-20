@@ -1,0 +1,133 @@
+/*
+题意：先移动马，再移动车，再移动象，最后问达到某个位置的最小步数
+记f[8][8][8][8][8][8][3]，最后的3是记当前是谁在移动
+*/
+#include<stdio.h>
+#include<queue>
+#include<string.h>
+#include<math.h>
+#include<stdlib.h>
+#include<memory>
+#include<map>
+#include<set>
+#include<vector>
+#include<algorithm>
+#include<malloc.h>
+#include<iostream>
+using namespace std;
+typedef long long ll;
+const int maxn=8;
+
+struct P
+{
+ int x,y;
+ bool operator==(const P&a)const
+ {
+    return a.x==x&&a.y==y;
+}
+};
+struct S
+{
+    P a,b,c;
+    int ti;
+};
+S st,u,v;
+int vis[8][8][8][8][8][8][3];
+
+int dir1[8][2]={{1,2},{1,-2},{-1,2},{-1,-2},{2,1},{2,-1},{-2,1},{-2,-1}};
+int dir3[4][2]={{1,1},{1,-1},{-1,1},{-1,-1}};
+int dir2[4][2]={{0,1},{0,-1},{1,0},{-1,0}};
+
+queue<S>que;
+void bfs()
+{
+    while(!que.empty())que.pop();
+    u=st;
+    u.ti=0;
+    vis[u.a.x][u.a.y][u.b.x][u.b.y][u.c.x][u.c.y][0]=1;
+    que.push(u);
+    while(!que.empty())
+    {
+     // printf("**\n");
+     u=que.front();
+     //printf("%d %d %d %d %d %d\n",u.a.x,u.a.y,u.b.x,u.b.y,u.c.x,u.c.y);
+     int utmp=vis[u.a.x][u.a.y][u.b.x][u.b.y][u.c.x][u.c.y][u.ti];
+   //  if(utmp==4)printf("%d %d %d %d %d %d %d\n",u.a.x,u.a.y,u.b.x,u.b.y,u.c.x,u.c.y,u.ti);
+     que.pop();
+     if(u.ti==0)
+     {
+         for(int i=0;i<8;i++)
+         {
+           v=u;
+           v.ti=1;
+           int x=v.a.x+dir1[i][0];
+           int y=v.a.y+dir1[i][1];
+           if(x<0||x>7||y<0||y>7)continue;
+           v.a.x=x;
+           v.a.y=y;
+
+      // if(u.a.x==1&&u.a.y==2&&u.b.x==5&&u.b.y==0&&u.c.x==5&&u.c.y==1)
+        //printf("%d %d\n",x,y);
+
+           if(v.a==v.b||v.a==v.c)continue;
+          if(vis[v.a.x][v.a.y][v.b.x][v.b.y][v.c.x][v.c.y][v.ti])continue;
+          vis[v.a.x][v.a.y][v.b.x][v.b.y][v.c.x][v.c.y][v.ti]=utmp+1;
+           que.push(v);
+       }
+   }
+   else if(u.ti==1)
+   {
+
+       for(int i=0;i<4;i++)
+        for(int j=1;j<=8;j++)
+        {
+          v=u;
+          v.ti=2;
+          v.b.x+=dir2[i][0]*j;
+          v.b.y+=dir2[i][1]*j;
+          if(v.b.x<0||v.b.x>7||v.b.y<0||v.b.y>7)continue;
+          if(v.b==v.a||v.b==v.c)break;
+          if(vis[v.a.x][v.a.y][v.b.x][v.b.y][v.c.x][v.c.y][v.ti])continue;
+          vis[v.a.x][v.a.y][v.b.x][v.b.y][v.c.x][v.c.y][v.ti]=utmp+1;
+          que.push(v);
+      }
+  }
+  else
+  {
+      for(int i=0;i<4;i++)
+        for(int j=1;j<=8;j++)
+        {
+          v=u;
+          v.ti=0;
+          v.c.x+=dir3[i][0]*j;
+          v.c.y+=dir3[i][1]*j;
+          if(v.c.x<0||v.c.x>7||v.c.y<0||v.c.y>7)continue;
+          if(v.c==v.a||v.c==v.b)break;
+          if(vis[v.a.x][v.a.y][v.b.x][v.b.y][v.c.x][v.c.y][v.ti])continue;
+          vis[v.a.x][v.a.y][v.b.x][v.b.y][v.c.x][v.c.y][v.ti]=utmp+1;
+          que.push(v);
+      }
+  }
+ }
+}
+
+
+int main()
+{
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+       memset(vis,0,sizeof(vis));
+       scanf("%d%d%d%d%d%d",&st.a.x,&st.a.y,&st.b.x,&st.b.y,&st.c.x,&st.c.y);
+       bfs();
+       int tmp=1000000007;
+       for(int i=0;i<3;i++)
+      tmp=min(tmp,vis[st.c.x][st.c.y][st.a.x][st.a.y][st.b.x][st.b.y][i]);
+
+      // printf("%d\n",vis[1][2][5][0][5][1]);
+
+       printf("%d\n",tmp==1000000007?-1:tmp-1);
+    }
+    return 0;
+}
