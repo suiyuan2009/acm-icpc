@@ -1,0 +1,146 @@
+/*
+网格，出口是n,m，每次只能向下或者向右，给出(x1,y,x2,y)条形障碍，问多少空格子不能到达出口
+离散化后一行一行处理能到的格子线段。
+*/
+#include <cstdio>
+#include <iostream>
+#include <cstring>
+#include <algorithm>
+#include <vector>
+using namespace std;
+typedef long long ll;
+const int maxn = 1005;
+
+struct P {
+    int x, y, z;
+    P() {}
+    P(int x, int y, int z): x(x), y(y), z(z) {}
+    bool operator<(const P&a)const {
+        return z == a.z ? x<a.x: z>a.z;
+    }
+} p[maxn];
+int dx, dy, n;
+
+vector<pair<int, int> >v[3];
+
+int main() {
+    int ncase = 0;
+    //freopen("in.cpp", "r", stdin);
+    //freopen("out2.cpp", "w", stdout);
+    while (scanf("%d%d%d", &dx, &dy, &n)) {
+        //if(ncase==5)printf("%d %d %d\n",dx,dy,n);
+        if (dx == 0 && dy == 0 && n == 0)break;
+        ll c_b = 0, c_c = 0;
+        bool sign = 0;
+        for (int i = 1; i <= n; i++) {
+            int x, y, z;
+            scanf("%d%d%d%d", &x, &z, &y, &z);
+            //if(ncase==5)printf("%d %d %d %d\n",x,z,y,z);
+            p[i] = P(x, y, z);
+            c_b += (y - x + 1);
+            if (z == dx - 1 && y == dy - 1)sign = 1;
+        }
+        if (sign) {
+            printf("Case %d: %lld\n", ++ncase, dx * (ll)dy - c_b);
+            continue;
+        }
+        if (n == 0) {
+            printf("Case %d: 0\n", ++ncase);
+            continue;
+        }
+        sort(p + 1, p + n + 1);
+        for (int i = 0; i < 3; i++)v[i].clear();
+        if (p[1].z == dx - 1) {
+            int r = 0;
+            for (int i = 1; i <= n; i++) {
+                if (p[i].z == dx - 1)r = p[i].y + 1;
+                else break;
+            }
+            v[0].push_back(make_pair(r, dy - 1));
+            c_c += dy - r;
+        } else {
+            int len = dx - 1 - p[1].z;
+            v[0].push_back(make_pair(0, dy - 1));
+            c_c += len * (ll)dy;
+        }
+        int st = n + 1;
+        for (int i = 1; i <= n; i++)
+            if (p[i].z != dx - 1) {
+                st = i;
+                break;
+            }
+        if (st != n + 1 && p[st].z < p[1].z - 1) {
+            int len = p[1].z - p[st].z - 1;
+            v[0].clear();
+            v[0].push_back(make_pair(0, dy - 1));
+            c_c += len * (ll)dy;
+        }
+        bool no = 0;
+        for (int i = st; i <= n; i++) {
+            int j = i;
+            if (v[0].size() == 0) {
+                no = 1;
+                break;
+            }
+            v[1].clear();
+            if (p[i].x != 0)v[1].push_back(make_pair(0, p[i].x - 1));
+            if ((i == n || p[i + 1].z != p[i].z) && p[i].y < dy - 1)
+                v[1].push_back(make_pair(p[i].y + 1, dy - 1));
+            for (int k = i + 1; k <= n; k++) {
+                if (p[k].z == p[i].z) {
+                    if (p[k].x > p[k - 1].y + 1) {
+                        v[1].push_back(make_pair(p[k - 1].y + 1, p[k].x - 1));
+                    }
+                    if ((k == n || p[k + 1].z != p[k].z) && p[k].y < dy - 1) {
+                        v[1].push_back(make_pair(p[k].y + 1, dy - 1));
+                    }
+                    j = k;
+                } else break;
+            }
+            if (v[1].size() == 0) {
+                no = 1;
+                break;
+            }
+            int r = -1;
+            v[2].clear();
+            for (int k = 0; k < v[1].size(); k++) {
+                //if(i==1)printf("*****     %d %d\n",v[1][k].first,v[1][k].second);
+                while (r + 1 < v[0].size() && v[0][r + 1].second <= v[1][k].second)r++;
+                int tt = -1;
+                if (r != -1 && v[0][r].second >= v[1][k].first)tt = v[0][r].second;
+                if (r + 1 < v[0].size() && v[0][r + 1].first <= v[1][k].second)tt = v[1][k].second;
+                if (tt != -1) {
+                    v[2].push_back(make_pair(v[1][k].first, tt));
+                    //if(i==1)printf("****   %d %d\n",v[1][k].first,tt);
+                    c_c += tt - v[1][k].first + 1;
+                }
+            }
+            if (v[2].size() == 0) {
+                no = 1;
+                break;
+            }
+            if (j + 1 <= n && p[j + 1].z < p[j].z - 1) {
+                //printf("**&& %d\n",i);
+                int sz = v[2].size();
+                int len = p[j].z - p[j + 1].z - 1;
+                v[0].clear();
+                v[0].push_back(make_pair(0, v[2][sz - 1].second));
+                c_c += len * (ll)(v[2][sz - 1].second + 1);
+                //if(i==1)printf("** %d\n",v[2][sz-1].second);
+            } else {
+                v[0] = v[2];
+            }
+            //printf("***%d %lld\n", i, c_c);
+            i = j;
+        }
+        if (!no) {
+            if (p[n].z != 0) {
+                int len = p[n].z;
+                int sz = v[0].size();
+                c_c += len * (ll)(v[0][sz - 1].second + 1);
+            }
+        }
+        printf("Case %d: %lld\n", ++ncase, dx * (ll)dy - c_b - c_c);
+    }
+    return 0;
+}

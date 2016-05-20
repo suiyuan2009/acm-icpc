@@ -1,0 +1,266 @@
+/*
+题意：环上n条线段，n<10^6，最少需要多少条线段覆盖环
+先求出所有线段的后继，然后从长度最大的线段开始，向后求需要多少条线段，如果为m，那么答案就死m-1或者m，
+用倍增求到第m-1个后继的情况。
+*/
+#include<cstdio>
+#include<iostream>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+using namespace std;
+const int maxn = 1000005;
+const int maxm = maxn+maxn;
+
+int n,m,a[maxn],b[maxn],c[maxm],cid[maxm],to[maxn];
+int f[21][maxn];
+
+int cal(int id) {
+    if(a[id]<=b[id])return b[id]-a[id]+1;
+    return b[id]+n-a[id]+1;
+}
+
+void pd(int pos,int val,int id) {
+    if(c[pos]<val) {
+        c[pos]=val;
+        cid[pos]=id;
+    } else if(c[pos]==val) {
+        if(cal(cid[pos])<cal(id))cid[pos]=id;
+    }
+}
+
+int test(int x,int y,int pos) {
+    if(x<=y)return x<=pos&&pos<=y;
+    return pos>=x||pos<=y;
+}
+
+struct P {
+    int x,y;
+    P() {}
+    P(int x,int y):x(x),y(y) {}
+} g[21][maxn];
+
+void catcat(int x1,int y1,int x2,int y2,int &x,int &y) {
+    if(x1>y1)y1+=n;
+    if(x2>y2)y2+=n;
+
+    if(y1<x2) {
+        x1+=n,y1+=n;
+    } else if(y2<x1) {
+        x2+=n,y2+=n;
+    }
+    x=min(x1,x2);
+    y=max(y1,y2);
+}
+
+void init() {
+    for(int i=0; i<n+n; i++)c[i]=to[i]=-1;
+    for(int i=0; i<m; i++) {
+        a[i]--;
+        if(b[i]==n)b[i]=0;
+        if(a[i]<=b[i]) {
+            pd(a[i],b[i],i);
+            pd(a[i]+n,b[i]+n,i);
+        } else {
+            pd(a[i],b[i]+n,i);
+            pd(a[i]+n,b[i]+n+n,i);
+        }
+    }
+
+    for(int i=1; i<n+n; i++) {
+        if(c[i-1]>c[i]) {
+            c[i]=c[i-1];
+            cid[i]=cid[i-1];
+        } else if(c[i-1]==c[i]) {
+            if(cid[i-1]!=-1&&cid[i]!=-1)
+                if(cal(cid[i-1])>cal(cid[i]))cid[i]=cid[i-1];
+        }
+    }
+    for(int i=0; i<m; i++) {
+        to[i]=cid[b[i]+n];
+        if(to[i]!=-1) {
+            if(to[i]==i)to[i]=-1;
+            else if(!test(a[to[i]],b[to[i]],b[i]))to[i]=-1;
+        }
+    }
+    for(int i=0; i<m; i++) {
+        f[0][i]=to[i];
+        if(to[i]==-1)continue;
+        int tt=to[i];
+        g[0][i]=P(a[tt],a[tt]>b[tt]?b[tt]+n:b[tt]);
+    }
+    int mx=0;
+    for(int i=0;i<21;i++)
+    if((1<<i)>=n){
+        mx=i;
+        break;
+    }
+    for(int j=1; j<=mx; j++)
+        for(int i=0; i<m; i++) {
+            if(f[j-1][i]==-1||f[j-1][f[j-1][i]]==-1)f[j][i]=-1;
+            else {
+                f[j][i]=f[j-1][f[j-1][i]];
+                catcat(g[j-1][i].x,g[j-1][i].y,g[j-1][f[j-1][i]].x,g[j-1][f[j-1][i]].y,g[j][i].x,g[j][i].y);
+            }
+        }
+    //for(int i=0; i<m; i++)printf("%d: %d %d %d\n",i,a[i],b[i],to[i]);
+}
+
+int main() {
+    //freopen("in.cpp","r",stdin);
+    //freopen("out.cpp","w",stdout);
+    int ncase=0;
+    while(~scanf("%d%d",&n,&m)) {
+        bool sign=0;
+        for(int i=0; i<m; i++) {
+            scanf("%d%d",&a[i],&b[i]);
+            if(a[i]==b[i]+1)sign=1;
+            else if(a[i]==1&&b[i]==n)sign=1;
+        }
+        //printf("Case %d\n",++ncase);
+        if(sign) {
+            printf("1\n");
+            continue;
+        }
+        init();
+        int ret;
+
+        int id=0;
+        for(int i=1; i<m; i++)
+            if(cal(i)>cal(id))id=i;
+
+        sign=0;
+        //printf("******\n0");
+        int x=a[id],y=b[id],now=id;
+        // printf("** %d %d\n",x,y);
+        for(ret=2; ret<=m; ret++) {
+            int tt=to[now];
+            if(tt==-1)break;
+            //printf(" %d",tt);
+            catcat(x,y,a[tt],b[tt],x,y);
+            // printf("**%d %d %d\n",tt,x,y);
+            if(x+n<=y) {
+                sign=1;
+                break;
+            }
+            now=tt;
+        }
+        for(int i=0; i<m; i++)if(to[i]==-1)sign=0;
+        //printf("\n");
+        if(!sign)printf("impossible\n");
+        else {
+            // printf("*&&* %d %d\n",id,ret);
+            if(ret==2)printf("%d\n",ret);
+            else {
+                bool sg=0;
+                //printf("** %d\n",ret);
+                for(int i=0; i<m; i++) {
+                    int tt=ret-2;
+                    int cur=i;
+                    int x=a[i],y=b[i];
+                    if(x>y)y+=n;
+                    for(int j=0; j<20; j++)
+                        if(tt&(1<<j)) {
+                            catcat(g[j][cur].x,g[j][cur].y,x,y,x,y);
+                            cur=f[j][cur];
+                            if(cur==-1)break;
+                        }
+                    if(cur!=-1&&cur!=i&&x+n<=y) {
+                        ret--;
+                        break;
+                    }
+                }
+                printf("%d\n",ret);
+            }
+        }
+    }
+    return 0;
+}
+
+
+
+#include<cstdio>
+#include<algorithm>
+#include<string>
+#include<cmath>
+#include<cstring>
+#include<vector>
+#include<iostream>
+#include<ctime>
+using namespace std;
+const int maxn=300;
+typedef __int64 ll;
+const int inf=0x3fffffff;
+
+int main() {
+    freopen("in.cpp","w",stdout);
+    srand(time(0));
+    int T=1000;
+    while(T--) {
+        int n=40,m=10;
+        printf("%d %d\n",n,m);
+        for(int i=1; i<=m; i++) {
+            int x=rand()%n+1;
+            int y=rand()%n+1;
+            printf("%d %d\n",x,y);
+        }
+    }
+    return 0;
+}
+
+
+#include<cstdio>
+#include<iostream>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+using namespace std;
+const int maxn = 105;
+const int maxm = maxn+maxn;
+
+int n,m,a[maxn],b[maxn];
+
+bool vis[maxn];
+
+/*void pd(int x) {
+    for(int i=0; i<m; i++)
+        if(x&(1<<i))printf("1");
+        else printf("0");
+    printf("\n");
+}*/
+
+int main() {
+    freopen("in.cpp","r",stdin);
+    //
+    freopen("out2.cpp","w",stdout);
+    int ncase=0;
+    while(~scanf("%d%d",&n,&m)) {
+        for(int i=0; i<m; i++)scanf("%d%d",&a[i],&b[i]);
+        int ret=-1;
+        for(int i=0; i<(1<<m); i++) {
+            int cnt=0;
+            memset(vis,0,sizeof(vis));
+            for(int j=0; j<m; j++)if(i&(1<<j)) {
+                    cnt++;
+                    if(a[j]<=b[j]) {
+                        for(int k=a[j]; k<=b[j]; k++)vis[k]=1;
+                    } else {
+                        for(int k=a[j]; k<=n; k++)vis[k]=1;
+                        for(int k=1; k<=b[j]; k++)vis[k]=1;
+                    }
+                }
+            bool sign=0;
+            for(int j=1; j<=n; j++)
+                if(!vis[j])sign=1;
+            if(!sign) {
+                if(ret==-1)ret=cnt;
+                else ret=min(ret,cnt);
+            }
+        }
+        printf("Case %d\n",++ncase);
+        if(ret==-1)printf("impossible\n");
+        else printf("%d\n",ret);
+    }
+    return 0;
+}
+

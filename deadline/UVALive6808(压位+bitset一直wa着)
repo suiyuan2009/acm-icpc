@@ -1,0 +1,76 @@
+/*
+题意：给一个大01矩阵，再给一个小矩阵做模板，问最多匹配，n<=500
+压位，但是bitset一直wa，对拍了10^5都没问题
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+#include<bitset>
+using namespace std;
+typedef long long ll;
+const int maxn = 525;
+
+int n,m,x,y;
+char str[maxn][maxn],str2[maxn][maxn];
+bitset<maxn>a[maxn],b[maxn];
+
+int change(char ch){
+    return ch=='L';
+}
+void init(){
+    for(int i=0;i<n;i++){
+        a[i]=0;
+        for(int j=0;j<m;j++)
+            a[i][j]=change(str[i][j]);
+    }
+}
+void init2(){
+    for(int i=0;i<x;i++){
+        b[i]=0;
+        for(int j=0;j<y;j++)
+            b[i][j]=change(str2[i][j]);
+    }
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    scanf("%d%d",&n,&m);
+    for(int i=0;i<n;i++)scanf("%s",str[i]);
+    init();
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--){
+        scanf("%d%d",&x,&y);
+        for(int i=0;i<x;i++)scanf("%s",str2[i]);
+        init2();
+        int ret=-1,retx,rety;
+        for(int i=0;i+x<=n;i++)
+            for(int j=0;j+y<=m;j++){
+                int cnt=0;
+                for(int k=i;k<i+x;k++){
+                  cnt+=(((a[k]<<(maxn-(j+y-1)-1))>>(maxn-y))^b[k-i]).count();
+                }
+                cnt=x*y-cnt;
+                if(ret<cnt){
+                    ret=cnt;
+                    retx=i,rety=j;
+                }
+            }
+        int cnt1=0,cnt2=0;
+        for(int i=retx;i<retx+x;i++)
+            for(int j=rety;j<rety+y;j++)
+                if(str[i][j]==str2[i-retx][j-rety]){
+                    if(str[i][j]=='L')cnt2++;
+                    else cnt1++;
+                }
+        printf("Case #%d: %d %d %d %d\n",++ncase,retx+1,rety+1,cnt1,cnt2);
+    }
+    return 0;
+}

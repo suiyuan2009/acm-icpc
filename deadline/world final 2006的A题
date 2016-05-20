@@ -1,0 +1,154 @@
+/*
+关于飞机换乘，给出按顺序必须进过的城市，一个航班也是按顺序经过的若干城市
+spfa会tle，大概是收敛太慢了，改成dijstra+heap就行
+*/
+#include<cstdio>
+#include<algorithm>
+#include<string>
+#include<cmath>
+#include<cstring>
+#include<vector>
+#include<queue>
+using namespace std;
+typedef long long ll;
+const int maxn=25;
+const int maxm=205;
+
+int n,m;
+vector<int>tr,a[maxn],e[maxm];
+int c[maxn];
+
+int f[10][20][10];
+
+vector<int>vis;
+void init() {
+    vis.clear();
+    for(int i=0; i<maxm; i++)e[i].clear();
+    for(int i=0; i<n; i++) {
+        a[i].clear();
+        int x,y;
+        scanf("%d%d",&c[i],&x);
+        while(x--) {
+            scanf("%d",&y);
+            vis.push_back(y);
+            a[i].push_back(y);
+        }
+    }
+    sort(vis.begin(),vis.end());
+    vis.erase(unique(vis.begin(),vis.end()),vis.end());
+    for(int i=0; i<n; i++) {
+        for(int j=0; j<a[i].size(); j++)
+            a[i][j]=lower_bound(vis.begin(),vis.end(),a[i][j])-vis.begin();
+        e[a[i][0]].push_back(i);
+    }
+    m=vis.size();
+}
+
+bool pd(int &ret,int val) {
+    if(ret==-1||ret>val) {
+        ret=val;
+        return 1;
+    }
+    return 0;
+}
+
+bool in[10][20][10];
+struct P {
+    int x,y,z;
+    P() {}
+    P(int x,int y,int z):x(x),y(y),z(z) {}
+    bool operator<(const P&a)const {
+        return f[x][y][z]>f[a.x][a.y][a.z];
+    }
+};
+P pnt[10][20][10];
+//queue<P>que;
+priority_queue<P>que;
+void spfa() {
+    while(!que.empty())que.pop();
+    memset(f,-1,sizeof(f));
+    memset(in,0,sizeof(in));
+    int len=tr.size();
+    for(int i=0; i<10; i++)
+        for(int j=0; j<20; j++)
+            for(int k=0; k<10; k++)
+                pnt[i][j][k].x=pnt[i][j][k].y=pnt[i][j][k].z=-1;
+    for(int i=0; i<n; i++)
+        if(a[i][0]==tr[0]) {
+            f[0][i][0]=0;
+            que.push(P(0,i,0));
+        }
+    while(!que.empty()) {
+        P tt=que.top();
+        que.pop();
+        int x=tt.x,y=tt.y,z=tt.z;
+        if(in[x][y][z])continue;
+        in[x][y][z]=1;
+        if(z+1<a[y].size()) {
+            int cost=(z==0?c[y]:0);
+            int nx=x;
+            if(x+1<tr.size()&&a[y][z+1]==tr[x+1])nx=x+1;
+            if(pd(f[nx][y][z+1],f[x][y][z]+cost)) {
+                if(!in[nx][y][z+1]) {
+                    pnt[nx][y][z+1]=P(x,y,z);
+                    que.push(P(nx,y,z+1));
+                }
+            }
+        }
+        int now=a[y][z];
+        for(int i=0; i<e[now].size(); i++) {
+            int tt=e[now][i];
+            if(pd(f[x][tt][0],f[x][y][z])) {
+                if(!in[x][tt][0]) {
+                    pnt[x][tt][0]=P(x,y,z);
+                    que.push(P(x,tt,0));
+                }
+            }
+        }
+    }
+}
+
+vector<int>ans;
+int main() {
+    int ncase=0;
+    //freopen("in.cpp","r",stdin);
+    while(scanf("%d",&n)&&n) {
+        ncase++;
+        init();
+        int q;
+        scanf("%d",&q);
+        int ncase2=0;
+        while(q--) {
+            tr.clear();
+            int len;
+            scanf("%d",&len);
+            for(int i=0; i<len; i++) {
+                int x;
+                scanf("%d",&x);
+                x=lower_bound(vis.begin(),vis.end(),x)-vis.begin();
+                tr.push_back(x);
+            }
+            spfa();
+            int ret=-1;
+            P now=P(-1,-1,-1);
+            for(int i=0; i<n; i++)
+                for(int j=0; j<a[i].size(); j++) {
+                    if(f[len-1][i][j]==-1)continue;
+                    if(pd(ret,f[len-1][i][j]))now=P(len-1,i,j);
+                }
+            ans.clear();
+            while(now.x!=-1) {
+                int x=now.x,y=now.y,z=now.z;
+                P nxt=pnt[x][y][z];
+                if(nxt.x!=-1&&nxt.y==now.y&&nxt.z==0&&now.z==1) {
+                    ans.push_back(now.y+1);
+                }
+                now=nxt;
+            }
+            printf("Case %d, Trip %d: Cost = %d\n  Tickets used:",ncase,++ncase2,ret);
+            for(int i=ans.size()-1; i>=0; i--)printf(" %d",ans[i]);
+            printf("\n");
+        }
+    }
+    return 0;
+}

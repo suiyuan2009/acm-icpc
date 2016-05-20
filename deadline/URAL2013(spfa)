@@ -1,0 +1,211 @@
+/*
+题意：给一个有向图，从顶点1走到x，f(x)是这条路径上不包含x的最后一个带权值节点的权值，g(x)是包含x的路径的最后权值，
+求每个节点的f(x)和g(x)是否唯一，唯一输出权值
+直接spfa，g++会TLE，交c++就过了，自环的话是特殊处理的。
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn = 100005;
+
+int n,a[maxn];
+vector<int>e[maxn];
+int ans[maxn][2];
+bool b[maxn];
+
+void init(){
+    for(int i=1;i<=n;i++)ans[i][0]=ans[i][1]=-2;
+    memset(b,0,sizeof(b));
+    for(int i=1;i<=n;i++){
+        e[i].clear();
+        int x,y;
+        scanf("%d%d",&a[i],&x);
+        for(int j=0;j<x;j++){
+            scanf("%d",&y);
+            if(i==y)b[i]=1;
+            else e[i].push_back(y);
+        }
+    }
+}
+
+bool pd(int u,int v){
+    bool ret=0;
+    if(ans[u][1]==-1){
+        if(ans[v][0]!=-1){
+            ret=1;
+            ans[v][0]=-1;
+        }
+        if(a[v]){
+            if(ans[v][1]!=a[v]){
+                ret=1;
+                ans[v][1]=a[v];
+            }
+        }else{
+            if(ans[v][1]!=-1){
+                ret=1;
+                ans[v][1]=-1;
+            }
+        }
+    }else if(ans[u][1]==0){
+        if(a[v]){
+            if(b[v]){
+                if(ans[v][0]!=-1){
+                    ret=1;
+                    ans[v][0]=-1;
+                }
+                if(ans[v][1]!=a[v]){
+                    ans[v][1]=a[v];
+                    ret=1;
+                }
+            }else{
+                if(ans[v][1]!=a[v]){
+                    ret=1;
+                    ans[v][1]=a[v];
+                }
+                if(ans[v][0]==-2){
+                    ret=1;
+                    ans[v][0]=0;
+                }else if(ans[v][0]!=-1){
+                    if(ans[v][0]!=0){
+                        ret=1;
+                        ans[v][0]=-1;
+                    }
+                }
+            }
+        }else{
+            if(ans[v][0]==-2){
+                ans[v][0]=0;
+                ret=1;
+            }else if(ans[v][0]!=-1){
+                if(ans[v][0]!=0){
+                    ans[v][0]=-1;
+                    ret=1;
+                }
+            }
+            if(ans[v][1]==-2){
+                ans[v][1]=0;
+                ret=1;
+            }else if(ans[v][1]!=-1){
+                if(ans[v][1]!=0){
+                    ans[v][1]=-1;
+                    ret=1;
+                }
+            }
+        }
+    }else{
+        if(a[v]){
+            if(b[v]){
+                if(ans[v][1]!=a[v]){
+                    ans[v][1]=a[v];
+                    ret=1;
+                }
+                if(ans[v][0]==-2){
+                    if(ans[u][1]==a[v]){
+                        ans[v][0]=a[v];
+                        ret=1;
+                    }else{
+                        ans[v][0]=-1;
+                        ret=1;
+                    }
+                }else{
+                    if(ans[v][0]==a[v]&&a[v]==ans[u][1]){
+
+                    }else{
+                        if(ans[v][0]!=-1){
+                            ans[v][0]=-1;
+                            ret=1;
+                        }
+                    }
+                }
+            }else{
+                if(ans[v][0]==-2){
+                    ans[v][0]=ans[u][1];
+                    ret=1;
+                }else{
+                    if(ans[v][0]!=-1){
+                        if(ans[v][0]!=ans[u][1]){
+                            ret=1;
+                            ans[v][0]=-1;
+                        }
+                    }
+                }
+                if(ans[v][1]!=a[v]){
+                    ret=1;
+                    ans[v][1]=a[v];
+                }
+            }
+        }else{
+            if(ans[v][0]==-2){
+                ret=1;
+                ans[v][0]=ans[u][1];
+            }else{
+                if(ans[v][0]!=-1){
+                    if(ans[v][0]!=ans[u][1]){
+                        ret=1;
+                        ans[v][0]=-1;
+                    }
+                }
+            }
+            if(ans[v][1]==-2){
+                ret=1;
+                ans[v][1]=ans[u][1];
+            }else{
+                if(ans[v][1]!=-1){
+                    if(ans[v][1]!=ans[u][1]){
+                        ret=1;
+                        ans[v][1]=-1;
+                    }
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+queue<int>que;
+int cnt;
+void spfa(){
+    cnt=0;
+    while(!que.empty())que.pop();
+    que.push(1);
+    ans[1][0]=0;
+    if(b[1]&&a[1])ans[1][0]=-1;
+    ans[1][1]=a[1];
+    while(!que.empty()){
+        int u=que.front();
+        que.pop();
+        if(cnt>1000000)break;
+        for(int i=0;i<e[u].size();i++){
+            int v=e[u][i];
+            if(pd(u,v)){
+                // printf("%d %d\n",u,v);
+                que.push(v);
+            }
+        }
+    }
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    while(~scanf("%d",&n)){
+        init();
+        spfa();
+        for(int i=1;i<=n;i++)
+            for(int j=0;j<2;j++){
+                if(ans[i][j]==-1)printf("unknown");
+                else if(ans[i][j]==0)printf("sober");
+                else printf("%d",ans[i][j]);
+                printf("%c",j?'\n':' ');
+            }
+    }
+    return 0;
+}

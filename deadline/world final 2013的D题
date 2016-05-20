@@ -1,0 +1,85 @@
+/*
+暴搜题
+*/
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+#include<queue>
+#include<deque>
+#include<map>
+#include<hash_map>
+using namespace std;
+const int maxn = 64;
+typedef long long ll;
+const ll inf =(1LL<<62)-1+(1LL<<62);
+
+ll c[maxn][maxn];
+vector<int>p;
+void init(){
+    bool sign=0;
+    for(int i=0;i<maxn;i++)c[i][i]=c[i][0]=1;
+    for(int i=1;i<maxn;i++)
+    for(int j=1;j<i;j++){
+        if(inf-c[i-1][j-1]<c[i-1][j]){
+            sign=1;
+        }
+        c[i][j]=c[i-1][j-1]+c[i-1][j];
+    }
+    //printf("** %d\n",sign);
+    for(int i=2;i<1000;i++){
+        bool sign=0;
+        for(int j=2;j*j<=i;j++)
+        if(i%j==0){
+            sign=1;
+            break;
+        }
+        if(!sign){
+            p.push_back(i);
+            if(p.size()==maxn)break;
+        }
+    }
+}
+
+ll ret,n;
+int path[maxn];
+
+void cal(int cnt){
+    ll ans=1;
+    for(int i=0;i<cnt;i++)
+    for(int j=0;j<path[i];j++)
+    {
+        if(ans>inf/p[i])return;
+        ans*=p[i];
+    }
+    if(ret==-1||ret>ans)ret=ans;
+}
+
+void dfs(int cnt,int ct,int pre,ll cur){
+    if(cur==n){
+            cal(cnt);
+    return;
+    }
+    for(int i=1;i+ct<maxn&&i<=pre;i++)
+    if(n%c[i+ct][ct]==0&&c[i+ct][ct]<=inf/cur){
+        path[cnt]=i;
+        dfs(cnt+1,ct+i,i,cur*c[i+ct][ct]);
+    }
+}
+
+int main() {
+    init();
+   // freopen("in.cpp","r",stdin);
+    while(~scanf("%lld",&n)){
+        if(n==1){
+            printf("1 2\n");
+            continue;
+        }
+        ret=-1;
+        dfs(0,0,maxn,1);
+        printf("%lld %lld\n",n,ret);
+    }
+    return 0;
+}
