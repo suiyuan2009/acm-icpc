@@ -1,0 +1,73 @@
+/*
+题意：给一堆点，有权值，问单位圆最多能覆盖多少点权和
+
+枚举点在圆上，圆绕点旋转，扫描线
+*/
+#include<cmath>  
+#include<cstdio> 
+#include<iostream>  
+#include<algorithm>  
+using namespace std;  
+const int mm=2005;
+const double eps=1e-8;
+const double PI=acos(-1.0);
+typedef double diy;  
+struct point  
+{  
+    diy x,y;
+    int z;
+    point(){}  
+    point(diy _x,diy _y):x(_x),y(_y){}  
+}g[mm];  
+struct alpha  
+{  
+    diy angle;  
+    bool flag;
+    int idx;
+}s[mm];  
+bool cmp(alpha P,alpha Q)  
+{  
+    return P.angle<Q.angle;  
+}  
+diy SqrDis(point P,point Q)  
+{  
+    return (P.x-Q.x)*(P.x-Q.x)+(P.y-Q.y)*(P.y-Q.y);  
+}  
+int CircleMaxPoint(int n,diy r)  
+{  
+    int i,j,m,sum,ret=0;  
+    double tmp,rad;  
+    for(i=0;i<n;++i)  
+    {  
+        m=0;  
+        for(j=0;j<n;++j)  
+            if(i!=j&&(tmp=SqrDis(g[i],g[j]))<4+eps)  
+            {  
+                rad=acos(sqrt(tmp)/2);  
+                tmp=atan2(g[j].y-g[i].y,g[j].x-g[i].x);
+                if(tmp<-eps)tmp+=2*PI;
+                s[m].idx=j,s[m].angle=tmp-rad,s[m++].flag=1;
+                s[m].idx=j,s[m].angle=tmp+rad,s[m++].flag=0;  
+            }  
+        sort(s,s+m,cmp);
+        int sum=g[i].z;
+        ret=max(ret,sum);
+        for(j=0;j<m;++j)  
+        {  
+            if(s[j].flag)sum+=g[s[j].idx].z;  
+            else sum-=g[s[j].idx].z;  
+            ret=max(ret,sum);  
+        }  
+    }  
+    return ret;  
+}  
+int main()  
+{
+    //freopen("ACM/in.in","r",stdin);
+    int i,n;
+    scanf("%d",&n);
+    for(int i=0;i<n;++i)  
+        scanf("%lf%lf%d",&g[i].x,&g[i].y,&g[i].z);  
+    printf("%d\n",CircleMaxPoint(n,1.0));  
+    return 0;  
+}
