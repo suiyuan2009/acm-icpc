@@ -1,0 +1,113 @@
+/*
+题意：给一个n，2^64-1以内，问多少对(x,y)满足x^3+y^3=n
+
+因式分解，枚举约数解方程
+*/
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+#include<time.h>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<map>
+using namespace std;
+typedef unsigned long long ll;
+const int maxn=4000006;
+
+int q[maxn],cq;
+bool notp[maxn];
+
+void init()
+{
+    for(int i=2; i<maxn; i++)
+        if(!notp[i])
+        {
+            q[cq++]=i;
+            for(int j=i+i; j<maxn; j+=i)
+                notp[j]=1;
+        }
+}
+
+vector<pair<ll,ll> >ret;
+ll p[105],n;
+int c[105],cf;
+
+
+void solve(ll cur)
+{//printf("** %I64u\n",cur);
+    ll l=1,r=cur>>1,ans=0;
+    ll t=n/cur,t2=cur*cur;
+    while(l<=r)
+    {
+        ll m=(l+r)>>1;
+        ll tt=t+3*(cur-m)*m;
+        if(tt==t2)
+        {
+            ans=m;
+            break;
+        }
+        if(tt<t2)l=m+1;
+        else r=m-1;
+    }
+    if(ans!=0&&t+3*(cur-ans)*ans==t2)ret.push_back(make_pair(ans,cur-ans));
+}
+void dfs(int cnt,ll cur,int sign)
+{
+    if(cur>10000000||cur>n/cur)return;
+    if(sign)solve(cur);
+    if(cnt>=cf)return;
+    ll tt=1;
+    for(int j=0; j<=c[cnt]; j++)
+    {
+        dfs(cnt+1,cur*tt,j);
+        tt*=p[cnt];
+    }
+}
+
+int main()
+{
+ //  freopen("ACM/in.in","r",stdin);
+   //freopen("ACM/out.out","w",stdout);
+    init();
+    while(scanf("%llu",&n)!=EOF)
+    {
+        if(n==2)
+        {
+            printf("1 (1,1)\n");
+            continue;
+        }
+        ret.clear();
+        cf=0;
+        ll tt=n;
+        for(int i=0; i<cq; i++)
+        {
+            //printf("** %d\n",i);
+            if(tt==1)break;
+            if(tt%q[i]==0)
+            {
+                int cnt=0;
+                while(tt%q[i]==0)
+                {
+                    tt/=q[i];
+                    cnt++;
+                }
+                p[cf]=q[i];
+                c[cf++]=cnt;
+            }
+        }
+        if(tt>1&&tt<40000000){
+            p[cf]=tt;
+            c[cf++]=1;
+        }
+        //printf("**\n");
+        dfs(0,1,0);
+        sort(ret.begin(),ret.end());
+        ret.erase(unique(ret.begin(),ret.end()),ret.end());
+        printf("%d",(int)ret.size());
+        for(int i=0; i<ret.size(); i++)
+            printf(" (%llu,%llu)",ret[i].first,ret[i].second);
+        printf("\n");
+    }
+    return 0;
+}

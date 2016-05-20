@@ -1,0 +1,102 @@
+/*
+筛法求出每个合数的最小质因子，然后用欧拉函数优化式子的求和
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+using namespace std;
+typedef long long ll;
+const int maxn = 1000005;
+const int mod=1000003;
+
+void gcd(ll a,ll b, ll& d,ll& x,ll& y){  //      已经测试 FZU 1402
+    if(!b) {d=a;x=1;y=0;}
+    else   {	gcd(b,a%b,d,y,x);	y-=a/b*x;}
+}
+ll inv(ll a,ll n)  { //无逆元返回-1
+    ll d,x,y;	gcd(a,n,d,x,y);
+    return d==1?(x%n+n)%(n/d):-1; 
+}
+const int phiN=1000001;                      //已经测试  HDU 1645 TJU3317
+int phi[phiN];
+void phis(){
+    for(int i=1;i<phiN;++i)phi[i]=i;
+    for(int i=2;i<phiN;++i)
+        if(phi[i]==i)
+            for(int j=i;j<phiN;j+=i) phi[j]=phi[j]/i*(i-1);
+}
+int gcd(int x,int y){
+    return y==0?x:gcd(y,x%y);
+}
+ll pw[maxn];
+int fac[maxn];
+void init(){
+    pw[0]=1;
+    for(int i=1;i<maxn;i++)pw[i]=pw[i-1]*2%mod;
+    phis();
+    for(int i=2;i<maxn;i++)
+        if(!fac[i]){
+            for(int j=i+i;j<maxn;j+=i){
+                if(!fac[j])fac[j]=i;
+                else fac[j]=min(fac[j],i);
+            }
+        }
+}
+
+vector<int>v,c;
+
+ll ret;
+void dfs(int cnt,int s,int tt,int tt2){
+    if(cnt==(int)v.size()){
+        ret=(ret+pw[tt2*s]*phi[tt/s])%mod;
+        return;
+    }
+    int tmp=1;
+    for(int i=0;i<=c[cnt];i++){
+        dfs(cnt+1,s*tmp,tt,tt2);
+        tmp*=v[cnt];
+    }
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    //  freopen("ACM/out.out","w",stdout);
+    init(); 
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        int a,b;
+        scanf("%d%d",&a,&b);
+        if(a==0||b==0){
+            printf("0\n");
+            continue;
+        }
+        ret=0;
+        int tt2=gcd(a,b);
+        int tt=(a+b)/tt2;
+        v.clear(),c.clear();
+        int tmp=tt;
+        while(fac[tmp]){
+            int tmp2=fac[tmp];
+            v.push_back(tmp2);
+            int cnt=0;
+            while(tmp%tmp2==0){
+                tmp/=tmp2;
+                cnt++;
+            }
+            c.push_back(cnt);
+        }
+        if(tmp>1)v.push_back(tmp),c.push_back(1);
+        dfs(0,1,tt,tt2);
+        ret=ret*inv(tt,mod)%mod;
+        ret=(pw[a+b]+mod-ret)%mod;
+        printf("%lld\n",ret);
+    }
+    return 0;
+}

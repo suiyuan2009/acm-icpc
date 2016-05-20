@@ -1,0 +1,114 @@
+//#pragma comment(linker,"/STACK:10240000000,10240000000")
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+#include<set>
+#include<ctime>
+using namespace std;
+const int maxn = 16*16;
+const int inf = 0x3fffffff;
+typedef long long ll;
+
+int g[maxn][maxn],x[maxn],num[maxn];
+int ans,n;
+
+char str[maxn];
+int dir[5][2]={{1,0},{-1,0},{0,1},{0,-1},{0,0}};
+void init(){
+    int m;
+    memset(g,0,sizeof(g));
+    scanf("%d",&m);
+    n=m*m;
+    ans=n+1;
+    for(int i=0;i<m;i++){
+        scanf("%s",str);
+        for(int j=0;j<m;j++){
+            int now=i*m+j;
+            g[now][n]=str[j]=='w';
+            for(int k=0;k<5;k++){
+                int x=i+dir[k][0],y=j+dir[k][1];
+                if(x<0||x>=m||y<0||y>=m)continue;
+                int nxt=x*m+y;
+                g[now][nxt]=1;
+            }
+        }
+    }
+}
+
+inline void dfs(int k,int var)
+{
+    if(var==-1&&k==-1)
+    {
+        int sum=0;
+        for(int i=0;i<n;i++) sum+=x[i];
+        ans=min(ans,sum);
+        return;
+    }
+    if(num[k]==var)
+    {
+        x[var]=g[k][n];
+        for(int i=n-1;i>var;i--) x[var]^=x[i]&g[k][i];
+        dfs(k-1,var-1);
+    }
+    else
+    {
+        x[var]=1; dfs(k,var-1);
+        x[var]=0; dfs(k,var-1);
+    }
+}
+
+inline void uniqueans(int var)
+{
+    for(int i=var-1;i>=0;i--)
+    {
+        x[i]=g[i][var];
+        for(int j=i+1;j<var;j++) x[i]^=x[j]&g[i][j];
+    }
+    ans=0;
+    for(int i=0;i<var;i++) ans+=x[i];
+}
+inline void gauss(int equ,int var)
+{
+    int k,col,maxr;
+    for(k=0,col=0;k<equ&&col<var;k++,col++)
+    {
+        maxr=k;
+        for(int i=k+1;i<equ;i++)
+        {
+            if(g[maxr][col]<g[i][col]) maxr=i;
+            if(g[maxr][col]==1) break;
+        }
+        if(maxr!=k)
+        {
+            for(int i=col;i<=var;i++)
+                swap(g[maxr][i],g[k][i]);
+        }
+        num[k]=col;//记录当前行最靠左的未知数
+        if(g[k][col]==0) {k--;continue;}
+        for(int i=k+1;i<equ;i++)
+            if(g[i][col]!=0)
+            {
+                for(int j=col;j<=var;j++)
+                    g[i][j]^=g[k][j];
+            }
+    }
+    for(int i=k;i<equ;i++)
+        if(g[i][var]!=0) {puts("inf");return;}//无解
+    if(k==var) uniqueans(var);//唯一解
+    else dfs(k-1,var-1);//枚举变元  
+    printf("%d\n",ans);
+}
+
+int main(){
+    //freopen("ACM/in.in","r",stdin); 
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--){
+        init();
+        gauss(n,n);
+    }
+    return 0;
+}

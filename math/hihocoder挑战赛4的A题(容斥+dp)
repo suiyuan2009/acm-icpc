@@ -1,0 +1,82 @@
+/*
+题意：15个点的简单无向图，边可以染白色或者黑色，问最大的白色联通块的点数是x的图染色方案，输出所有x和方案数
+记f[mask][i]为mask这些点里最大的联通块点数不超过i的方案数，我们可以枚举编号最小的点所在的联通块，其余的点就是个子问题，
+所以预处理g[mask]代表mask这些点联通的方案数，可以通过所有方案减去不联通的方案数求得。
+枚举子集的复杂度是3^n，可以递推证明
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn = 16;
+const int mod=1000000007;
+const double eps=1e-8;
+
+ll f[1<<maxn][maxn],g[1<<maxn],p[maxn*maxn];
+int n,m,c[1<<maxn],cv[1<<maxn];
+int e[maxn][maxn];
+
+void pd(ll&ret,ll val){
+    ret+=val;
+    if(ret>=mod)ret-=mod;
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    p[0]=1;
+    //int i=5;
+    //for(int j=i;j;j=(j-1)&i)printf("** %d\n",j);
+    for(int i=1;i<maxn*maxn;i++)p[i]=p[i-1]*2%mod;
+    scanf("%d%d",&n,&m);
+    for(int i=1;i<=m;i++){
+        int u,v;
+        scanf("%d%d",&u,&v);
+        u--,v--;
+        e[u][v]=e[v][u]=1;
+    }
+    for(int i=1;i<(1<<n);i++){
+        int pos=-1;
+        for(int j=0;j<n;j++)if(i&(1<<j))pos=j;
+        for(int j=0;j<pos;j++)if((i&(1<<j))&&e[pos][j])c[i]++;
+        c[i]+=c[i-(1<<pos)],cv[i]=cv[i-(1<<pos)]+1;
+    }
+    for(int i=1;i<(1<<n);i++){
+        int pos=-1;
+        for(int j=n-1;j>=0;j--)
+            if(i&(1<<j))pos=j;
+        if((1<<pos)==i){
+            g[i]=1;
+            continue;
+        }
+        for(int j=i;j;j=(j-1)&i){
+            if(j==i||!(j&(1<<pos)))continue;
+            pd(g[i],g[j]*p[c[i-j]]%mod);
+        }
+        g[i]=(p[c[i]]+mod-g[i])%mod;
+    }
+    for(int i=1;i<(1<<n);i++){
+        int pos=-1;
+        for(int j=n-1;j>=0;j--)
+            if(i&(1<<j))pos=j;
+        if((1<<pos)==i){
+            for(int j=1;j<=n;j++)f[i][j]=1;
+            continue;
+        }
+        for(int j=i;j;j=(j-1)&i){
+            if(j==i||!(j&(1<<pos)))continue;
+            for(int k=cv[j];k<=n;k++)
+                pd(f[i][k],g[j]*f[i-j][k]%mod);
+        }
+        for(int j=cv[i];j<=n;j++)pd(f[i][j],g[i]);
+    }
+    for(int i=1;i<=n;i++)printf("%lld\n",(f[(1<<n)-1][i]+mod-f[(1<<n)-1][i-1])%mod);
+    return 0;
+}

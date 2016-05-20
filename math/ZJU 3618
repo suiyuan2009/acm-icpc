@@ -1,0 +1,62 @@
+/*
+题意：问多少子区间哈希值为t
+
+枚举右端点，查map
+*/
+#include<bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+const int maxn = 10005;
+
+char s[maxn];
+int ls,n,mod,t;
+ll p[maxn],q[maxn],f[maxn];
+map<ll,int>mp;
+
+void gcd(ll a,ll b, ll& d,ll& x,ll& y){  //      已经测试 FZU 1402
+        if(!b) {d=a;x=1;y=0;}
+        else   {	gcd(b,a%b,d,y,x);	y-=a/b*x;}
+}
+
+ll inv(ll a,ll n)  { //无逆元返回-1
+        ll d,x,y;	gcd(a,n,d,x,y);
+        return d==1?(x%n+n)%(n/d):-1; 
+}
+
+void init(){
+    gets(s);
+    gets(s+1);
+    scanf("%d%d%d",&n,&mod,&t);
+    ls=strlen(s+1);
+    p[0]=1,q[0]=inv(p[0],mod);
+    for(int i=1;i<maxn;i++){
+         p[i]=p[i-1]*n%mod;
+         q[i]=inv(p[i],mod);
+    }
+    mp.clear();
+    f[ls+1]=0;
+    for(int i=ls;i>=1;i--){
+        f[i]=(f[i+1]+s[i]*p[ls-i]%mod)%mod;
+        mp[f[i]]++;
+    }
+}
+
+int main(){
+    //freopen("ACM/in.in","r",stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        init();
+       /* for(int i=1;i<=ls;i++){
+            printf("%d: %lld\n",i,f[i]);
+        }*/
+        ll ret=0;
+        for(int i=ls+1;i>1;i--){
+            ll tt=(t+f[i]*q[ls+1-i]%mod)%mod*p[ls+1-i]%mod;
+            ret+=mp[tt];
+            mp[f[i-1]]--;
+        }
+        printf("%lld\n",ret);
+    }
+    return 0;
+}

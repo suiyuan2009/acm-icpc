@@ -1,0 +1,69 @@
+/*
+题意：有多少个三元组满足gcd=x&&lcm=y
+首先y/=x，如果记y=p1^a1*p2^a2...那么gcd就是取指数的最小值，lcm就是取指数的最大值
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-8
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=100005;
+
+bool notp[maxn];
+int p[maxn],cp;
+
+void init()
+{
+    for(int i=2; i<maxn; i++)
+        if(!notp[i])
+        {
+            p[cp++]=i;
+            for(int j=i+i; j<maxn; j+=i)
+                notp[j]=1;
+        }
+}
+
+int main()
+{
+    // freopen("in.cpp","r",stdin);
+    init();
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+        int n,m;
+        scanf("%d%d",&m,&n);
+        if(n%m!=0)printf("0\n");
+        else
+        {
+            n/=m;
+            int ret=1;
+            for(int i=0; i<cp; i++)
+                if(n%p[i]==0)
+                {
+                    int cnt=0;
+                    while(n%p[i]==0)
+                    {
+                        cnt++;
+                        n/=p[i];
+                    }
+                    ret*=(6*cnt);
+                }
+            if(n!=1)ret*=6;
+            printf("%d\n",ret);
+        }
+    }
+    return 0;
+}
