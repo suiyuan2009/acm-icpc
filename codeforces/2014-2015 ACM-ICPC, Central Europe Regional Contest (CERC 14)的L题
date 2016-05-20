@@ -1,0 +1,106 @@
+/*
+题意：给出一些怪兽出现的时间和消失的时间，以及杀死需要的能量，在时刻i存活的怪兽，能量小于j的都会被杀死，消耗是j，
+问杀死所有怪兽的最小花费。
+
+记f[i][j]为杀死出现时间>=i且结束时间<=j的怪兽的最小花费，枚举k,f[i][j]=min{f[i][k-1]+f[k+1][j]+g[i][j][k]}，其中
+g[i][j][k]是出现时间>=i且结束时间<=j且时间跨过k的怪兽的最大值。O(n^3)，注意i,j,k的维度设置，k放最后明显快。
+*/
+#include<cstdio>
+#include<iostream>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+using namespace std;
+const int maxn = 601;
+
+int n,m;
+struct P {
+    int x,y,z;
+    P() {}
+    P(int x,int y,int z):x(x),y(y),z(z) {}
+    bool operator<(const P&a)const {
+        return y==a.y?x<a.x:y<a.y;
+    }
+} p[maxn];
+int f[maxn][maxn];
+short g[maxn][maxn][maxn];
+
+void pdmin(int&ret,int val) {
+    if(ret==-1||ret>val)ret=val;
+}
+
+void pdmax(short&ret,short id) {
+    if(p[ret].z<p[id].z)ret=id;
+}
+
+vector<int>vis;
+void init() {
+    vis.clear();
+    scanf("%d",&n);
+    for(int i=1; i<=n; i++) {
+        int x,y,z;
+        scanf("%d%d%d",&x,&y,&z);
+        p[i]=P(x,y,z);
+        vis.push_back(x);
+        vis.push_back(y);
+    }
+    sort(vis.begin(),vis.end());
+    vis.erase(unique(vis.begin(),vis.end()),vis.end());
+    for(int i=1; i<=n; i++) {
+        p[i].x=lower_bound(vis.begin(),vis.end(),p[i].x)-vis.begin()+1;
+        p[i].y=lower_bound(vis.begin(),vis.end(),p[i].y)-vis.begin()+1;
+    }
+    m=vis.size();
+    for(int i=1; i<=m; i++)
+        for(int j=i; j<=m; j++)
+            f[i][j]=(i==j?0:-1);
+    for(int i=1; i<=m; i++)
+        for(int j=i; j<=m; j++) {
+            bool sign=0;
+            for(int k=1; k<=n; k++)
+                if(p[k].x>=i&&p[k].y<=j)sign=1;
+            if(!sign)f[i][j]=0;
+        }
+    for(int i=1; i<=m; i++)
+        for(int j=i; j<=m; j++)
+            for(int k=i; k<=j; k++)
+                g[i][j][k]=0;
+    for(int i=1; i<=n; i++)
+        for(int j=p[i].x; j<=p[i].y; j++)
+            pdmax(g[p[i].x][p[i].y][j],i);
+    for(int len=0; len<m; len++)
+        for(int i=1; i+len<=m; i++) {
+            int j=i+len;
+            for(int k=i; k<=j; k++) {
+                if(i+1<=k)
+                    pdmax(g[i][j][k],g[i+1][j][k]);
+                if(k<=j-1)
+                    pdmax(g[i][j][k],g[i][j-1][k]);
+            }
+        }
+}
+
+int main() {
+    //freopen("in.cpp","r",stdin);
+    //freopen("out2.cpp","w",stdout);
+    int T;
+    scanf("%d",&T);
+    while(T--) {
+        init();
+        //for(int i=1;i<=n;i++)
+        //  printf("%d %d %d\n",p[i].x,p[i].y,p[i].z);
+        for(int i=1; i<=n; i++)
+            if(p[i].x+1==p[i].y) {
+                int x=p[i].x,y=p[i].y;
+                f[x][y]=max(f[x][y],p[i].z);
+            }
+        for(int len=2; len<m; len++)
+            for(int i=1; i+len<=m; i++) {
+                int j=i+len;
+                for(int k=i+1; k<j; k++)
+                    pdmin(f[i][j],f[i][k-1]+f[k+1][j]+p[g[i][j][k]].z);
+            }
+        printf("%d\n",f[1][m]);
+    }
+    return 0;
+}

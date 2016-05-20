@@ -1,0 +1,51 @@
+/*
+N个人排成一排，如果此时i位置是男的，i+1位置是女的，那么可以交换，问结束交换的时间
+计算每个女的的停滞时间
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-7
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=1000005;
+
+int n;
+char s[maxn];
+
+int main()
+{
+    //freopen("tank.in","r",stdin);
+    scanf("%s",s);
+    int n=strlen(s);
+    int ret=0,cnt=0,c=0;
+    for(int i=1; i<=n; i++)
+    {
+        if(s[i-1]=='M')
+        {
+            if(i>1&&s[i-2]=='M')cnt--;
+            else if(i>1&&s[i-2]=='F')cnt++;
+        }
+        else
+        {
+            c++;
+            if(i>1&&s[i-2]=='F')cnt++;
+            else if(i>1&&s[i-2]=='M')cnt--;
+            if(cnt<0||i==c)cnt=0;
+            if(i-c>0)ret=max(ret,i-c+cnt);
+        }
+    }
+    printf("%d\n",ret);
+    return 0;
+}

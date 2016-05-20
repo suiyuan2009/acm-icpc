@@ -1,0 +1,81 @@
+/*
+N个人每个人有K发子弹，每次每个人的枪对准最小下标的没死的人，不会对着自己，问过程中所有可能出现剩余的人的情况。
+记f[i][j]为达到第一个人是i第二个人是j的最小轮次即可。
+*/
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+#include <iostream>
+#include <cmath>
+#include <string>
+#include <vector>
+using namespace std;
+typedef long long ll;
+const int maxn = 3005;
+
+int f[maxn][maxn];
+int n, m, a[maxn], s[maxn], s2[maxn];
+
+int main()
+{
+    //freopen("in.txt", "r", stdin);
+    scanf("%d%d", &n, &m);
+    for (int i = 1; i <= n; i++)scanf("%d", &a[i]);
+    s2[n + 1] = 1;
+    for (int i = n; i >= 1; i--)
+    {
+        s2[i] = s2[i + 1];
+        if (i < n)s[i] = s[i + 1];
+        s[i] |= (a[i] == 100);
+        s2[i] &= (a[i] == 0);
+    }
+    for (int i = 0; i < maxn; i++)
+        for (int j = 0; j < maxn; j++)
+            f[i][j] = m + 1;
+    f[1][2] = 0;
+    for (int i = 1; i <= n; i++)
+        for (int j = i + 1; j <= n; j++)
+        {
+            if (f[i][j] == m + 1)continue;
+            if (s[j])
+            {
+                if (a[i] == 100)
+                    f[j + 1][j + 2] = min(f[j + 1][j + 2], f[i][j] + 1);
+                else if (a[i] == 0)
+                    f[j][j + 1] = min(f[j][j + 1], f[i][j] + 1);
+                else
+                {
+                    f[j][j + 1] = min(f[j][j + 1], f[i][j] + 1);
+                    f[j + 1][j + 2] = min(f[j + 1][j + 2], f[i][j] + 1);
+                }
+            }
+            else if (s2[j])
+            {
+                if (a[i])f[i][j + 1] = min(f[i][j + 1], f[i][j] + 1);
+            }
+            else
+            {
+                if (a[i] == 100)
+                {
+                    f[i][j + 1] = min(f[i][j + 1], f[i][j] + 1);
+                    f[j + 1][j + 2] = min(f[j + 1][j + 2], f[i][j] + 1);
+                }
+                else if (a[i] == 0)
+                {
+                    f[j][j + 1] = min(f[j][j + 1], f[i][j] + 1);
+                }
+                else
+                {
+                    f[i][j + 1] = min(f[i][j + 1], f[i][j] + 1);
+                    f[j][j + 1] = min(f[j][j + 1], f[i][j] + 1);
+                    f[j + 1][j + 2] = min(f[j + 1][j + 2], f[i][j] + 1);
+                }
+            }
+        }
+    int ret = 0;
+    for (int i = 1; i <= n + 1; i++)
+        for (int j = i + 1; j <= n + 2; j++)
+            if (f[i][j] <= m)ret++;
+    printf("%d\n", ret);
+    return 0;
+}

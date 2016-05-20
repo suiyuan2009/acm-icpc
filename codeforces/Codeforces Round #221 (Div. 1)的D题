@@ -1,0 +1,165 @@
+/*
+题意：给出一颗有根树，每个节点有颜色，每次询问一颗子树中颜色数量大于某个值的颜色有几种
+n*sqrt(n)*log(n)
+先求DFS序列，询问转化成线段，按sqrt的方法sort询问，BIT查询颜色数
+*/
+#include<stdio.h>
+#include<string.h>
+#include<vector>
+#include<algorithm>
+#include<math.h>
+using namespace std;
+const int maxn=100005;
+const int maxm=maxn+maxn;
+const double eps=1e-6;
+typedef long long ll;
+
+int n,m,per;
+vector<int>g[maxn];
+int c[maxn],p[maxn][2],seq[maxm];
+int cnt[maxn];
+struct Q
+{
+    int l,r,val,id;
+    Q() {}
+    Q(int _l,int _r,int _val,int _id)
+    {
+        l=_l,r=_r,val=_val,id=_id;
+    }
+    bool operator<(const Q&a)const
+    {
+        int x=l/per,y=a.l/per;
+        if(x==y)return r<a.r;
+        return x<y;
+    }
+} q[maxn];
+int ans[maxn];
+int num;
+
+void dfs(int u,int fa)
+{
+    p[u][0]=++num;
+    seq[num]=u;
+    for(int i=0; i<g[u].size(); i++)
+    {
+        int v=g[u][i];
+        if(v==fa)continue;
+        dfs(v,u);
+    }
+    p[u][1]=++num;
+    seq[num]=-u;
+}
+
+struct BIT
+{
+    int c[maxn];
+    void init()
+    {
+        for(int i=0; i<maxn; i++)c[i]=0;
+    }
+    int lowbit(int x)
+    {
+        return x&(-x);
+    }
+    void add(int x,int val)
+    {
+        while(x<maxn)
+        {
+            c[x]+=val;
+            x+=lowbit(x);
+        }
+    }
+    int sum(int x)
+    {
+        int ret=0;
+        while(x>0)
+        {
+            ret+=c[x];
+            x-=lowbit(x);
+        }
+        return ret;
+    }
+} bit;
+
+int main()
+{
+    scanf("%d%d",&n,&m);
+    for(int i=1; i<=n; i++)scanf("%d",&c[i]);
+    for(int i=1; i<n; i++)
+    {
+        int u,v;
+        scanf("%d%d",&u,&v);
+        g[u].push_back(v);
+        g[v].push_back(u);
+    }
+    dfs(1,0);
+    for(int i=1; i<=m; i++)
+    {
+        int x,y;
+        scanf("%d%d",&x,&y);
+        q[i]=Q(p[x][0],p[x][1],y,i);
+    }
+    per=(int)sqrt(n);
+    sort(q+1,q+m+1);
+    int l=0,r=0;
+    //printf("****\n");
+    for(int i=1; i<=m; i++)
+    {
+        // printf("** %d\n",i);
+        //printf("** %d %d\n",q[i].l,q[i].r);
+        while(r<q[i].r)
+        {
+            //  printf("*** %d %d\n",r,q[i].r);
+            r++;
+            if(seq[r]>0)
+            {
+                int color=c[seq[r]];
+                int cc=cnt[color];
+                if(cc)bit.add(cc,-1);
+                bit.add(cc+1,1);
+                cnt[color]++;
+            }
+        }
+        while(r>q[i].r)
+        {
+            r--;
+            if(seq[r]>0)
+            {
+                int color=c[seq[r]];
+                int cc=cnt[color];
+                bit.add(cc,-1);
+                if(cc>1)bit.add(cc-1,1);
+                cnt[color]--;
+            }
+        }
+        while(l<q[i].l)
+        {
+            if(l&&seq[l]>0)
+            {
+                int color=c[seq[l]];
+                int cc=cnt[color];
+                bit.add(cc,-1);
+                if(cc>1)bit.add(cc-1,1);
+                cnt[color]--;
+            }
+            l++;
+        }
+        while(l>q[i].l)
+        {
+            l--;
+            if(seq[l]>0)
+            {
+                int color=c[seq[l]];
+                int cc=cnt[color];
+                if(cc)bit.add(cc,-1);
+                bit.add(cc+1,1);
+                cnt[color]++;
+            }
+        }
+        //printf("** %d %d\n",l,r);
+        ans[q[i].id]=bit.sum(n)-bit.sum(q[i].val-1);
+    }
+    for(int i=1; i<=m; i++)
+        printf("%d\n",ans[i]);
+    return 0;
+}

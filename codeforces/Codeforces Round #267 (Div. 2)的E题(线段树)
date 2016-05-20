@@ -1,0 +1,104 @@
+/*
+题意：给出一个序列，问abab子序列可以有多少个，不能相交
+
+线段树，每个点维护跨越这个点的相同的数的最右下标
+*/
+#include<cstdio>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<map>
+#include<cmath>
+using namespace std;
+const int maxn = 500005;
+const double eps = 1e-6;
+const int inf = 0x3fffffff;
+typedef long long ll;
+const ll mod=1000000007;
+
+int n,a[maxn],pre[maxn],nxt[maxn];
+map<int,int>mp;
+
+struct ST{
+    int l,r,val;
+}st[maxn*4];
+void build(int id,int l,int r){
+    st[id].l=l,st[id].r=r,st[id].val=0;
+    if(l==r)return;
+    int m=(l+r)>>1;
+    build(id<<1,l,m),build(id<<1|1,m+1,r);
+}
+void upd(int id,int l,int r,int val){
+    if(st[id].l==l&&st[id].r==r){
+        st[id].val=max(val,st[id].val);
+        return;
+    }
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)upd(id<<1,l,r,val);
+    else if(l>m)upd(id<<1|1,l,r,val);
+    else upd(id<<1,l,m,val),upd(id<<1|1,m+1,r,val);
+}
+int qret;
+void query(int id,int pos){
+    qret=max(qret,st[id].val);
+    if(st[id].l==st[id].r)return;
+    int m=(st[id].l+st[id].r)>>1;
+    if(pos<=m)query(id<<1,pos);
+    else query(id<<1|1,pos);
+}
+
+void init(){
+    scanf("%d",&n);
+    for(int i=1;i<=n;i++)scanf("%d",&a[i]);
+    for(int i=1;i<=n;i++){
+        pre[i]=mp[a[i]];
+        mp[a[i]]=i;
+    }
+    mp.clear();
+    for(int i=n;i>=1;i--){
+        nxt[i]=mp[a[i]];
+        mp[a[i]]=i;
+    }
+    build(1,1,n);
+}
+
+struct P{
+    int x,y;
+    P(){}
+    P(int x,int y):x(x),y(y){}
+    bool operator<(const P&a)const{
+        return y<a.y;
+    }
+};
+vector<P>p,ans;
+
+int main(){
+    //freopen("ACM/in.in","r",stdin);
+    init();
+    for(int i=1;i<=n;i++){
+        if(!pre[i])continue;
+        int pr=pre[pre[i]];
+        if(pr&&pre[pr])p.push_back(P(pre[pr],i));
+        qret=0;
+        //printf("**%d %d\n",i,pre[i]);
+        query(1,pre[i]);
+        if(qret)p.push_back(P(qret,i));
+        if(pre[i]+1<=i-1)upd(1,pre[i]+1,i-1,pre[i]);
+    }
+    //  printf("** %d\n",(int)p.size());
+    sort(p.begin(),p.end());
+    int pr=0;
+    for(int i=0;i<p.size();i++){
+        if(p[i].x<=pr)continue;
+        pr=p[i].y;
+        ans.push_back(p[i]);
+    }
+    printf("%d\n",(int)ans.size()*4);
+    for(int i=0;i<ans.size();i++){
+        if(i)printf(" ");
+        int x=ans[i].x,y=ans[i].y;
+        printf("%d %d %d %d",a[x],a[pre[y]],a[nxt[x]],a[y]);
+    }
+    printf("\n");
+    return 0;
+}

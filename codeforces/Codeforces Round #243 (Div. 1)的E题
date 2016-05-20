@@ -1,0 +1,55 @@
+/*
+Let's assume that set S consists of m distinct intervals [l1, r1], [l2, r2], ..., [lm, rm] (1 ≤ li ≤ ri ≤ n; li, ri are integers).
+Let's assume that f(S) is the maximum number of intervals that you can choose from the set S, such that every two of them do not intersect. We assume that two intervals, [l1, r1] and [l2, r2], intersect if there is an integer x, which meets two inequalities: l1 ≤ x ≤ r1 and l2 ≤ x ≤ r2.
+Sereja wonders, how many sets S are there, such that f(S) = k? Count this number modulo 1000000007 (109 + 7).
+
+记f[i][j]为第j个不相交线段最右端不超过i的方案数
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <stack>
+#include <iostream>
+using namespace std;
+typedef long long ll;
+const double eps = 1e-10;
+//const double PI = acos(-1);
+const int maxn = 505;
+const int maxm=maxn*maxn;
+const int inf = 0x3fffffff;
+const int mod = 1000000007;
+
+ll f[maxn][maxn],A[maxm];
+int n,m;
+
+void init()
+{
+    A[0]=1;
+    for(int i=1; i<maxm; i++)
+        A[i]=A[i-1]*2%mod;
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    //freopen("out.cpp","w",stdout);
+    init();
+    scanf("%d%d",&n,&m);
+    for(int i=0; i<=n; i++)f[i][0]=1;
+    for(int j=1; j<=n; j++)
+        for(int i=1; i<=m; i++)
+        {
+            for(int k=0; k<j; k++)
+            {
+                ll tt=(A[j-k]+mod-1)%mod*A[(j-k)*k]%mod;//从k+1到j中选不少于1个位置，并且最后一个位置就是所有线段的右端点，然后选其他线段
+                f[j][i]=(f[j][i]+f[k][i-1]*tt%mod)%mod;
+            }
+        }
+    printf("%lld\n",f[n][m]);
+    return 0;
+}

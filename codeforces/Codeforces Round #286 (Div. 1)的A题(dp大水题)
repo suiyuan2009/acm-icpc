@@ -1,0 +1,50 @@
+/*
+题意：一个人从点0向点30000跳，上一次跨越d步，这次只能跨越d-1,d,d+1步，每个位置有宝藏，问最多能得到的宝藏数量
+d的变化范围不会超过sqrt(30000)，直接dp。
+*/
+#include<cstdio>
+#include<cstring>
+using namespace std;
+const int maxn=30005;
+const int maxm=800;
+const int base=400;
+
+int c[maxn];
+int n,d;
+int f[maxn][maxm];
+
+void pd(int &ret,int val)
+{
+    if(ret<val)ret=val;
+}
+
+int main()
+{
+    scanf("%d%d",&n,&d);
+    for(int i=1; i<=n; i++)
+    {
+        int x;
+        scanf("%d",&x);
+        c[x]++;
+    }
+    memset(f,-1,sizeof(f));
+    f[d][base]=c[d];
+    for(int i=d; i<maxn; i++)
+        for(int j=0; j<maxm; j++)
+        {
+            if(f[i][j]==-1)continue;
+            int tt=j-base+d;
+            if(tt>0&&i+tt<maxn)
+                pd(f[i+tt][j],f[i][j]+c[i+tt]);
+            if(tt+1>0&&i+tt+1<maxn)
+                pd(f[i+tt+1][j+1],f[i][j]+c[i+tt+1]);
+            if(tt-1>0&&i+tt-1<maxn&&j)
+                pd(f[i+tt-1][j-1],f[i][j]+c[i+tt-1]);
+        }
+    int ret=0;
+    for(int i=0; i<maxn; i++)
+        for(int j=0; j<maxm; j++)
+            pd(ret,f[i][j]);
+    printf("%d\n",ret);
+    return 0;
+}

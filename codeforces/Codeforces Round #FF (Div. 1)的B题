@@ -1,0 +1,84 @@
+/×
+题意：给出一个矩阵，每次可以选择一行或者一列，把所有数的和加到答案里，然后所有数减少p，问正好k次操作后答案最大是多少
+
+先用优先队列预处理出只取行和只取列的最有解r[i]和c[i]，然后枚举取多少行，计算结果。
+×/
+#include <cstdio>
+#include <algorithm>
+#include <vector>
+#include <cmath>
+#include <cstring>
+#include <string>
+#include <queue>
+using namespace std;
+typedef long long ll;
+const int maxn = 1005;
+const int maxm = 1000005;
+const int inf = 0x3fffffff;
+
+int n, m, k;
+ll p, a[maxn][maxn];
+ll r[maxm], c[maxm];
+
+struct  P
+{
+    int id;
+    ll val;
+    P() {}
+    P(int _id, ll _val)
+    {
+        id = _id;
+        val = _val;
+    }
+    bool operator<(const P &a)const
+    {
+        return val < a.val;
+    }
+};
+priority_queue<P>qr, qc;
+
+int main()
+{
+    //freopen("in.cpp", "r", stdin);
+    //freopen("out.cpp", "w", stdout);
+    scanf("%d%d%d%lld", &n, &m, &k, &p);
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= m; j++)
+            scanf("%lld", &a[i][j]);
+    for (int i = 1; i <= n; i++)
+    {
+        ll sum = 0;
+        for (int j = 1; j <= m; j++)
+            sum += a[i][j];
+        qr.push(P(i, sum));
+    }
+    for (int j = 1; j <= m; j++)
+    {
+        ll sum = 0;
+        for (int i = 1; i <= n; i++)
+            sum += a[i][j];
+        qc.push(P(j, sum));
+    }
+    for (int i = 1; i <= k; i++)
+    {
+        P u = qr.top();
+        qr.pop();
+        r[i] = r[i - 1] + u.val;
+        qr.push(P(u.id, u.val - m * p));
+    }
+    for (int i = 1; i <= k; i++)
+    {
+        P u = qc.top();
+        qc.pop();
+        c[i] = c[i - 1] + u.val;
+        qc.push(P(u.id, u.val - n * p));
+    }
+    ll ret = c[k];
+    for (int i = 0; i <= k; i++)
+    {
+        ll tt = c[i] + r[k - i];
+        ret = max(ret, tt - i * p * (k - i));
+    }
+    printf("%lld\n", ret);
+    return 0;
+}

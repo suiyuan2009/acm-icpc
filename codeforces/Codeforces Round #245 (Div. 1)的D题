@@ -1,0 +1,95 @@
+/*
+Iahub and Sorin are the best competitive programmers in their town. However, they can't both qualify to an important contest. The selection will be made with the help of a single problem. Blatnatalag, a friend of Iahub, managed to get hold of the problem before the contest. Because he wants to make sure Iahub will be the one qualified, he tells Iahub the following task.
+You're given an (1-based) array a with n elements. Let's define function f(i, j) (1 ≤ i, j ≤ n) as (i - j)2 + g(i, j)2. Function g is calculated by the following pseudo-code:
+
+
+int g(int i, int j) {
+    int sum = 0;
+    for (int k = min(i, j) + 1; k <= max(i, j); k = k + 1)
+        sum = sum + a[k];
+    return sum;
+}
+Find a value mini ≠ j  f(i, j).
+Probably by now Iahub already figured out the solution to this problem. Can you?
+
+平面最近点对 (i,sum[i])
+*/
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+#include <iostream>
+#include <vector>
+#include <cmath>
+using namespace std;
+typedef long long ll;
+const int maxn=100005;
+const int inf=0x3fffffff;
+const ll linf=(1LL)<<60;
+
+int n;
+struct P
+{
+    ll x,y;
+    bool operator<(const P&a)const
+    {
+        return y<a.y;
+    }
+} p[maxn],L[maxn],R[maxn];
+
+void pd(ll &ret,ll val)
+{
+    if(val==-1)return;
+    if(ret==-1||ret>val)ret=val;
+}
+
+int cnt_L,cnt_R;
+ll dfs(int  l,int  r)
+{
+    if(l==r)return linf;
+    int m=(l+r)/2;
+    ll d=linf;
+    pd(d,dfs(l,m));
+    pd(d,dfs(m+1,r));
+    cnt_L=cnt_R=0;
+    for(int i=l; i<=m; i++)
+        if((ll)(i-m)*(i-m)<=d)
+            L[++cnt_L]=p[i];
+    for(int i=m+1; i<=r; i++)
+        if((ll)(i-m)*(i-m)<=d)
+            R[++cnt_R]=p[i];
+    sort(L+1,L+cnt_L+1);
+    sort(R+1,R+cnt_R+1);
+    int x=1,y=0;
+    ll ret=d;
+    for(int i=1; i<=cnt_L; i++)
+    {
+        while(y<cnt_R&&abs(L[i].y-R[y+1].y)*abs(L[i].y-R[y+1].y)<=d)
+            y++;
+        while(L[i].y>=R[x].y&&abs(L[i].y-R[x].y)*abs(L[i].y-R[x].y)>d)
+            x++;
+        for(int j=x; j<=y; j++)
+        {
+            ll  tmp=(L[i].x-R[j].x)*(L[i].x-R[j].x)+(L[i].y-R[j].y)*(L[i].y-R[j].y);
+            if(ret==-1||ret>tmp)ret=tmp;
+        }
+        if(x>y)y=x-1;
+    }
+    return ret;
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    scanf("%d",&n);
+    ll s=0;
+    for(int i=1; i<=n; i++)
+    {
+        ll x;
+        scanf("%lld",&x);
+        s+=x;
+        p[i].x=i;
+        p[i].y=s;
+    }
+    printf("%lld\n",dfs(1,n));
+    return 0;
+}

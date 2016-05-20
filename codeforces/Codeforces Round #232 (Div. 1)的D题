@@ -1,0 +1,140 @@
+/*
+题意：问字典序不超过给定排列的所有排列的逆序对和
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <set>
+#include <stack>
+#include <iostream>
+using namespace std;
+typedef __int64 ll;
+const double eps = 1e-6;
+const double PI = acos(-1);
+const int maxn=1000005;
+const int inf = 0x3fffffff;
+const int mod=1000000007;
+
+struct BIT
+{
+    int c[maxn],n;
+    void init(int _n)
+    {
+        n=_n;
+        for(int i=1; i<=n; i++)c[i]=0;
+    }
+    int lowbit(int x)
+    {
+        return x&(-x);
+    }
+    void add(int x,int v)
+    {
+        while(x<=n)
+        {
+            c[x]+=v;
+            x+=lowbit(x);
+        }
+    }
+    int sum(int x)
+    {
+        int ret=0;
+        while(x)
+        {
+            ret+=c[x];
+            x-=lowbit(x);
+        }
+        return ret;
+    }
+} bit1,bit2;
+
+int n;
+ll f[maxn],g[maxn];
+int a[maxn],b[maxn];
+
+void init()
+{
+    g[1]=1;
+    for(int i=2; i<maxn; i++)
+        g[i]=g[i-1]*i%mod;
+    f[1]=0;
+    for(int i=2; i<maxn; i++)
+        f[i]=(f[i-1]*i+(ll)i*(i-1)/2%mod*g[i-1]%mod)%mod;
+    //  printf("** %I64d\n",f[3]);
+}
+
+bool vis[maxn];
+ll ans;
+int c[maxn];
+void dfs(int cnt,int n)
+{
+    if(cnt==n)
+    {
+        for(int i=1; i<=n; i++)
+            for(int j=1; j<i; j++)
+                if(c[j]>c[i])ans++;
+        return;
+    }
+    for(int i=1; i<=n; i++)
+        if(!vis[i])
+        {
+            c[cnt+1]=i;
+            vis[i]=1;
+            dfs(cnt+1,n);
+            vis[i]=0;
+        }
+}
+
+int main()
+{
+    //dfs(0,4);
+    //printf("** %I64d\n",ans);
+    //freopen("in.txt","r",stdin);
+    init();
+    //printf("%I64d\n",f[2]);
+    scanf("%d",&n);
+    for(int i=1; i<=n; i++)scanf("%d",&a[i]);
+    bit1.init(n);
+    for(int i=n; i>=1; i--)
+    {
+        b[i]=bit1.sum(a[i])+1;
+        bit1.add(a[i],1);
+    }
+    // for(int i=1;i<=n;i++)
+    //printf("%d: %d\n",i,b[i]);
+    bit1.init(n);
+    bit2.init(n);
+    for(int i=1; i<=n; i++)
+        bit2.add(a[i],1);
+    ll ret=0,left=0,between=0;
+    for(int i=1; i<n; i++)
+    {
+        if(b[i]>1)
+        {
+            ll tt=(left+between)%mod*g[n-i]%mod*(b[i]-1)%mod;
+            tt=(tt+(ll)(b[i]-1)*(b[i]-2)/2%mod*g[n-i]%mod)%mod;
+            tt=(tt+f[n-i]*(b[i]-1)%mod)%mod;
+            ret=(ret+tt)%mod;
+        }
+        ll tmp=bit1.sum(n)-bit1.sum(a[i]);
+        left+=tmp;
+        if(left>=mod)left-=mod;
+        bit1.add(a[i],1);
+        bit2.add(a[i],-1);
+        between+=bit2.sum(a[i]-1);
+        if(between>=mod)between-=mod;
+        between=between+mod-tmp;
+        if(between>=mod)between-=mod;
+        // printf("%d:%I64d %I64d %I64d\n",i,left,between,ret);
+    }
+    ll tmp=bit1.sum(n)-bit1.sum(a[n]);
+    left+=tmp;
+    if(left>=mod)left-=mod;
+    //printf("** %I64d\n",left);
+    printf("%I64d\n",(ret+left)%mod);
+    return 0;
+}

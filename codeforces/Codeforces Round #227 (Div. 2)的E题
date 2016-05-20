@@ -1,0 +1,131 @@
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+using namespace std;
+const double eps = 1e-6;
+typedef __int64 ll;
+const double PI = acos(-1);
+const int maxn = 1000005;
+const int maxm = 1005;
+const int inf = 0x3fffffff;
+
+int n, m, a[maxn], b[maxn], pos[maxn], pos2[maxn];
+int L1[maxn], R1[maxn], L2[maxn], R2[maxn];
+bool yes[maxn];
+
+struct BIT
+{
+    int c[maxn], n;
+    int lowbit(int x)
+    {
+        return x & (-x);
+    }
+    void add(int pos)
+    {
+        while (pos <= n)
+        {
+            c[pos]++;
+            pos += lowbit(pos);
+        }
+    }
+    int sum(int pos)
+    {
+        int ret = 0;
+        while (pos)
+        {
+            ret += c[pos];
+            pos -= lowbit(pos);
+        }
+        return ret;
+    }
+} bit;
+
+int main()
+{
+    //freopen("in.txt", "r", stdin);
+    // freopen("out.txt", "w", stdout);
+    scanf("%d%d", &n, &m);
+    for (int i = 1; i <= n; i++)
+    {
+        scanf("%d", &a[i]);
+        pos[a[i]] = i;
+    }
+    for (int i = 1; i <= m; i++)
+    {
+        scanf("%d", &b[i]);
+        yes[b[i]] = 1;
+        pos2[b[i]] = i;
+    }
+    //printf("****\n");
+    for (int i = 1; i <= m; i++)
+    {
+        int j = i - 1;
+        while (b[j] > b[i])j = L1[j];
+        L1[i] = j;
+    }
+    for (int i = m; i >= 1; i--)
+    {
+        int j = i + 1;
+        while (b[j] > b[i])j = R1[j];
+        R1[i] = j;
+    }
+    //printf("****\n");
+    int pre = -1;
+    for (int i = 1; i <= n; i++)
+    {
+        if (yes[a[i]])
+        {
+            pre = i;
+            continue;
+        }
+        if (pre == -1)
+        {
+            L2[i] = 0;
+            continue;
+        }
+        int j = pos2[a[pre]];
+        while (b[j] > a[i])j = L1[j];
+        L2[i] = pos[b[j]];
+    }
+    //printf("***\n");
+    pre = -1;
+    for (int i = n; i >= 1; i--)
+    {
+        if (yes[a[i]])
+        {
+            pre = i;
+            continue;
+        }
+        if (pre == -1)
+        {
+            R2[i] = n + 1;
+            continue;
+        }
+        int j = pos2[a[pre]];
+        while (b[j] > a[i])j = R1[j];
+        if (b[j] == 0)
+        {
+            R2[i] = n + 1;
+            continue;
+        }
+        R2[i] = pos[b[j]];
+    }
+    // printf("***\n");
+    bit.n = n;
+    ll ret = 0;
+    for (int i = 1; i <= n; i++)
+    {
+        if (yes[i])continue;
+        int l = L2[pos[i]], r = R2[pos[i]] - 1;
+        ret += r - l - (bit.sum(r) - bit.sum(l));
+        bit.add(pos[i]);
+    }
+    printf("%I64d\n", ret);
+    return 0;
+}
+

@@ -1,0 +1,50 @@
+/*
+题意：给出两个马的位置，跳绝对值(2,2)，每次同时跳，问是否可以跳到一起
+只需看x和y的绝对值模4是否都是0
+*/
+//#pragma comment(linker, "/STACK:1024000000,1024000000")
+#include <map>
+#include <cmath>
+#include <queue>
+#include <cstdio>
+#include <vector>
+#include <string>
+#include <cstring>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+const double eps = 1e-6;
+typedef long long ll;
+const int maxn = 8;
+
+char str[maxn + 5][maxn + 5];
+int x, y, x2, y2;
+
+int main()
+{
+    int T;
+    scanf("%d", &T);
+    while (T--)
+    {
+        for (int i = 0; i < maxn; i++)scanf("%s", str[i]);
+        x = y = x2 = y2 = -1;
+        for (int i = 0; i < maxn; i++)
+            for (int j = 0; j < maxn; j++)
+                if (str[i][j] == 'K')
+                {
+                    if (x == -1)
+                    {
+                        x = i;
+                        y = j;
+                    }
+                    else
+                    {
+                        x2 = i;
+                        y2 = j;
+                    }
+                }
+        if (abs(x - x2) % 4 != 0 || abs(y - y2) % 4 != 0)printf("NO\n");
+        else printf("YES\n");
+    }
+    return 0;
+}

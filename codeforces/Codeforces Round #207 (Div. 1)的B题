@@ -1,0 +1,60 @@
+/*
+题意：给出串s和t，s循环n次，t循环m次，最后长度一样，求汉明距离
+在一个lcm的循环节中，s中的位置i要和t中的j相遇，必须满足i+k1*len1=j+k2*len2，
+这个式子的一般写法就是i-j=k*gcd(len1,len2)
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-8
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+const int maxn=1000005;
+
+ll n,m,c[maxn][26];
+char s[maxn],t[maxn];
+bool vis[maxn];
+
+ll gcd(ll x,ll y)
+{
+    if(y==0)return x;
+    return gcd(y,x%y);
+}
+
+int main()
+{
+    // freopen("in.cpp","r",stdin);
+    scanf("%I64d%I64d%s%s",&n,&m,s,t);
+    int ls=strlen(s),lt=strlen(t);
+    ll x=gcd(ls,lt);
+    for(int i=0; i<x; i++)
+    {
+        int j=i;
+        while(!vis[j])
+        {
+            vis[j]=1;
+            c[i][t[j]-'a']++;
+            j=(j+x)%lt;
+        }
+    }
+    ll y=ls/x*lt;
+    ll ret=0;
+    for(int i=0; i<ls; i++)
+    {
+        int pos=i%x;
+        ret+=c[pos][s[i]-'a'];
+    }
+    printf("%I64d\n",n*ls-n*ls/y*ret);
+    return 0;
+}

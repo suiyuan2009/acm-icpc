@@ -1,0 +1,198 @@
+/*
+题意：一个刷子刷矩形区域，每次只能向下或者向右边移动一个单位，问刷子面积最小值
+
+预处理出每个刷过的格子的最下和最右连续刷过的长度，答案的宽度或者长度一定是最左上角的刷过格子的最大矩形
+的长度或者宽度，假设是长度，宽度置为1，试着刷，如果向下向右都可以，宽度++，最后再check一遍。
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+using namespace std;
+typedef long long ll;
+const int maxn=1005;
+const double eps=1e-8;
+
+int n,m,num;
+char str[maxn][maxn];
+int r[maxn][maxn],c[maxn][maxn];
+
+bool test_1(){
+    return 1;
+    for(int i=0;i<n;i++)
+        for(int j=0;j<m;j++){
+            if(str[i][j]=='X')continue;
+            if(i+1<n&&j+1<m&&str[i+1][j+1]=='X'&&str[i][j+1]=='X'&&str[i+1][j]=='X')return 0;
+            if(i-1>=0&&j-1>=0&&str[i-1][j-1]=='X'&&str[i][j-1]=='X'&&str[i-1][j]=='X')
+                return 0;
+        }
+    return 1;
+}
+bool vis[maxn][maxn];
+queue<pair<int,int> >q;
+int dir[4][2]={{0,1},{0,-1},{1,0},{-1,0}};
+bool test_2(int sx,int sy){
+    while(!q.empty())q.pop();
+    memset(vis,0,sizeof(vis));
+    vis[sx][sy]=1;
+    q.push(make_pair(sx,sy));
+    while(!q.empty()){
+        pair<int,int>tt=q.front();
+        q.pop();
+        int x=tt.first,y=tt.second;
+        for(int i=0;i<4;i++){
+            int nx=x+dir[i][0];
+            int ny=y+dir[i][1];
+            if(nx>=0&&nx<n&&ny>=0&&ny<m&&str[nx][ny]=='X'){
+                if(vis[nx][ny])continue;
+                vis[nx][ny]=1;
+                q.push(make_pair(nx,ny));
+            }
+        }
+    }
+    for(int i=0;i<n;i++)
+        for(int j=0;j<m;j++)
+            if(str[i][j]=='X'&&!vis[i][j])return 0;
+    return 1;
+}
+
+void init(){
+    memset(r,-1,sizeof(r));
+    memset(c,-1,sizeof(c));
+    num=0;
+    for(int i=0;i<n;i++)
+        for(int j=m-1;j>=0;j--){
+            if(str[i][j]!='X')continue;
+            num++;
+            if(r[i][j+1]!=-1)r[i][j]=r[i][j+1];
+            else r[i][j]=j;
+        }
+    for(int j=0;j<m;j++)
+        for(int i=n-1;i>=0;i--){
+            if(str[i][j]!='X')continue;
+            if(c[i+1][j]!=-1)c[i][j]=c[i+1][j];
+            else c[i][j]=i;
+        }
+}
+bool test_3(int sx,int sy,int x,int y){
+ // printf("** %d %d %d %d\n",sx,sy,x,y);
+
+    memset(vis,0,sizeof(vis));
+    for(int i=sx;i<sx+x;i++)
+        for(int j=sy;j<sy+y;j++)
+            vis[i][j]=1;
+    while(1){
+        bool down=0,right=0;
+        int tx=sx+x-1,ty=sy+y-1;
+        if(tx+1<n&&str[tx+1][sy]=='X'&&r[tx+1][sy]-sy+1>=y)down=1;
+        if(ty+1<m&&str[sx][ty+1]=='X'&&c[sx][ty+1]-sx+1>=x)right=1;
+     //   if(down&&right)printf("** %d %d\n",sx,sy);
+        if(down&&right)return 0;
+        if(down){
+            //if(sx+1==1)printf("*&&* %d %d\n",sy,ty);
+            for(int i=sy;i<=ty;i++)
+                vis[tx+1][i]=1;
+            sx++;
+            //printf("*&&* %d\n",sx);
+        }
+        else if(right){
+            //printf("&&**%d: %d %d\n",sy+1,sx,tx);
+
+            for(int i=sx;i<=tx;i++)
+                vis[i][ty+1]=1;
+            sy++;
+        }
+        else break;
+    }
+//   printf("**&& %d %d\n",x,y);
+    for(int i=0;i<n;i++)
+        for(int j=0;j<m;j++)
+            if(str[i][j]=='X'&&!vis[i][j]){
+     //   printf("** %d %d\n",i,j);
+                return 0;
+            }
+    return 1;
+}
+int cal(int sx,int sy,int tx,int ty){
+    int ret=0;
+    int x=tx-sx+1,y=ty-sy+1;
+    if(tx+1<n&&str[tx+1][sy]=='X'&&r[tx+1][sy]-sy+1>=y)ret|=1;
+    if(ty+1<m&&str[sx][ty+1]=='X'&&c[sx][ty+1]-sx+1>=x)ret|=2;
+    return ret;
+}
+
+int calx(int sx,int sy,int y){
+    int x=1;
+    int ttx=sx,tty=sy;
+    while(1){
+        int tt=cal(sx,sy,sx+x-1,sy+y-1);
+        while(tt==3){
+            x++;
+            tt=cal(sx,sy,sx+x-1,sy+y-1);
+        }
+        if(!tt)break;
+        if(tt==1)sx++;
+        else sy++;
+    }
+    if(test_3(ttx,tty,x,y))return x;
+    return -1;
+}
+int caly(int sx,int sy,int x){
+    int y=1;
+    int ttx=sx,tty=sy;
+    while(1){
+        int tt=cal(sx,sy,sx+x-1,sy+y-1);
+        while(tt==3){
+            y++;
+            tt=cal(sx,sy,sx+x-1,sy+y-1);
+        }
+        if(!tt)break;
+        if(tt==1)sx++;
+        else sy++;
+    }
+   // printf("** %d\n",y);
+    if(test_3(ttx,tty,x,y))return y;
+    return -1;
+}
+
+int main(){
+    //freopen("ACM/in.in","r",stdin);
+    scanf("%d%d",&n,&m);
+    for(int i=0;i<n;i++)scanf("%s",str[i]);
+    init();
+    if(!test_1())printf("-1\n");
+    else{
+        int sx=-1,sy;
+        for(int i=0;i<n;i++)
+            for(int j=0;j<m;j++)
+                if(str[i][j]=='X'){
+                    if(sx!=-1)break;
+                    sx=i,sy=j;
+                }
+        if(!test_2(sx,sy))printf("-1\n");
+        else{
+            int x=c[sx][sy]-sx+1;
+            int y=r[sx][sy]-sy+1;
+            if(x*y==num){
+                printf("%d\n",min(x,y));}
+            else{
+
+            //    printf("** %d %d\n",x,y);
+
+
+                int ret=-1;
+                int tt1=calx(sx,sy,y);
+                if(tt1!=-1)ret=tt1*y;
+              int tt2=caly(sx,sy,x);
+                if(tt2!=-1)ret=min(ret==-1?n*n:ret,tt2*x);
+                printf("%d\n",ret);
+            }
+        }
+    }
+    return 0;
+}

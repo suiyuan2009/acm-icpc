@@ -1,0 +1,62 @@
+/*
+题意：给出排列，只允许swap两个数，问逆序对最少可以是几
+记f[i][j]为到i为止小于j的数的个数
+*/
+//#pragma comment(linker, "/STACK:1024000000,1024000000")
+#include <map>
+#include <cmath>
+#include <queue>
+#include <cstdio>
+#include <vector>
+#include <string>
+#include <cstring>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+const double eps = 1e-6;
+typedef long long ll;
+const int maxn = 5005;
+
+int f[maxn][maxn];
+int n;
+int a[maxn];
+
+int main()
+{
+    scanf("%d", &n);
+    for (int i = 1; i <= n; i++)
+    {
+        scanf("%d", &a[i]);
+        a[i]++;
+    }
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= n; j++)
+            f[j][i] = f[j - 1][i] + (a[j] < i);
+    int sum = 0;
+    for (int i = 1; i <= n; i++)
+        for (int j = i + 1; j <= n; j++)
+            if (a[i] > a[j])sum++;
+    int ret = 0, val = sum;
+    for (int i = 1; i <= n; i++)
+        for (int j = i + 1; j <= n; j++)
+        {
+            int tt = 0;
+            if (i + 1 <= j - 1)
+            {
+                tt += f[j - 1][a[i]] - f[i][a[i]];
+                tt -= j - 1 - i - (f[j - 1][a[i]] - f[i][a[i]]);
+                tt -= f[j - 1][a[j]] - f[i][a[j]];
+                tt += j - 1 - i - (f[j - 1][a[j]] - f[i][a[j]]);
+            }
+            if (a[i] < a[j])tt--;
+            else tt++;
+            if (sum - tt < val)
+            {
+                ret = 1;
+                val = sum - tt;
+            }
+            else if (sum - tt == val)ret++;
+        }
+    printf("%d %d\n", val, ret);
+    return 0;
+}

@@ -1,0 +1,96 @@
+/*
+题被删除，做法是容斥
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <set>
+#include <stack>
+#include <iostream>
+using namespace std;
+typedef __int64 ll;
+const double eps = 1e-6;
+const double PI = acos(-1);
+const int maxn=100005;
+const int inf = 0x3fffffff;
+const int mod=1000000007;
+
+int n,m;
+ll l,r,p;
+bool notp[maxn];
+vector<int>pr;
+void init()
+{
+    for(int i=2; i<maxn; i++)
+        if(!notp[i])
+        {
+            pr.push_back(i);
+            for(int j=i+i; j<maxn; j+=i)
+                notp[j]=1;
+        }
+}
+vector<int>fac;
+ll solve(int x)
+{
+    fac.clear();
+    int tx=x;
+    for(int i=0; i<pr.size(); i++)
+    {
+        if(tx==1)break;
+        if(tx%pr[i]==0)
+        {
+            fac.push_back(pr[i]);
+            while(tx%pr[i]==0)tx/=pr[i];
+        }
+    }
+    ll tl=(l<=x)?1:(ll)ceil(sqrt(l*l-(ll)x*x));
+    ll tr=(ll)floor(sqrt(r*r-(ll)x*x));
+    if(tr>m)tr=m;
+    if(tl>m)return 0;
+
+    //if(x==1)printf("** %I64d %I64d\n",tl,tr);
+
+    ll ret=0;
+    for(int i=0; i<(1<<(fac.size())); i++)
+    {
+        int cnt=0;
+        ll tt=1;
+        for(int j=0; j<fac.size(); j++)
+            if(i&(1<<j))
+            {
+                cnt++;
+                tt*=fac[j];
+            }
+        ll cr=tr/tt;
+        ll cl=(tl+tt-1)/tt;
+        if(cr*tt<tl||cl*tt>tr||cr<cl)continue;
+        int cc=cr-cl+1;
+        ll tmp=(m-cl*tt+1+m-cr*tt+1)*cc/2%p*(n-x+1)%p;
+        if(cnt&1)ret=((ret-tmp)%p+p)%p;
+        else ret=((ret+tmp)%p+p)%p;
+    }
+    return ret;
+}
+
+int main()
+{
+    //freopen("in.txt","r",stdin);
+   // freopen("out.txt","w",stdout);
+    init();
+    scanf("%d%d%I64d%I64d%I64d",&n,&m,&l,&r,&p);
+    ll ret=0;
+    for(int i=1; i<=n&&i<r; i++)
+    {
+        ret=(ret+solve(i))%p;
+        //printf("%d: %I64d\n",i,ret);
+    }
+    ret=ret*2%p;
+    if(l==1)ret=(ret+(ll)n*(m+1)+(ll)(n+1)*m)%p;
+    printf("%I64d\n",ret);
+    return 0;
+}

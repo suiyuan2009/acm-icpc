@@ -1,0 +1,108 @@
+/*
+题意：每次一个格子里的每一个人会向曼哈段距离<t的格子产生人，求最后一次产生的人的情况
+坐标变换，(i,j)->(i+j,i-j+m)，然后就是矩阵前缀和预处理
+*/
+//#pragma comment(linker, "/STACK:1024000000,1024000000")
+#include <map>
+#include <set>
+#include <cmath>
+#include <queue>
+#include <cstdio>
+#include <vector>
+#include <string>
+#include <cassert>
+#include <cstring>
+#include <iostream>
+#include <algorithm>
+using namespace std;
+const int maxn = 205;
+const double eps = 1e-6;
+typedef long long ll;
+const int mod = 1000000007;
+
+int n, m, ti, sx, sy;
+int a[maxn][maxn];
+ll f[105][maxn][maxn], s[maxn][maxn];
+
+ll get(int i, int j)
+{
+    if (i < 0 || j < 0)return 0;
+    if (i >= n + m - 1)i = n + m - 2;
+    if (j > n + m - 1)j = n + m - 1;
+    return s[i][j];
+}
+
+int main()
+{
+    //freopen("in.txt", "r", stdin);
+    freopen("treasures.in", "r", stdin);
+    int T;
+    int ncase = 0;
+    scanf("%d", &T);
+    while (T--)
+    {
+        scanf("%d%d%d%d%d", &n, &m, &ti, &sx, &sy);
+        sx--, sy--;
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < m; j++)
+                scanf("%d", &a[i][j]);
+        memset(f, 0, sizeof(f));
+        f[ti + 1][sx + sy][sx - sy + m] = 1;
+        for (int t = ti; t > 1; t--)
+        {
+            for (int i = 0; i < n + m - 1; i++)
+                for (int j = 1; j < n + m; j++)
+                {
+                    s[i][j] = s[i][j - 1] + f[t + 1][i][j];
+                    if (s[i][j] >= mod)s[i][j] -= mod;
+                }
+            for (int i = 1; i < n + m - 1; i++)
+                for (int j = 1; j < n + m; j++)
+                {
+                    s[i][j] = s[i][j] + s[i - 1][j];
+                    if (s[i][j] >= mod)s[i][j] -= mod;
+                }
+            /* for (int i = 0; i < n + m - 1; i++)
+             {
+                 for (int j = 1; j < n + m; j++)
+                 {
+                     printf("%I64d ", s[i][j]);
+                 }
+                 printf("\n");
+             }*/
+            for (int i = 0; i < n; i++)
+                for (int j = 0; j < m; j++)
+                {
+                    //f[t][i + j][i - j + m] = f[t + 1][i + j][i - j + m];
+                    f[t][i + j][i - j + m] += get(i + j + t - 1, i - j + m + t - 1);
+                    if (f[t][i + j][i - j + m] >= mod)f[t][i + j][i - j + m] -= mod;
+                    f[t][i + j][i - j + m] += get(i + j - t, i - j + m - t);
+                    if (f[t][i + j][i - j + m] >= mod)f[t][i + j][i - j + m] -= mod;
+                    f[t][i + j][i - j + m] -= get(i + j + t - 1, i - j + m - t);
+                    if (f[t][i + j][i - j + m] < 0)f[t][i + j][i - j + m] += mod;
+                    f[t][i + j][i - j + m] -= get(i + j - t, i - j + m + t - 1);
+                    if (f[t][i + j][i - j + m] < 0)f[t][i + j][i - j + m] += mod;
+
+                    /*if (i == 2 && j == 0)
+                    {
+                       printf("** %d %d %d %d\n", i + j - t, i - j + m - t, i + j + t - 1, i - j + m + t - 1);
+                    }*/
+                }
+        }
+        ll ret = 0;
+       // f[2][sx + sy][sx - sy + m]--;
+        //if (f[2][sx + sy][sx - sy + m] < 0)f[2][sx + sy][sx - sy + m] += mod;
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < m; j++)
+            {
+                //printf("%I64d ", f[2][i + j][i - j + m]);
+                ret += f[2][i + j][i - j + m] * a[i][j];
+                ret %= mod;
+            }
+            // printf("\n");
+        }
+        printf("Case %d: %I64d\n", ++ncase, ret);
+    }
+    return 0;
+}

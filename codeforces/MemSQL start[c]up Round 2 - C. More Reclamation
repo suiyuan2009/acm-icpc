@@ -1,0 +1,59 @@
+/*
+题意：一个n*2的网格，(x,y)位置放了，(x,y^1),(x-1,y^1),(x+1,y^1)都不能放，问先手是否必胜
+记f[i][j][x][y]为第i行到第j行且i-1行状态是x,j+1行状态是y的sg值
+*/
+#include<cstdio>
+#include<iostream>
+#include<cstring>
+#include<algorithm>
+#include<cmath>
+#include<queue>
+#include<map>
+#include<vector>
+#include<string>
+#include<set>
+using namespace std;
+typedef long long ll;
+#define eps 1e-8
+const int inf=0x3f3f3f3f;
+const int maxn=105;
+
+int f[maxn][maxn][4][4];
+bool hash[maxn][2];
+int n,m;
+
+int dfs(int l,int r,int x,int y)
+{
+    if(l>r)return 0;
+    if(f[l][r][x][y]!=-1)return f[l][r][x][y];
+    vector<int>vis;
+    for(int i=l; i<=r; i++)
+        for(int j=0; j<2; j++)
+        {
+            if(hash[i][j]||(i==l&&(x&(1<<j))!=0)||(i==r&&(y&(1<<j))!=0))continue;
+            vis.push_back(dfs(l,i-1,x,1<<(j^1))^dfs(i+1,r,1<<(j^1),y));
+        }
+    sort(vis.begin(),vis.end());
+    vis.erase(unique(vis.begin(),vis.end()),vis.end());
+    for(int i=0; i<vis.size(); i++)if(vis[i]!=i)return f[l][r][x][y]=i;
+    return f[l][r][x][y]=vis.size();
+}
+
+int main()
+{
+    scanf("%d%d",&n,&m);
+    for(int i=0; i<m; i++)
+    {
+        int x,y;
+        scanf("%d%d",&x,&y);
+        --y;
+        hash[x][y]=1;
+        hash[x][y^1]=1;
+        hash[x-1][y^1]=1;
+        hash[x+1][y^1]=1;
+    }
+    memset(f,-1,sizeof(f));
+    if(dfs(1,n,0,0))printf("WIN\n");
+    else printf("LOSE\n");
+    return 0;
+}

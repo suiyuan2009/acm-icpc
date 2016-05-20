@@ -1,0 +1,77 @@
+/*
+给出无向图中1到2的最短路径条数，构造图
+二进制
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <map>
+#include <iostream>
+using namespace std;
+typedef __int64 ll;
+const int maxn = 1005;
+const int maxm = 32;
+
+int n, e[maxn][maxn];
+int a[maxm], b[maxm][2];
+
+void addedge(int u, int v)
+{
+    e[u][v] = e[v][u] = 1;
+}
+
+int main()
+{
+    //freopen("in.txt", "r", stdin);
+    // freopen("out.txt", "w", stdout);
+    addedge(1, 3);
+    a[0] = 3;
+    n = 3;
+    for (int i = 4; i <= maxm + 2; i++)
+    {
+        addedge(i - 1, i);
+        a[i - 3] = i;
+        n++;
+    }
+    b[0][0] = ++n;
+    b[0][1] = ++n;
+    addedge(b[0][0], 2);
+    addedge(b[0][1], 2);
+    for (int i = 1; i < maxm; i++)
+    {
+        b[i][0] = ++n;
+        b[i][1] = ++n;
+        for (int j = 0; j < 2; j++)
+            for (int k = 0; k < 2; k++)
+                addedge(b[i][j], b[i - 1][k]);
+    }
+    int m;
+    scanf("%d", &m);
+    for (int i = 0; i < maxm; i++)
+        if (m & (1 << i))
+        {
+            int u = i - 1;
+            int v = maxm - 2 - u;
+            if (u < 0)
+            {
+                addedge(a[v], 2);
+                continue;
+            }
+            addedge(a[v], b[u][0]);
+            addedge(a[v], b[u][1]);
+        }
+    printf("%d\n", n);
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            if (e[i][j])printf("Y");
+            else printf("N");
+        }
+        printf("\n");
+    }
+    return 0;
+}

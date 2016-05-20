@@ -1,0 +1,94 @@
+/*
+题意：n个点，m条边，floyd中第一层for循环中只取a[1:k]，
+问是否可能建出图使得这个floyd算法出错
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-7
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=305;
+
+int e[maxn][maxn];
+int n,m,k;
+int a[maxn];
+bool vis[maxn];
+
+int main()
+{
+    scanf("%d%d%d",&n,&m,&k);
+    for(int i=1; i<=k; i++)scanf("%d",&a[i]);
+    if(k==n||m>n*(n-1)/2-(k-1))
+    {
+        printf("-1\n");
+        return 0;
+    }
+    for(int i=1; i<=k; i++)vis[a[i]]=1;
+    int st=a[1],nd;
+    if(k>1)nd=a[2];
+    else
+    {
+        for(int i=1; i<=n; i++)
+            if(i!=st)nd=i;
+    }
+    int mid;
+    for(int i=1; i<=n; i++)
+    {
+        if(i==st||i==nd)continue;
+        if(vis[i])continue;
+        mid=i;
+        break;
+    }
+    e[st][mid]=1;
+    e[mid][nd]=1;
+    m-=2;
+    int pre=st;
+    for(int i=1; i<=n; i++)
+    {
+        if(i==st||i==nd||i==mid)continue;
+        if(m==0)continue;
+        e[pre][i]=1;
+        pre=i;
+        m--;
+    }
+    for(int i=1; i<=n; i++)
+        for(int j=i+1; j<=n; j++)
+        {
+            if(e[i][j]||e[j][i])continue;
+            if(m==0)continue;
+            if(i==nd||j==nd)continue;
+            e[i][j]=1;
+            m--;
+        }
+    for(int i=1; i<=n; i++)
+    {
+        if(i==st||i==nd)continue;
+        if(e[i][nd]||e[nd][i])continue;
+        if(m==0)continue;
+        if(vis[i])continue;
+        e[i][nd]=1;
+        m--;
+    }
+    int cnt=0;
+    for(int i=1; i<=n; i++)
+        for(int j=i+1; j<=n; j++)
+            if(e[i][j]||e[j][i])
+            {
+                printf("%d %d\n",i,j);
+                cnt++;
+            }
+    //printf("** %d\n",cnt);
+    return 0;
+}

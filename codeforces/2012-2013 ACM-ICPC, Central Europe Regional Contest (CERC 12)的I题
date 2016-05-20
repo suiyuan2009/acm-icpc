@@ -1,0 +1,61 @@
+/*
+题意：给出一些直线，保证不同且三线不共点。给非直线上的点，问点是否覆盖了所有区域
+
+先算出区域个数，然后根据点在直线的哪边给对应的0/1标记，最后看标记的种类。
+*/
+#include<cstdio>
+#include<iostream>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+using namespace std;
+typedef long long ll;
+const int maxn=105;
+const int maxm = 50005;
+
+struct P {
+    int x,y;
+    ll l,h;
+    bool operator<(const P&a)const {
+        return l==a.l?h<a.h:l<a.l;
+    }
+} p[maxm];
+struct S {
+    int a,b,c;
+} s[maxn];
+int n,m;
+
+int main() {
+    freopen("in.cpp","r",stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--) {
+        scanf("%d%d",&n,&m);
+        for(int i=1; i<=n; i++)scanf("%d%d%d",&s[i].a,&s[i].b,&s[i].c);
+        for(int i=1; i<=m; i++) {
+            scanf("%d%d",&p[i].x,&p[i].y);
+            p[i].l=p[i].h=0;
+        }
+        int num=1;
+        for(int i=1; i<=n; i++) {
+            int cnt=0;
+            for(int j=1; j<i; j++)
+                if(s[i].a*s[j].b==s[i].b*s[j].a)cnt++;
+            num+=i-cnt;
+        }
+        for(int i=1; i<=n; i++)
+            for(int j=1; j<=m; j++) {
+                ll tt=(ll)s[i].a*p[j].x+(ll)s[i].b*p[j].y+s[i].c;
+                if(tt>0) {
+                    if(i-1<50)p[j].l|=(1LL<<(i-1));
+                    else p[j].h|=(1LL<<(i-1-50));
+                }
+            }
+        sort(p+1,p+m+1);
+        int ret=1;
+        for(int i=2; i<=m; i++)
+            if(p[i].l!=p[i-1].l||p[i].h!=p[i-1].h)ret++;
+        printf("%s\n",ret==num?"PROTECTED":"VULNERABLE");
+    }
+    return 0;
+}

@@ -1,0 +1,61 @@
+/*
+题意：给出一个矩阵，有些格子已经被占，每次从n*n个格子中随机选一个格子占有，
+直到每一行和每一列都有格子被占，求期望的次数。
+记f[i][j]为还有i行j列没被占时所需要的期望，
+那么f[i][j]=(f[i-1][j-1]*i*j+f[i-1][j]*i*(n-j)+f[i][j-1]*(n-i)*j+f[i][j]*(n-i)*(n-j))/(n*n);
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <set>
+#include <stack>
+#include <iostream>
+using namespace std;
+const double eps = 1e-8;
+const double PI = acos(-1);
+const int maxn=2005;
+const int inf = 0x3fffffff;
+const int mod=1000000007;
+
+int n,m;
+bool x[maxn],y[maxn];
+int cx,cy;
+double f[maxn][maxn];
+
+int main()
+{
+    //freopen("in.txt","r",stdin);
+    scanf("%d%d",&n,&m);
+    for(int i=1; i<=m; i++)
+    {
+        int xx,yy;
+        scanf("%d%d",&xx,&yy);
+        x[xx]=y[yy]=1;
+    }
+    for(int i=1; i<=n; i++)
+    {
+        cx+=x[i];
+        cy+=y[i];
+    }
+    cx=n-cx;
+    cy=n-cy;
+    for(int i=1; i<=n; i++)
+    {
+        f[0][i]=f[0][i-1]+n*1.0/i;
+        f[i][0]=f[i-1][0]+n*1.0/i;
+    }
+    for(int i=1; i<=cx; i++)
+        for(int j=1; j<=cy; j++)
+        {
+            double tt=f[i-1][j-1]*i*j+f[i-1][j]*i*(n-j)+f[i][j-1]*(n-i)*j+n*n;
+            tt/=(n*j+n*i-i*j);
+            f[i][j]=tt;
+        }
+    printf("%.10f\n",f[cx][cy]);
+    return 0;
+}

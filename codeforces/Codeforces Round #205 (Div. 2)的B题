@@ -1,0 +1,87 @@
+/*
+题意：给出2n个数，在10到99之间，分成两堆，
+使得第一堆中一个数接上第二堆中一个数形成的四位数不同的数目最多
+比赛的时候用的f[i][j][k]代表到大小是i的数时第一堆选了j个数且重复了k个数第二堆最少重复几个数，
+其实，对于数目为1的数，平均分给两堆，数目大于1的，先每一堆各分一个，其他的最后任意放就行
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+#include<sstream>
+using namespace std;
+#define eps 1e-7
+typedef long long ll;
+const int inf=0x3f3f3f3f;
+const int maxn=205;
+
+int n,a[maxn],c[maxn],ans[maxn];
+
+void pd(int val,int turn)
+{
+    for(int i=1; i<=n; i++)
+    {
+        if(ans[i])continue;
+        if(a[i]==val)
+        {
+            ans[i]=turn;
+            break;
+        }
+    }
+}
+
+int main()
+{
+    //freopen("tank.in","r",stdin);
+    scanf("%d",&n);
+    n*=2;
+    int cnt=0,cnt2=0;
+    for(int i=1; i<=n; i++)
+    {
+        scanf("%d",&a[i]);
+        c[a[i]]++;
+    }
+    int turn=1;
+    for(int i=10; i<=99; i++)
+    {
+        if(c[i]==1)
+        {
+            if(turn==1)cnt++;
+            else cnt2++;
+            pd(i,turn);
+            turn=3-turn;
+            c[i]=0;
+        }
+        else if(c[i]>1)
+        {
+            cnt2++;
+            cnt++;
+            pd(i,1);
+            pd(i,2);
+            c[i]-=2;
+        }
+    }
+    printf("%d\n",cnt*cnt2);
+    turn=1;
+    for(int i=10; i<=99; i++)
+        if(c[i])
+        {
+            for(int j=1; j<=c[i]; j++)
+            {
+                if(cnt==n/2)turn=2;
+                pd(i,turn);
+                cnt++;
+            }
+        }
+    for(int i=1; i<n; i++)printf("%d ",ans[i]);
+    printf("%d\n",ans[n]);
+    return 0;
+}
