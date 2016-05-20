@@ -1,0 +1,80 @@
+/*
+单调队列维护长度为定值的连续区间的最小值
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn = 1005;
+const int inf=0x3fffffff;
+
+int n,m,a[maxn][maxn],A,B,C,D;
+int s[maxn][maxn],s2[maxn][maxn],s3[maxn][maxn];
+
+void init(){
+    for(int i=1;i<=n;i++)
+        for(int j=1;j<=m;j++)
+            s[i][j]=s[i][j-1]+a[i][j];
+    for(int j=1;j<=m;j++)
+        for(int i=1;i<=n;i++){
+            s[i][j]+=s[i-1][j];
+            s2[i][j]=s[i][j]-s[i][j-D]-s[i-C][j]+s[i-C][j-D];
+        }
+}
+
+int q[maxn],idq[maxn];
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        scanf("%d%d%d%d%d%d",&n,&m,&A,&B,&C,&D);
+        for(int i=1;i<=n;i++){
+            scanf("%d",&a[i][1]);
+            for(int j=2;j<=m;j++)
+                a[i][j]=(a[i][j-1]*71+17)%100+1;
+        }
+        init();
+        int ret=0;
+        if(C==0||D==0){
+            for(int i=A;i<=n;i++)
+                for(int j=B;j<=m;j++)
+                    ret=max(ret,s[i][j]-s[i][j-B]-s[i-A][j]+s[i-A][j-B]);
+            printf("%d\n",ret);
+            continue;
+        }
+        for(int j=1;j<=m;j++){
+            int l=0,r=0;
+            for(int i=1;i<=n;i++){
+                while(l!=r&&q[r-1]>=s2[i][j])r--;
+                q[r]=s2[i][j],idq[r++]=i;
+                if(i>=A-C-1){
+                    while(l!=r&&idq[l]<=i-(A-C-1))l++;
+                    s3[i][j]=q[l];
+                }
+            }
+        }
+        for(int i=A-1;i<n;i++){
+            int l=0,r=0;
+            for(int j=1;j<m;j++){
+                while(l!=r&&q[r-1]>=s3[i][j])r--;
+                q[r]=s3[i][j],idq[r++]=j;
+                if(j>=B-1){
+                    while(l!=r&&idq[l]<=j-(B-D-1))l++;
+                    ret=max(ret,s[i+1][j+1]-s[i+1][j+1-B]-s[i+1-A][j+1]+s[i+1-A][j+1-B]-q[l]);
+                }
+            }
+        }
+        printf("%d\n",ret);
+    }
+    return 0;
+}

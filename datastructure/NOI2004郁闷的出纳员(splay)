@@ -1,0 +1,219 @@
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn = 100005;
+const double eps = 1e-6;
+const int inf = 0x3fffffff;
+typedef long long ll;
+
+struct node
+{
+    node *ch[2], *p;
+    int val,size;
+    node ()
+    {
+        val=0,size=0;
+    }
+    bool d()
+    {
+        return this==p->ch[1];
+    }
+    void setc(node *c, int d)
+    {
+        ch[d]=c;
+        c->p=this;
+    }
+    void update()
+    {
+        size=ch[0]->size+ch[1]->size+1;
+    }
+}*null, *root;
+node mem[maxn*2], *stk[maxn*2];
+int A[maxn], N, M, top;
+
+inline void pushdown(node *t)
+{
+    if (t==null) return;
+}
+
+inline node *new_node(int v)
+{
+    node *ret=stk[--top];
+    ret->val=v,ret->size=1;
+    ret->ch[0]=ret->ch[1]=ret->p=null;
+    return ret;
+}
+
+inline void recycle(node *x)
+{
+    stk[top++]=x;
+}
+
+inline void Delete_All(node *t_root)
+{
+    static node *Q[maxn];
+    static int h, t;
+    for (h=t=0, Q[t++]=t_root; h<t; h++)
+    {
+        node *x=Q[h];
+        if (x->ch[0]!=null) Q[t++]=x->ch[0];
+        if (x->ch[1]!=null) Q[t++]=x->ch[1];
+        recycle(x);
+    }
+}
+
+inline node* rot(node *t)
+{
+    node *p=t->p;
+    pushdown(p);
+    pushdown(t);
+    int d=t->d();
+    p->p->setc(t, p->d());
+    p->setc(t->ch[!d], d);
+    t->setc(p, !d);
+    p->update();
+    if (p==root) root=t;
+    return t;
+}
+
+inline void splay(node *t, node *f)
+{
+    for (pushdown(t); t->p!=f;)
+    {
+        if (t->p->p==f) rot(t);
+        else t->d()==t->p->d() ? (rot(t->p), rot(t)) : (rot(t), rot(t));
+    }
+    t->update();
+}
+
+inline node *select(int k)
+{
+    for (node *t=root;;)
+    {
+        pushdown(t);
+        int c=t->ch[0]->size;
+        if (k==c) return t;
+        if (k>c) k-=c+1, t=t->ch[1];
+        else t=t->ch[0];
+    }
+    return null;
+}
+
+inline void ins(int val)
+{
+    node *ret=new_node(val);
+    for(node *t=root;;)
+    {
+        pushdown(t);
+        if(t->val<=val)
+        {
+            if(t->ch[1]==null)
+            {
+                t->setc(ret,1);
+                break;
+            }
+            t=t->ch[1];
+        }
+        else
+        {
+            if(t->ch[0]==null)
+            {
+                t->setc(ret,0);
+                break;
+            }
+            t=t->ch[0];
+        }
+    }
+    splay(ret,null);
+}
+
+inline node *get_seq(int l, int r)
+{
+    node *L=select(l);
+    splay(L, null);
+    node *R=select(r);
+    splay(R, root);
+    return root->ch[1]->ch[0];
+}
+
+node *build_tree(int *l, int *r)
+{
+    if (l>=r) return null;
+    if (l+1==r) return new_node(*l);
+    int *m=l+(r-l)/2;
+    node *t=new_node(*m);
+    t->setc(build_tree(l, m), 0);
+    t->setc(build_tree(m+1, r), 1);
+    t->update();
+    return t;
+}
+
+void init()
+{
+    for (int i=0; i<2*maxn; i++) stk[i]=mem+i;
+    top=maxn*2;
+    null=new_node(-inf);
+    null->size=0;
+    null->ch[0]=null->ch[1]=null->p=null;
+    A[0]=-inf,A[N+1]=inf;
+    root=build_tree(A,A+N+2);
+}
+
+int minn;
+int main()
+{
+  //  freopen("ACM/cashier1.in","r",stdin);
+// freopen("ACM/out.out","w",stdout);
+    while(~scanf("%d%d",&M,&minn))
+    {
+        N=0,init();
+        int cnt=0,add=0;
+        char s[20];
+        while(M--)
+        {
+            int x;
+            scanf("%s%d",s,&x);
+            if(s[0]=='I')
+            {
+                if(x<minn)
+                {
+                  //  cnt++;
+                    continue;
+                }
+                ins(x-add),N++;
+                /*  for(int i=1;i<=N;i++)
+                    printf("%d ",get_seq(i-1,i+1)->val);
+                    printf("\n");*/
+            }
+            else if(s[0]=='S')
+            {
+                add-=x;
+                while(N)
+                {
+                    node*t=get_seq(0,2);
+                    //  printf("**%d %d\n",N,t->val);
+                    if(t->val+add<minn)
+                    {
+                        N--;
+                        root->ch[1]->setc(null,0);
+                        Delete_All(t);
+                        cnt++;
+                    }
+                    else break;
+                }
+            }
+            else if(s[0]=='F')
+            {
+                if(x>N)printf("-1\n");
+                else
+                {
+                    node*t=select(N-x+1);
+                    printf("%d\n",t->val+add);
+                    splay(t,null);
+                }
+            }
+            else add+=x;
+        }
+        printf("%d\n",cnt);
+    }
+    return 0;
+}

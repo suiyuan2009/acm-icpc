@@ -1,0 +1,171 @@
+/*
+题意：带权树，计算dist(u,v)<=m的点对个数
+树分治，路径要么经过根，要么在子树里，
+每次找子树的中心做为根，每次只计算经过根的路径的条数，
+复杂度O(n*logn*logn)
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-7
+typedef long long ll;
+typedef long double ldb;
+const int inf=0x3f3f3f3f;
+const int maxn=10005;
+const int maxm=maxn+maxn;
+const int mod=1000000007;
+
+int n,m;
+int num,ev[maxm],ew[maxm],next[maxm],head[maxn];
+int d[maxn];
+bool rooted[maxn];
+ll ret;
+
+void init()
+{
+    ret=0;
+    num=0;
+    memset(head,-1,sizeof(head));
+    memset(rooted,0,sizeof(rooted));
+}
+
+void add_edge(int u,int v,int w)
+{
+    next[++num]=head[u];
+    head[u]=num;
+    ev[num]=v,ew[num]=w;
+}
+
+struct E
+{
+    int u,fa;
+};
+E que[maxn];
+int pnt[maxn];
+
+int get_far(int start)
+{
+    int fr=0,rr=0;
+    pnt[start]=-1;
+    d[start]=0;
+    int maxx=0,idx=start;
+    E u,v;
+    u.fa=-1,u.u=start;
+    que[rr++]=u;
+    while(fr<rr)
+    {
+        u=que[fr++];
+        if(maxx<d[u.u])
+        {
+            maxx=d[u.u];
+            idx=u.u;
+        }
+        for(int i=head[u.u]; i!=-1; i=next[i])
+        {
+            if(ev[i]==u.fa)continue;
+            if(rooted[ev[i]])continue;
+            v.u=ev[i],v.fa=u.u;
+            pnt[v.u]=u.u;
+            d[ev[i]]=d[u.u]+1;
+            que[rr++]=v;
+        }
+    }
+    return idx;
+}
+
+int get_root(int start)
+{
+    int l=get_far(start);
+    int r=get_far(l);
+    int dis=d[r]/2;
+    int root=r;
+    while(dis--)root=pnt[root];
+    return root;
+}
+
+int d1[maxn],d2[maxn],cnt1,cnt2;
+void dfs_2(int u,int fa)
+{
+    for(int i=head[u]; i!=-1; i=next[i])
+    {
+        if(ev[i]==fa)continue;
+        if(rooted[ev[i]])continue;
+        d[ev[i]]=d[u]+ew[i];
+        d2[cnt2++]=d[ev[i]];
+        d1[cnt1++]=d[ev[i]];
+        dfs_2(ev[i],u);
+    }
+}
+void dfs(int u)
+{
+    int root=get_root(u);
+    //printf("** %d\n",root);
+    cnt1=0;
+    d1[cnt1++]=0;
+    for(int i=head[root]; i!=-1; i=next[i])
+    {
+        if(rooted[ev[i]])continue;
+        cnt2=0;
+        //d2[cnt2++]=0;
+        d2[cnt2++]=ew[i];
+        d1[cnt1++]=ew[i];
+        d[ev[i]]=ew[i];
+        dfs_2(ev[i],root);
+
+        //printf("**%d: %d\n",root,cnt2);
+
+        sort(d2,d2+cnt2);
+        int pos1=0,pos2=cnt2-1;
+        while(pos1<pos2)
+        {
+            while(pos1<pos2&&d2[pos2]+d2[pos1]>m)pos2--;
+            ret-=(pos2-pos1);
+            pos1++;
+        }
+        // printf("** %d: %d\n",root,cnt2);
+    }
+    sort(d1,d1+cnt1);
+    //printf("** %d:%d\n",root,cnt1);
+    int pos1=0,pos2=cnt1-1;
+    while(pos1<pos2)
+    {
+        while(pos1<pos2&&d1[pos1]+d1[pos2]>m)pos2--;
+        ret+=(pos2-pos1);
+        pos1++;
+    }
+    rooted[root]=1;
+    for(int i=head[root]; i!=-1; i=next[i])
+    {
+        if(rooted[ev[i]])continue;
+        dfs(ev[i]);
+    }
+}
+
+int main()
+{
+    while(~scanf("%d%d",&n,&m))
+    {
+        if(n==0&&m==0)break;
+        init();
+        for(int i=1; i<n; i++)
+        {
+            int u,v,w;
+            scanf("%d%d%d",&u,&v,&w);
+            add_edge(u,v,w);
+            add_edge(v,u,w);
+        }
+        dfs(1);
+        printf("%lld\n",ret);
+    }
+    return 0;
+}

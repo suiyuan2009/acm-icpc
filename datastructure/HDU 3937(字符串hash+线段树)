@@ -1,0 +1,109 @@
+/*
+题意：给出一些词和一个串，每次修改串中某个字符，询问s[l,r]是否是词
+字符串hash，注意'a'代表1，否则任意长度的aaa..aa哈希值都是0，线段树维护当前区间的哈希值
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+#include<bitset>
+using namespace std;
+typedef unsigned long long ull;
+const int maxn = 100005;
+const int maxm = 2000005;
+const int base = 31;
+
+map<ull,int>mp;
+int n,m;
+char str[maxm];
+ull p[maxm];
+
+void init_1(){
+    p[0]=1;
+    for(int i=1;i<maxm;i++)p[i]=p[i-1]*base;
+}
+
+struct ST{
+    int l,r;
+    ull val;
+}st[maxn*4];
+void up(int id){
+    int x=st[id<<1|1].r-st[id<<1|1].l+1;
+    st[id].val=st[id<<1].val*p[x]+st[id<<1|1].val;
+}
+void build(int id,int l,int r){
+    st[id].l=l,st[id].r=r;
+    if(l==r){
+        st[id].val=str[l-1]-'a'+1;
+        return;
+    }
+    int m=(l+r)>>1;
+    build(id<<1,l,m),build(id<<1|1,m+1,r);
+    up(id);
+}
+void upd(int id,int pos,int val){
+    if(st[id].l==st[id].r){
+        st[id].val=val;
+        return;
+    }
+    int m=(st[id].l+st[id].r)>>1;
+    if(pos<=m)upd(id<<1,pos,val);
+    else upd(id<<1|1,pos,val);
+    up(id);
+}
+ull query(int id,int l,int r){
+    if(st[id].l==l&&st[id].r==r)return st[id].val;
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)return query(id<<1,l,r);
+    else if(l>m)return query(id<<1|1,l,r);
+    return query(id<<1,l,m)*p[r-m]+query(id<<1|1,m+1,r);
+}
+
+void init_2(){
+    mp.clear();
+    scanf("%d",&n);
+    for(int i=0;i<n;i++){
+        scanf("%s",str);
+        m=strlen(str);
+        ull tt=0;
+        for(int j=0;j<m;j++)tt=tt*base+(str[j]-'a'+1);
+        mp[tt]=1;
+    }
+    scanf("%s",str);
+    m=strlen(str);
+    build(1,1,m);
+}
+
+char s[15],ch[15];
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    int T,ncase=0;
+    init_1();
+    scanf("%d",&T);
+    while(T--){
+        init_2();
+        scanf("%d",&m);
+        printf("Case #%d:\n",++ncase);
+        while(m--){
+            scanf("%s",s);
+            if(s[0]=='C'){
+                int x;
+                scanf("%d%s",&x,ch);
+                upd(1,x+1,ch[0]-'a'+1);
+            }else{
+                int l,r;
+                scanf("%d%d",&l,&r);
+                ull tt=query(1,l+1,r+1);
+                if(mp[tt])printf("Yes\n");
+                else printf("No\n");
+            }
+        }
+    }
+    return 0;
+}

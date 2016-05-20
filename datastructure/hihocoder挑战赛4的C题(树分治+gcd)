@@ -1,0 +1,133 @@
+/*
+题意：有点权，问路径上的gcd值的可能性和对应条数
+选定一个根之后，这个子树上所有的gcd都是这个根的权值的约数，而约数的个数有限，暴力树分治
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn = 100005;
+const int mod=1000000007;
+const double eps=1e-8;
+
+int a[maxn];
+ll ans[maxn];
+
+int n,head[maxn],ev[maxn+maxn],num,nxt[maxn+maxn];
+void addedge(int u,int v){
+    nxt[++num]=head[u],head[u]=num,ev[num]=v;
+}
+bool rooted[maxn];
+queue<int>que;
+int pnt[maxn],d[maxn];
+int pd2(int st){
+    int ret=0,id=st;
+    while(!que.empty())que.pop();
+    d[st]=0,pnt[st]=-1,que.push(st);
+    while(!que.empty()){
+        int u=que.front();
+        que.pop();
+        for(int i=head[u];i;i=nxt[i]){
+            int v=ev[i];
+            if(rooted[v]||pnt[u]==v)continue;
+            d[v]=d[u]+1,pnt[v]=u,que.push(v);
+            if(d[v]>ret)ret=d[v],id=v;
+        }
+    }
+    return id;
+}
+int pd(int st){
+    int l=pd2(st),r=pd2(l),dis=d[r]/2;
+    while(dis--)r=pnt[r];
+    return r;
+}
+
+int gcd(int x,int y){
+    return y==0?x:gcd(y,x%y);
+}
+struct P{
+    int x,y;
+    bool operator<(const P&a)const{
+        return x>a.x;
+    }
+};
+P b[maxn],c[maxn],tt[maxn];
+int cb,cc;
+
+void dfs2(int u,int fa,int cur){
+    ++cb;
+    b[cb].x=cur,b[cb].y=1;
+    for(int i=head[u];i;i=nxt[i]){
+        int v=ev[i];
+        if(v==fa||rooted[v])continue;
+        dfs2(v,u,gcd(cur,a[v]));
+    }
+}
+void dfs(int u){
+    u=pd(u);
+    rooted[u]=1;
+    cc=0;
+    for(int i=head[u];i;i=nxt[i]){
+        int v=ev[i];
+        if(rooted[v])continue;
+        cb=0;
+        dfs2(v,u,gcd(a[u],a[v]));
+        sort(b+1,b+cb+1);
+        int tmp=1;
+        for(int j=2;j<=cb;j++){
+            if(b[j].x==b[tmp].x)b[tmp].y+=b[j].y;
+            else b[++tmp]=b[j];
+        }
+        cb=tmp;
+        for(int j=1;j<=cb;j++){
+            ans[b[j].x]+=b[j].y;
+            for(int k=1;k<=cc;k++){
+                int tt=gcd(b[j].x,c[k].x);
+                ans[tt]+=b[j].y*(ll)c[k].y;
+            }
+        }
+        int ctt=0,l=1,r=1;
+        while(l<=cc||r<=cb){
+            while(ctt>=1&&l<=cc&&tt[ctt].x==c[l].x)tt[ctt].y+=c[l++].y;
+            while(ctt>=1&&r<=cb&&tt[ctt].x==b[r].x)tt[ctt].y+=b[r++].y;
+            if(l<=cc&&r<=cb){
+                if(c[l].x>b[r].x)tt[++ctt]=c[l++];
+                else tt[++ctt]=b[r++];
+            }else if(l<=cc)tt[++ctt]=c[l++];
+            else if(r<=cb)tt[++ctt]=b[r++];
+        }
+        cc=ctt;
+        for(int i=1;i<=cc;i++)c[i]=tt[i];
+    }
+
+    for(int i=head[u];i;i=nxt[i]){
+        int v=ev[i];
+        if(rooted[v])continue;
+        dfs(v);
+    }
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    scanf("%d",&n);
+    for(int i=1;i<=n;i++)scanf("%d",&a[i]);
+    for(int i=1;i<n;i++){
+        int x,y;
+        scanf("%d%d",&x,&y);
+        addedge(x,y);
+        addedge(y,x);
+    }
+    for(int i=1;i<=n;i++)ans[a[i]]++;
+    dfs(1);
+    for(int i=1;i<maxn;i++)
+        if(ans[i])printf("%d %lld\n",i,ans[i]);
+    return 0;
+}

@@ -1,0 +1,145 @@
+/*
+题意：动态修改边权，问路径中最大边权
+树链剖分，边以儿子的编号为编号
+*/
+#include<stdio.h>
+#include<vector>
+#include<string.h>
+using namespace std;
+typedef long long ll;
+typedef pair<int,int>pii;
+const int inf=0x3fffffff;
+const int maxn=10005;
+const int maxm=maxn+maxn;
+
+vector<int>g[maxn];
+int n;
+int d[maxn][3];
+int pnt[maxn],son[maxn],sz[maxn],top[maxn],dep[maxn],pos[maxn],pos_clk;
+
+void dfs1(int u,int fa,int d)
+{
+	pnt[u]=fa;
+	son[u]=-1;
+	sz[u]=1;
+	dep[u]=d;
+	for(int i=0;i<g[u].size();i++)
+	{
+		int v=g[u][i];
+		if(v==fa)continue;
+		dfs1(v,u,d+1);
+		sz[u]+=sz[v];
+		if(son[u]==-1||sz[v]>sz[son[u]])son[u]=v;
+	}
+}
+void dfs2(int u,int tp)
+{
+	pos[u]=++pos_clk;
+	top[u]=tp;
+	if(son[u]!=-1)dfs2(son[u],tp);
+	for(int i=0;i<g[u].size();i++)
+	{
+		int v=g[u][i];
+		if(v==son[u]||v==pnt[u])continue;
+		dfs2(v,v);
+	}
+}
+
+#define lson l,m,rt<<1
+#define rson m+1,r,rt<<1|1
+int mx[maxn<<1];
+void push_up(int rt)
+{
+	mx[rt]=max(mx[rt<<1],mx[rt<<1|1]);
+}
+void update(int p,int v,int l,int r,int rt)
+{
+	if(l==r)
+	{
+		mx[rt]=v;
+		return;
+	}
+	int m=(l+r)>>1;
+	if(p<=m)update(p,v,lson);
+	else update(p,v,rson);
+	push_up(rt);
+}
+int query(int L,int R,int l,int r,int rt)
+{
+	if(L<=l&&r<=R)
+	{
+		return mx[rt];
+	}
+	int m=(l+r)>>1;
+	int t1=-inf,t2=-inf;
+	if(L<=m)t1=query(L,R,lson);
+	if(m<R)t2=query(L,R,rson);
+	return max(t1,t2);
+}
+
+void divide(int u,int v,vector<pii>&ret)
+{
+	ret.clear();
+	int tu=top[u],tv=top[v];
+	while(tu!=tv)
+	{
+		if(dep[tu]<dep[tv])swap(tu,tv),swap(u,v);
+		ret.push_back(make_pair(pos[tu],pos[u]));
+		u=pnt[tu];
+		tu=top[u];
+	}
+	if(dep[u]>dep[v])swap(u,v);
+	if(u!=v)
+		ret.push_back(make_pair(pos[u]+1,pos[v]));
+}
+
+void Query(int u,int v)
+{
+	vector<pii>tt;
+	divide(u,v,tt);
+	int ret=0;
+	for(int i=0;i<tt.size();i++)
+		ret=max(ret,query(tt[i].first,tt[i].second,1,n,1));
+	printf("%d\n",ret);
+}
+
+void solve()
+{
+	dfs1(1,0,0);
+	pos_clk=0;
+	dfs2(1,1);
+	memset(mx,0,sizeof(mx));
+	for(int i=1;i<n;i++)
+	{
+		if(dep[d[i][0]]<dep[d[i][1]])swap(d[i][0],d[i][1]);
+		update(pos[d[i][0]],d[i][2],1,n,1);
+	}
+	char str[10];
+	int u,v;
+	while(~scanf("%s",str))
+	{
+		if(str[0]=='D')break;
+		scanf("%d%d",&u,&v);
+		if(str[0]=='Q')Query(u,v);
+		else update(pos[d[u][0]],v,1,n,1);
+	}
+}
+
+int main()
+{
+	int T;
+	scanf("%d",&T);
+	while(T--)
+	{
+		scanf("%d",&n);
+		for(int i=1;i<=n;i++)g[i].clear();
+			for(int i=1;i<n;i++){
+				for(int j=0;j<3;j++)
+					scanf("%d",&d[i][j]);
+				g[d[i][0]].push_back(d[i][1]);
+				g[d[i][1]].push_back(d[i][0]);
+			}
+			solve();
+		}
+		return 0;
+	}

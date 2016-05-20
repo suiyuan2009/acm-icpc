@@ -1,0 +1,192 @@
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn = 100005;
+const double eps = 1e-6;
+const int inf = 0x3fffffff;
+
+inline void pd(int &ret,int val)
+{
+    if(ret<val)ret=val;
+}
+
+struct node
+{
+    node *ch[2], *p;
+    int size,sum,val,maxl,maxr,maxm;
+    node ()
+    {
+        size=sum=maxl=maxr=maxm=val=0;
+        // ch[0]=ch[1]=p=null;
+    }
+    bool d()
+    {
+        return this==p->ch[1];
+    }
+    void setc(node *c, int d)
+    {
+        ch[d]=c;
+        c->p=this;
+    }
+    void update()
+    {
+        size=ch[0]->size+ch[1]->size+1;
+        sum=ch[0]->sum+ch[1]->sum+val;
+        maxl=maxr=maxm=-inf;
+        if(ch[0]->size)pd(maxl,ch[0]->maxl);
+        pd(maxl,ch[0]->sum+val);
+        pd(maxl,ch[0]->sum+val+ch[1]->maxl);
+        if(ch[1]->size)pd(maxr,ch[1]->maxr);
+        pd(maxr,ch[1]->sum+val);
+        pd(maxr,ch[1]->sum+val+ch[0]->maxr);
+        pd(maxm,maxl),pd(maxm,maxr);
+        if(ch[0]->size)pd(maxm,ch[0]->maxm);
+        if(ch[1]->size)pd(maxm,ch[1]->maxm);
+        pd(maxm,val);
+        pd(maxm,ch[0]->maxr+val);
+        pd(maxm,ch[1]->maxl+val);
+        pd(maxm,ch[0]->maxr+ch[1]->maxl+val);
+    }
+}*null, *root;
+node mem[maxn*2], *stk[maxn*2];
+int A[maxn], N, M, top;
+
+inline node *new_node(int v)
+{
+    node *ret=stk[--top];
+    ret->val=v;
+    ret->size=1;
+    ret->sum=ret->maxl=ret->maxr=ret->maxm=v;
+    ret->ch[0]=ret->ch[1]=ret->p=null;
+    return ret;
+}
+
+inline void recycle(node *x)
+{
+    stk[top++]=x;
+}
+
+inline node* rot(node *t)
+{
+    node *p=t->p;
+    int d=t->d();
+    p->p->setc(t, p->d());
+    p->setc(t->ch[!d], d);
+    t->setc(p, !d);
+    p->update();
+    if (p==root) root=t;
+    return t;
+}
+
+inline void splay(node *t, node *f)
+{
+    for (; t->p!=f;)
+    {
+        if (t->p->p==f) rot(t);
+        else t->d()==t->p->d() ? (rot(t->p), rot(t)) : (rot(t), rot(t));
+    }
+    t->update();
+}
+
+inline node *select(int k)
+{
+    for (node *t=root;;)
+    {
+        int c=t->ch[0]->size;
+        if (k==c) return t;
+        if (k>c) k-=c+1, t=t->ch[1];
+        else t=t->ch[0];
+    }
+    return null;
+}
+
+inline node *get_seq(int l, int r)
+{
+    node *L=select(l);
+    splay(L, null);
+    node *R=select(r);
+    splay(R, root);
+    return root->ch[1]->ch[0];
+}
+
+node *build_tree(int *l, int *r)
+{
+    if (l>=r) return null;
+    if (l+1==r) return new_node(*l);
+    int *m=l+(r-l)/2;
+    node *t=new_node(*m);
+    t->setc(build_tree(l, m), 0);
+    t->setc(build_tree(m+1, r), 1);
+    t->update();
+    return t;
+}
+
+void init()
+{
+    for (int i=0; i<2*maxn; i++) stk[i]=mem+i;
+    top=maxn*2;
+    null=new_node(0);
+    null->size=0;
+    null->ch[0]=null->ch[1]=null->p=null;
+    A[0]=A[N+1]=-inf;
+    root=build_tree(A, A+N+2);
+}
+
+void Insert()
+{
+    int pos;
+    scanf("%d",&pos);
+    // for(int i=0;i<c;i++)scanf("%d",A+i);
+    scanf("%d",&A[0]);
+    node*t=build_tree(A,A+1);
+    get_seq(pos-1,pos);
+    root->ch[1]->setc(t,0);
+    splay(t,null);
+}
+void Delete()
+{
+    int x;
+    scanf("%d",&x);
+    node*t=get_seq(x-1,x+1);
+    t->p->setc(null,0);
+    splay(root->ch[1],null);
+    recycle(t);
+}
+
+void Replace()
+{
+    int x,y;
+    scanf("%d%d",&x,&y);
+    node*t=get_seq(x-1,x+1);
+    t->val=y;
+    t->update();
+    splay(t,null);
+}
+void Query()
+{
+    int x,y;
+    scanf("%d%d",&x,&y);
+    node*t=get_seq(x-1,y+1);
+    printf("%d\n",t->maxm);
+    splay(t,null);
+}
+
+int main()
+{
+    //freopen("ACM/in.in","r",stdin);
+    while(~scanf("%d",&N))
+    {
+        for(int i=1;i<=N;i++)scanf("%d",&A[i]);
+        init();
+        scanf("%d",&M);
+        char str[20];
+        while(M--)
+        {
+            scanf("%s",str);
+            if(str[0]=='I')Insert();
+            else if(str[0]=='D')Delete();
+            else if(str[0]=='R')Replace();
+            else Query();
+        }
+    }
+    return 0;
+}

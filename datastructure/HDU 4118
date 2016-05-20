@@ -1,0 +1,78 @@
+/*
+题意：给出一个带权树，要求节点错排后总的行走路径最大
+每条边两边的点数取小乘以边权求和，最后乘2，这是最大的结果，
+要构造的话，大概是取树的中心为根，每个点的路径都经过根，如果
+中心正好是边也行
+*/
+#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<vector>
+#include<cstring>
+#include<cmath>
+#include<algorithm>
+#include<map>
+#include<iostream>
+#include<queue>
+#include<stack>
+using namespace std;
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+#define eps 1e-6
+const int maxn=100005;
+const int maxm=maxn+maxn;
+
+int n;
+int head[maxn],next[maxm],ev[maxm],num;
+ll ew[maxm],ret;
+int cnt[maxn];
+
+void init()
+{
+    num=0;
+    ret=0;
+    memset(head,0,sizeof(head));
+    memset(cnt,0,sizeof(cnt));
+}
+
+void add_edge(int u,int v,ll w)
+{
+    next[++num]=head[u];
+    head[u]=num;
+    ev[num]=v,ew[num]=w;
+}
+
+void dfs(int u,int fa)
+{
+    cnt[u]=1;
+    for(int i=head[u]; i; i=next[i])
+    {
+        int v=ev[i];
+        ll w=ew[i];
+        if(v==fa)continue;
+        dfs(v,u);
+        ret+=w*min(cnt[v],n-cnt[v]);
+        cnt[u]+=cnt[v];
+    }
+}
+
+int main()
+{
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--)
+    {
+        init();
+        scanf("%d",&n);
+        for(int i=0; i<n-1; i++)
+        {
+            int u,v;
+            ll w;
+            scanf("%d%d%I64d",&u,&v,&w);
+            add_edge(u,v,w);
+            add_edge(v,u,w);
+        }
+        dfs(1,0);
+        printf("Case #%d: %I64d\n",++ncase,ret*2);
+    }
+    return 0;
+}

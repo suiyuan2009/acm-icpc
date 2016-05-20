@@ -1,0 +1,247 @@
+/*
+zimpha的模板get_seq返回null后splay调整会死循环
+*/
+#include<bits/stdc++.h>
+using namespace std;
+const int maxn = 500005;
+const double eps = 1e-6;
+const int inf = 0x3fffffff;
+typedef long long ll;
+
+inline void pd(int &ret,int val)
+{
+    if(ret<val)ret=val;
+}
+ 
+struct node
+{
+    node *ch[2], *p;
+    int same,size,rev;
+    int sum,val,maxl,maxr,maxm;
+    node ()
+    {
+        size=sum=maxl=maxr=maxm=val=same=rev=0;
+       // ch[0]=ch[1]=p=null;
+    }
+    bool d()
+    {
+        return this==p->ch[1];
+    }
+    void setc(node *c, int d)
+    {
+        ch[d]=c;
+        c->p=this;
+    }
+    void markSame(int _val)
+    {
+        same=1,val=_val,sum=val*size,maxl=maxr=maxm=max(sum,_val);
+    }
+    void markRev()
+    {
+        rev^=1;
+        swap(maxl,maxr);
+        swap(ch[0], ch[1]);
+    }
+    void update()
+    {
+        size=ch[0]->size+ch[1]->size+1;
+        sum=ch[0]->sum+ch[1]->sum+val;
+        int l=max(0,ch[0]->maxr);
+        int r=max(0,ch[1]->maxl);
+        maxl=max(ch[0]->maxl,ch[0]->sum+val+r);
+        maxr=max(ch[1]->maxr,ch[1]->sum+val+l);
+        maxm=max(ch[0]->maxm,ch[1]->maxm);
+        maxm=max(maxm,l+r+val);
+    }
+}*null, *root;
+node mem[maxn*2], *stk[maxn*2];
+int A[maxn], N, M, top;
+ 
+inline void pushdown(node *t)
+{
+    if (t==null) return;
+    if(t->same)
+    {
+        if(t->ch[0]!=null)t->ch[0]->markSame(t->val);
+        if(t->ch[1]!=null)t->ch[1]->markSame(t->val);
+    }
+    if (t->rev)
+    {
+        if (t->ch[0]!=null) t->ch[0]->markRev();
+        if (t->ch[1]!=null) t->ch[1]->markRev();
+    }
+    t->same=t->rev=0;
+}
+ 
+inline node *new_node(int v)
+{
+    node *ret=stk[--top];
+    ret->val=v;
+    ret->size=1;
+    ret->same=0;
+    ret->sum=ret->maxl=ret->maxr=ret->maxm=v;
+    ret->rev=0;
+    ret->ch[0]=ret->ch[1]=ret->p=null;
+    return ret;
+}
+ 
+inline void recycle(node *x)
+{
+    stk[top++]=x;
+}
+
+inline void Delete_All(node *t_root)
+{
+    static node *Q[maxn];
+    static int h, t;
+    for (h=t=0, Q[t++]=t_root; h<t; h++)
+    {
+        node *x=Q[h];
+        if (x->ch[0]!=null) Q[t++]=x->ch[0];
+        if (x->ch[1]!=null) Q[t++]=x->ch[1];
+        recycle(x);
+    }
+}
+ 
+inline node* rot(node *t)
+{
+    node *p=t->p;
+    pushdown(p);
+    pushdown(t);
+    int d=t->d();
+    p->p->setc(t, p->d());
+    p->setc(t->ch[!d], d);
+    t->setc(p, !d);
+    p->update();
+    if (p==root) root=t;
+    return t;
+}
+ 
+inline void splay(node *t, node *f)
+{
+    for (pushdown(t); t->p!=f;)
+    {
+        if (t->p->p==f) rot(t);
+        else t->d()==t->p->d() ? (rot(t->p), rot(t)) : (rot(t), rot(t));
+    }
+    t->update();
+}
+ 
+inline node *select(int k)
+{
+    for (node *t=root;;)
+    {
+        pushdown(t);
+        int c=t->ch[0]->size;
+        if (k==c) return t;
+        if (k>c) k-=c+1, t=t->ch[1];
+        else t=t->ch[0];
+    }
+    return null;
+}
+ 
+inline node *get_seq(int l, int r)
+{
+    node *L=select(l);
+    splay(L, null);
+    node *R=select(r);
+    splay(R, root);
+    return root->ch[1]->ch[0];
+}
+ 
+node *build_tree(int *l, int *r)
+{
+    if (l>=r) return null;
+    if (l+1==r) return new_node(*l);
+    int *m=l+(r-l)/2;
+    node *t=new_node(*m);
+    t->setc(build_tree(l, m), 0);
+    t->setc(build_tree(m+1, r), 1);
+    t->update();
+    return t;
+}
+ 
+void init()
+{
+    for (int i=0; i<2*maxn; i++) stk[i]=mem+i;
+    top=maxn*2;
+    null=new_node(-inf);
+    null->size=null->sum=0;
+    null->ch[0]=null->ch[1]=null->p=null;
+    A[0]=A[N+1]=-inf;
+    root=build_tree(A, A+N+2);
+}
+ 
+void get_sum()
+{
+    int x,y;
+    scanf("%d%d",&x,&y);
+    if(y==0)
+    {
+        printf("0\n");
+        return;
+    }
+    node*t = get_seq(x-1,x+y);
+    printf("%d\n",t->sum);
+    splay(t,null);
+}
+void max_sum()
+{
+    printf("%d\n",root->maxm);
+}
+void Insert()
+{
+    int pos,c;
+    scanf("%d%d",&pos,&c);
+    for(int i=0;i<c;i++)scanf("%d",A+i);
+    node*t=build_tree(A,A+c);
+    get_seq(pos,pos+1);
+    root->ch[1]->setc(t,0);
+    splay(t,null);
+}
+void Delete()
+{
+    int x,y;
+    scanf("%d%d",&x,&y);
+    node*t=get_seq(x-1,x+y);
+    t->p->setc(null,0);
+    splay(root->ch[1],null);
+    Delete_All(t);
+}
+void Reverse()
+{
+    int x,y;
+    scanf("%d%d",&x,&y);
+    node*t=get_seq(x-1,x+y);
+    t->markRev();
+    splay(t,null);
+}
+void make_same()
+{
+    int x,y,z;
+    scanf("%d%d%d",&x,&y,&z);
+    node*t=get_seq(x-1,x+y);
+    t->markSame(z);
+    splay(t,null);
+}
+ 
+int main()
+{
+ //   freopen("ACM/in.in","r",stdin);
+    while(~scanf("%d%d",&N,&M)){
+        for(int i=1; i<=N; i++)scanf("%d",A+i);
+        init();
+        while(M--)
+        {
+            char s[20];
+            scanf("%s",s);
+            if(s[0]=='G')get_sum();
+            else if(s[0]=='M'&&s[2]=='X')max_sum();
+            else if(s[0]=='I')Insert();
+            else if(s[0]=='D')Delete();
+            else if(s[0]=='M')make_same();
+            else Reverse();
+        }
+    }
+    return 0;
+}

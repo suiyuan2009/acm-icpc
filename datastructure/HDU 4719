@@ -1,0 +1,120 @@
+/*
+题意：给出n个人的身高序列，划分成连续的若干份，使得每份最多L人，
+第i份的最后一个人身高严格大于第i-1份的最后一个人的身高
+dp+线段树优化，先sort身高，如果身高相同，id大的在前，
+然后一个一个求f值，线段树区间求最大值，单点赋值
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef double ldb;
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+const int maxn=100005;
+const int mod=1000000007;
+
+int n,L;
+ll f[maxn];
+struct P
+{
+    int idx;
+    ll h;
+    bool operator<(const P &a)const
+    {
+        if(h==a.h)return idx>a.idx;
+        return h<a.h;
+    }
+} p[maxn];
+
+struct ST
+{
+    int l,r;
+    ll val;
+} st[maxn*3];
+
+void build(int id,int l,int r)
+{
+    st[id].l=l,st[id].r=r,st[id].val=-1;
+    if(l==r)return;
+    int m=(l+r)/2;
+    build(id*2,l,m);
+    build(id*2+1,m+1,r);
+}
+
+void update(int id,int pos,ll val)
+{
+    if(st[id].l==st[id].r)
+    {
+        st[id].val=val;
+        return;
+    }
+    int m=(st[id].l+st[id].r)/2;
+    if(pos<=m)update(id*2,pos,val);
+    else update(id*2+1,pos,val);
+    st[id].val=max(st[id*2].val,st[id*2+1].val);
+}
+
+ll query(int id,int l,int r)
+{
+    if(st[id].l==l&&st[id].r==r)return st[id].val;
+    int m=(st[id].l+st[id].r)/2;
+    if(r<=m)return query(id*2,l,r);
+    else if(l>m)return query(id*2+1,l,r);
+    return max(query(id*2,l,m),query(id*2+1,m+1,r));
+}
+
+void init()
+{
+    memset(f,-1,sizeof(f));
+    f[0]=0;
+    for(int i=1; i<=n; i++)
+    {
+        scanf("%I64d",&p[i].h);
+        p[i].idx=i;
+    }
+    sort(p+1,p+n+1);
+    build(1,0,n);
+    update(1,0,0);
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%d%d",&n,&L);
+        init();
+        for(int i=1; i<=n; i++)
+        {
+            int r=p[i].idx-1;
+            int l=max(0,r-L+1);
+            ll tt=query(1,l,r);
+            if(tt!=-1)f[i]=tt+p[i].h*p[i].h-p[i].h;
+            update(1,p[i].idx,f[i]);
+        }
+        int idx=1;
+        for(int i=1; i<=n; i++)
+            if(p[i].idx==n)
+            {
+                idx=i;
+                break;
+            }
+        printf("Case #%d: ",++ncase);
+        if(f[idx]==-1)printf("No solution\n");
+        else printf("%I64d\n",f[idx]+p[idx].h);
+    }
+    return 0;
+}

@@ -1,0 +1,229 @@
+/*
+题意：树顶点中有黑点和白点，求最长路径，且路径中包含的黑顶点数<=k，
+点分治，关键在于对子树按黑点深度排序，便于合并，合并过程中取最大值，
+复杂度O(n*logn)。
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-7
+typedef long long ll;
+typedef long double ldb;
+const int inf=0x3f3f3f3f;
+const int maxn=200005;
+const int maxm=maxn+maxn;
+const int mod=1000000007;
+
+int n,m,k;
+bool crowded[maxn],rooted[maxn];
+int head[maxn],ev[maxm],next[maxm],num,ew[maxm],ret;
+
+void init()
+{
+    ret=0;
+    num=0;
+    memset(crowded,0,sizeof(crowded));
+    memset(head,-1,sizeof(head));
+    memset(rooted,0,sizeof(rooted));
+}
+
+void add_edge(int u,int v,int w)
+{
+    next[++num]=head[u];
+    head[u]=num;
+    ev[num]=v,ew[num]=w;
+}
+
+struct E
+{
+    int x,fa;
+} que[maxn];
+int pnt[maxn],d[maxn];
+int get_far(int start)
+{
+    E u,v;
+    int fr=0,rr=0;
+    int maxx=0,idx=start;
+    u.fa=-1,u.x=start;
+    que[rr++]=u;
+    d[start]=0;
+    while(fr<rr)
+    {
+        //printf("**\n");
+        u=que[fr++];
+        for(int i=head[u.x]; i!=-1; i=next[i])
+        {
+            v.fa=u.x;
+            v.x=ev[i];
+            if(v.x==u.fa||rooted[v.x])continue;
+            d[v.x]=d[u.x]+1;
+            pnt[v.x]=u.x;
+            if(maxx<d[v.x])
+            {
+                maxx=d[v.x];
+                idx=v.x;
+            }
+            que[rr++]=v;
+        }
+    }
+    return idx;
+}
+int get_root(int start)
+{
+    //printf("**\n");
+    int l=get_far(start);
+
+    // printf("**\n");
+
+    int r=get_far(l);
+
+    //  printf("**\n");
+
+    int dis=d[r]/2;
+    while(dis--)r=pnt[r];
+    return r;
+}
+
+struct P
+{
+    int x,cnt,w;
+    bool operator<(const P&a)const
+    {
+        return cnt<a.cnt;
+    }
+} p[maxn];
+int cnt_p,cnt_d1,cnt_d2;
+int d1[maxn],d2[maxn];
+
+void dfs_1(int u,int fa,int cnt)
+{
+    for(int i=head[u]; i!=-1; i=next[i])
+    {
+        if(ev[i]==fa||rooted[ev[i]])continue;
+        d[ev[i]]=d[u]+ew[i];
+        int tcnt=cnt;
+        if(crowded[ev[i]])tcnt++;
+        if(cnt_d2<tcnt)d2[++cnt_d2]=d[ev[i]];
+        else d2[tcnt]=max(d2[tcnt],d[ev[i]]);
+        dfs_1(ev[i],u,tcnt);
+    }
+}
+
+void dfs(int u)
+{
+    int root=get_root(u);
+
+    //printf("** %d\n",root);
+
+    cnt_d1=-1;
+    cnt_p=0;
+    for(int i=head[root]; i!=-1; i=next[i])
+    {
+        if(rooted[ev[i]])continue;
+        cnt_d2=0;
+        d2[0]=0;
+        if(crowded[ev[i]])d2[++cnt_d2]=ew[i];
+        else d2[0]=max(d2[0],ew[i]);
+        d[ev[i]]=ew[i];
+        dfs_1(ev[i],root,cnt_d2);
+
+        //cout<<"**"<<d2[0]<<endl;
+
+        p[cnt_p].cnt=cnt_d2;
+        p[cnt_p].x=ev[i];
+        p[cnt_p++].w=ew[i];
+    }
+    sort(p,p+cnt_p);
+
+    //printf("**%d: %d\n",root,cnt_p);
+
+    for(int i=0; i<cnt_p; i++)
+    {
+        //printf("**%d: %d\n",root,p[i].cnt);
+        cnt_d2=0;
+        d2[0]=0;
+        if(crowded[p[i].x])d2[++cnt_d2]=p[i].w;
+        else d2[0]=max(d2[0],p[i].w);
+        d[p[i].x]=p[i].w;
+        // cout<<"** "<<d2[0]<<endl;
+
+        dfs_1(p[i].x,root,cnt_d2);
+
+        /*if(root==4)
+        {
+            printf("%d:",p[i].x);
+            for(int j=0; j<=cnt_d2; j++)
+                printf("%lld ",d2[j]);
+            printf("\n");
+        }*/
+
+        int sign=crowded[root];
+        for(int j=0; j<=cnt_d2; j++)
+        {
+            if(j>k-sign)break;
+            //cout<<"** "<<d2[j]<<endl;
+            if(k-sign-j<=cnt_d1)
+                ret=max(ret,d2[j]+d1[k-sign-j]);
+            if(cnt_d1!=-1&&cnt_d1+j+sign<=k)
+                ret=max(ret,d1[cnt_d1]+d2[j]);
+        }
+        if(cnt_d1==-1)
+        {
+            d1[0]=d2[0];
+            for(int j=1; j<=cnt_d2; j++)
+                d1[j]=max(d2[j],d1[j-1]);
+        }
+        else
+        {
+            for(int j=0; j<=cnt_d2; j++)
+            {
+                if(cnt_d1<j)d1[j]=max(d1[j-1],d2[j]);
+                else d1[j]=max(max(d1[j],d1[j-1]),d2[j]);
+            }
+        }
+        cnt_d1=cnt_d2;
+    }
+
+    //printf("** %d: %lld\n",root,ret);
+
+    rooted[root]=1;
+    for(int i=head[root]; i!=-1; i=next[i])
+    {
+        if(rooted[ev[i]])continue;
+        dfs(ev[i]);
+    }
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    init();
+    scanf("%d%d%d",&n,&k,&m);
+    for(int i=0; i<m; i++)
+    {
+        int x;
+        scanf("%d",&x);
+        crowded[x]=1;
+    }
+    for(int i=1; i<n; i++)
+    {
+        int u,v,w;
+        scanf("%d%d%d",&u,&v,&w);
+        add_edge(u,v,w);
+        add_edge(v,u,w);
+    }
+    // printf("***\n");
+    dfs(1);
+    printf("%d\n",ret);
+    return 0;
+}

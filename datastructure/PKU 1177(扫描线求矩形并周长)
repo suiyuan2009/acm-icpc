@@ -1,0 +1,94 @@
+//#pragma comment(linker,"/STACK:10240000000,10240000000")
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+using namespace std;
+const int maxn = 10005;
+const int inf = 0x3fffffff;
+typedef long long ll;
+
+int n,a[maxn][4];
+struct P{
+    int x,y1,y2,z;
+    P(){}
+    P(int x,int y1,int y2,int z):x(x),y1(y1),y2(y2),z(z){}
+    bool operator<(const P&a)const{
+        return x<a.x;
+    }
+}rec[maxn];
+vector<int>vis;
+struct ST{
+    int l,r,c,n,v,sl,sr;
+}st[maxn*4];
+void build(int id,int l,int r){
+    //printf("** %d %d\n",l,r);
+    st[id].l=l,st[id].r=r,st[id].c=st[id].v=st[id].n=st[id].sl=st[id].sr=0;
+    if(l+1==r)return;
+    int m=(l+r)>>1;
+    build(id<<1,l,m),build(id<<1|1,m,r);
+}
+void pd(int id){
+    if(st[id].c){
+        st[id].n=st[id].sl=st[id].sr=1,st[id].v=vis[st[id].r-1]-vis[st[id].l-1];
+        return;
+    }
+    if(st[id].l+1==st[id].r){
+        st[id].n=st[id].sl=st[id].sr=st[id].v=0;
+        return;
+    }
+    st[id].sl=st[id<<1].sl,st[id].sr=st[id<<1|1].sr;
+    st[id].v=st[id<<1].v+st[id<<1|1].v;
+    st[id].n=st[id<<1].n+st[id<<1|1].n;
+    if(st[id<<1].sr&&st[id<<1|1].sl)st[id].n--;
+}
+void upd(int id,int l,int r,int c){
+    if(st[id].l==l&&st[id].r==r){
+        st[id].c+=c,pd(id);
+        return;
+    }
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)upd(id<<1,l,r,c);
+    else if(l>=m)upd(id<<1|1,l,r,c);
+    else upd(id<<1,l,m,c),upd(id<<1|1,m,r,c);
+    pd(id);
+}
+
+void init(){
+    vis.clear();
+    for(int i=1;i<=n;i++){
+        for(int j=0;j<4;j++)
+            scanf("%d",&a[i][j]);
+        vis.push_back(a[i][1]),vis.push_back(a[i][3]);
+    }
+    sort(vis.begin(),vis.end());
+    vis.erase(unique(vis.begin(),vis.end()),vis.end());
+    for(int i=1;i<=n;i++){
+        int y1=lower_bound(vis.begin(),vis.end(),a[i][1])-vis.begin()+1;
+        int y2=lower_bound(vis.begin(),vis.end(),a[i][3])-vis.begin()+1;
+        rec[i*2-1]=P(a[i][0],y1,y2,0);
+        rec[i*2]=P(a[i][2],y1,y2,1);
+    }
+//    printf("** %d\n",(int)vis.size());
+    build(1,1,vis.size());
+    sort(rec+1,rec+n+n+1);
+}
+
+int main(){
+    //freopen("ACM/in.in","r",stdin);
+    while(~scanf("%d",&n)){
+        init();
+        int ret=0,pre=0;
+        for(int i=1;i<=n+n;i++){
+            ll tt=st[1].n;
+            upd(1,rec[i].y1,rec[i].y2,rec[i].z?-1:1);
+            ret+=abs(pre-st[1].v);
+            pre=st[1].v;
+            if(i>1)ret+=tt*2*(rec[i].x-rec[i-1].x);
+        }
+        printf("%d\n",ret);
+    }
+    return 0;
+}

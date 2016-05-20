@@ -1,0 +1,115 @@
+/*
+You are given a list of numbers A1 A2 .. AN and M queries. For the i-th query:
+The query has two parameters Li and Ri.
+The query will define a function Fi(x) on the domain [Li, Ri] ∈ Z.
+Fi(Li) = ALi
+Fi(Li + 1) = A(Li + 1)
+for all x >= Li + 2, Fi(x) = Fi(x - 1) + Fi(x - 2) × Ax
+
+线段树每个节点是一个矩阵
+*/
+#include <cstdio>
+#include <string>
+#include <cstring>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+#include <queue>
+#include <map>
+#include <stack>
+#include <iostream>
+using namespace std;
+typedef long long ll;
+const double eps = 1e-8;
+const double PI = acos(-1);
+const int maxn =100005;
+const int inf = 0x3fffffff;
+const int mod = 1000000007;
+
+int n,m,a[maxn];
+struct Mat
+{
+    ll a[2][2];
+    void init()
+    {
+        for(int i=0; i<2; i++)
+            for(int j=0; j<2; j++)
+                a[i][j]=0;
+    }
+    Mat operator*(const Mat &tt)const
+    {
+        Mat ret;
+        ret.init();
+        for(int i=0; i<2; i++)
+            for(int j=0; j<2; j++)
+                for(int k=0; k<2; k++)
+                {
+                    ret.a[i][j]+=a[i][k]*tt.a[k][j];
+                    ret.a[i][j]%=mod;
+                }
+        return ret;
+    }
+};
+struct ST
+{
+    int l,r;
+    Mat t;
+} st[maxn*3];
+void build(int id,int l,int r)
+{
+    st[id].l=l,st[id].r=r;
+    if(l==r)
+    {
+        st[id].t.a[0][0]=0;
+        st[id].t.a[0][1]=1;
+        st[id].t.a[1][0]=a[l];
+        st[id].t.a[1][1]=1;
+        return;
+    }
+    int m=(l+r)/2;
+    build(id*2,l,m);
+    build(id*2+1,m+1,r);
+    st[id].t=st[id*2+1].t*st[id*2].t;
+}
+Mat query(int id,int l,int r)
+{
+    if(st[id].l==l&&st[id].r==r)return st[id].t;
+    int m=(st[id].l+st[id].r)/2;
+    if(r<=m)return query(id*2,l,r);
+    else if(l>m)return query(id*2+1,l,r);
+    else return query(id*2+1,m+1,r)*query(id*2,l,m);
+}
+
+int main()
+{
+    //freopen("in.cpp","r",stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%d%d",&n,&m);
+        for(int i=1; i<=n; i++)
+            scanf("%d",&a[i]);
+        build(1,1,n);
+        while(m--)
+        {
+            int l,r;
+            scanf("%d%d",&l,&r);
+            if(r-l+1<=2)printf("%d\n",a[r]);
+            else
+            {
+                Mat tt=query(1,l+2,r);
+              //  printf("** %d %d\n",l+2,r);
+               /* for(int i=0;i<2;i++)
+                {
+                    for(int j=0;j<2;j++)
+                        printf("%lld ",tt.a[i][j]);
+                    printf("\n");
+                }*/
+                ll ret=(tt.a[1][0]*a[l]+tt.a[1][1]*a[l+1])%mod;
+                printf("%lld\n",ret);
+            }
+        }
+    }
+    return 0;
+}

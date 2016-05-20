@@ -1,0 +1,105 @@
+/*
+题意：给出n*m的0/1矩阵，求所有0到最近1的欧氏距离的平方
+
+先预处理出所有0到所在列中最近的1的位置，记为h[i][j]，
+然后依次处理每一行，
+对于每一行中的0到m-1这m个位置，记两个数组a[i]、b[i]，
+a[i]=-2*i，b[i]=h[id][i]*h[id][i]+i*i，
+然后建一个双端队列，
+当队列中元素个数大于1时，用check函数判断是否pop出最后入队列的元素，
+最后对于这一行中的每个位置，从队首取出元素计算结果，过程中判断是否pop出队首元素
+
+PS：
+假设对于第id行，现在双端队列中有i,j两个元素，现在我们在k这个位置，
+要判断是否pop出j这个元素，就要判断是否已经不存在到j位置才能得到最优解的点，
+记x，满足x*x+x*a[i]+b[i]>=x*x+x*a[j]+b[j]的所有x位置都是之前只能到j才能得到最优解的，
+同样，满足x*x+x*a[j]+b[j]>=x*x+x*a[k]+b[k]的所有x位置都是目前只能到k才能得到最优解的，
+所以解不等式，只要满足(b[j]-b[i])/(a[i]-a[j])>=(b[k]-b[j])/(a[j]-a[k])，
+那么就没有点到j才是最优，这样就可以pop出j，
+处理完之后，现在队列中所有的元素都是有效的，
+而且随着i的增加，最优解所需要的元素满足先入队到后入队的顺序
+*/
+#include<cstdio>
+#include<iostream>
+#include<cstring>
+#include<algorithm>
+#include<cmath>
+#include<queue>
+#include<map>
+#include<vector>
+#include<string>
+#include<set>
+using namespace std;
+typedef long long ll;
+#define eps 1e-8
+const int inf=0x3f3f3f3f;
+const int maxn=1005;
+
+int n,m;
+char str[maxn][maxn];
+ll h[maxn][maxn],a[maxn],b[maxn],d[maxn];
+ll ans[maxn][maxn];
+
+void init() {
+    for(int i=0; i<m; i++) {
+        d[i]=inf;
+        for(int j=0; j<n; j++)
+            h[j][i]=inf;
+    }
+    for(int i=0; i<n; i++)
+        for(int j=0; j<m; j++) {
+            d[j]=(str[i][j]=='1'?0:d[j]+1);
+            h[i][j]=min(h[i][j],d[j]);
+        }
+    for(int i=0; i<m; i++)d[i]=inf;
+    for(int i=n-1; i>=0; i--)
+        for(int j=0; j<m; j++) {
+            d[j]=(str[i][j]=='1'?0:d[j]+1);
+            h[i][j]=min(h[i][j],d[j]);
+        }
+    /*for(int i=0;i<n;i++)
+    {
+        for(int j=0;j<m;j++)
+        printf("%lld ",h[i][j]);
+        printf("\n");
+    }*/
+}
+
+bool check(int i,int j,int k) {
+    return (b[j]-b[i])*(a[j]-a[k])<(b[k]-b[j])*(a[i]-a[j]);
+}
+ll get(int i,int ii) {
+    return a[i]*ii+b[i]+ii*ii;
+}
+
+void fuck(int id) {
+    for(int i=0; i<m; i++) {
+        a[i]=-2*i;
+        b[i]=(h[id][i]==inf?-1:h[id][i]*h[id][i]+i*i);
+    }
+    deque<int>que;
+    for(int i=0; i<m; i++) {
+        if(b[i]==-1)continue;
+        while(que.size()>=2&&!check(que[que.size()-2],que.back(),i))
+            que.pop_back();
+        que.push_back(i);
+    }
+    for(int i=0; i<m; i++) {
+        while(que.size()>=2&&get(que[0],i)>get(que[1],i))que.pop_front();
+        ans[id][i]=get(que[0],i);
+    }
+}
+
+int main() {
+
+    scanf("%d%d",&n,&m);
+    for(int i=0; i<n; i++)scanf("%s",str[i]);
+    init();
+    for(int i=0; i<n; i++)fuck(i);
+    for(int i=0; i<n; i++) {
+        for(int j=0; j<m-1; j++)
+            printf("%lld ",ans[i][j]);
+        printf("%lld\n",ans[i][m-1]);
+    }
+    return 0;
+}

@@ -1,0 +1,111 @@
+/*
+题意：给出一些矩形，求至少被覆盖过2次的面积
+
+扫描线，每次覆盖到整的线段，无需下传，根据当前线段被覆盖次数更新
+*/
+//#pragma comment(linker,"/STACK:10240000000,10240000000")
+#include<cstdio>
+#include<cstring>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<cmath>
+using namespace std;
+const int maxn = 1005;
+const int inf = 0x3fffffff;
+typedef long long ll;
+
+int n;
+double a[maxn][4];
+struct P{
+    double x;
+    int y1,y2;
+    bool z;
+    P(){}
+    P(double x,int y1,int y2,bool z):x(x),y1(y1),y2(y2),z(z){}
+    bool operator<(const P&a)const{
+        return x<a.x;
+    }
+}rec[maxn+maxn];
+vector<double>vis;
+
+struct ST{
+    int l,r,c;
+    double v1,v2;
+}st[maxn*8];
+void build(int id,int l,int r){
+    st[id].l=l,st[id].r=r,st[id].c=0,st[id].v1=st[id].v2=0;
+    if(l==r)return;
+    int m=(l+r)>>1;
+    build(id<<1,l,m),build(id<<1|1,m+1,r);
+}
+void up(int id){
+    if(st[id].c>=2){
+        st[id].v1=st[id].v2=vis[st[id].r]-vis[st[id].l-1];
+        return;
+    }
+    if(st[id].c==1){
+        if(st[id].r==st[id].l){
+            st[id].v1=vis[st[id].r]-vis[st[id].l-1];
+            st[id].v2=0;
+            return;
+        }
+        st[id].v2=st[id<<1].v1+st[id<<1|1].v1;
+        st[id].v1=vis[st[id].r]-vis[st[id].l-1];
+        return;
+    }
+    if(st[id].r==st[id].l){
+        st[id].v1=st[id].v2=0;
+        return;
+    }
+    st[id].v1=st[id<<1].v1+st[id<<1|1].v1;
+    st[id].v2=st[id<<1].v2+st[id<<1|1].v2;
+}
+void upd(int id,int l,int r,int c){
+    if(st[id].l==l&&st[id].r==r){
+        st[id].c+=c,up(id);
+        return;
+    }
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)upd(id<<1,l,r,c);
+    else if(l>m)upd(id<<1|1,l,r,c);
+    else upd(id<<1,l,m,c),upd(id<<1|1,m+1,r,c);
+    up(id);
+}
+
+void init(){
+    scanf("%d",&n);
+    vis.clear();
+    for(int i=1;i<=n;i++){
+        for(int j=0;j<4;j++)
+            scanf("%lf",&a[i][j]);
+        vis.push_back(a[i][1]),vis.push_back(a[i][3]);
+    }
+    sort(vis.begin(),vis.end());
+    vis.erase(unique(vis.begin(),vis.end()),vis.end());
+    for(int i=1;i<=n;i++){
+        int y1=lower_bound(vis.begin(),vis.end(),a[i][1])-vis.begin()+1;
+        int y2=lower_bound(vis.begin(),vis.end(),a[i][3])-vis.begin();
+        rec[i*2-1]=P(a[i][0],y1,y2,0),rec[i*2]=P(a[i][2],y1,y2,1);
+    }
+    // printf("** %d\n",(int)vis.size());
+    sort(rec+1,rec+n+n+1);
+    build(1,1,vis.size()-1);
+}
+
+int main(){
+    //freopen("ACM/in.in","r",stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        init();
+        double ret=0;
+        upd(1,rec[1].y1,rec[1].y2,rec[1].z?-1:1);
+        for(int i=2;i<=n+n;i++){
+            ret+=(rec[i].x-rec[i-1].x)*st[1].v2;
+            upd(1,rec[i].y1,rec[i].y2,rec[i].z?-1:1);
+        }
+        printf("%.2f\n",ret);
+    }
+    return 0;
+}

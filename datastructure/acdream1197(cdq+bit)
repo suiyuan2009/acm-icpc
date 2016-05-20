@@ -1,0 +1,112 @@
+/*
+题意：给出n个点，多次询问一个长方体中点的个数
+cdq分治，计算左边的点对右边询问的影响
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+#include<bitset>
+using namespace std;
+typedef long long ll;
+const int maxn = 50005;
+const int base=10001;
+
+int ans[maxn],n,m,num;
+struct P{
+    int x,y,z,z2,t,id;
+    P(){}
+    P(int x,int y,int z,int z2,int t,int id):x(x),y(y),z(z),z2(z2),t(t),id(id){}
+}p[maxn*5];
+bool cmp(const P&a,const P&b){
+    if(a.x==b.x)return a.t==0;
+    return a.x<b.x;
+}
+bool cmp2(const P&a,const P&b){
+    return a.y<b.y;
+}
+
+void init(){
+    num=0;
+    for(int i=1;i<=n;i++){
+        int x,y,z;
+        scanf("%d%d%d",&x,&y,&z);
+        z+=base;
+        p[++num]=P(x,y,z,0,0,0);
+    }
+    scanf("%d",&m);
+    for(int i=1;i<=m;i++){
+        int x1,y1,z1,x2,y2,z2;
+        scanf("%d%d%d%d%d%d",&x1,&y1,&z1,&x2,&y2,&z2);
+        z1+=base,z2+=base;
+        if(x1>x2)swap(x1,x2);
+        if(y1>y2)swap(y1,y2);
+        if(z1>z2)swap(z1,z2);
+        p[++num]=P(x2,y2,z1,z2,1,i);
+        p[++num]=P(x2,y1-1,z1,z2,-1,i);
+        p[++num]=P(x1-1,y2,z1,z2,-1,i);
+        p[++num]=P(x1-1,y1-1,z1,z2,1,i);
+    }
+    for(int i=1;i<=m;i++)ans[i]=0;
+    sort(p+1,p+num+1,cmp);
+}
+
+struct BIT{
+    int c[maxn];
+    void add(int x,int y){
+        for(;x<maxn;x+=x&(-x))c[x]+=y;
+    }
+    int sum(int x){
+        int ret=0;
+        for(;x>0;x-=x&(-x))ret+=c[x];
+        return ret;
+    }
+}bit;
+
+P L[maxn*5],R[maxn*5];
+int cl,cr;
+queue<int>que;
+void solve(int l,int r){
+    if(l==r)return;
+    int mid=(l+r)>>1;
+    solve(l,mid);
+    cl=cr=0;
+    for(int i=l;i<=mid;i++)if(p[i].t==0)L[++cl]=p[i];
+    for(int i=mid+1;i<=r;i++)if(p[i].t!=0)R[++cr]=p[i];
+    sort(L+1,L+cl+1,cmp2);
+    sort(R+1,R+cr+1,cmp2);
+    int to=0;
+    for(int i=1;i<=cr;i++){
+        while(to+1<=cl&&L[to+1].y<=R[i].y){
+            bit.add(L[to+1].z,1);
+            que.push(L[to+1].z);
+            to++;
+        }
+        // printf("** %d %d\n",R[i].z,R[i].z2);
+        ans[R[i].id]+=R[i].t*(bit.sum(R[i].z2)-bit.sum(R[i].z-1));
+    }
+    while(!que.empty()){
+        int u=que.front();
+        bit.add(u,-1);
+        que.pop();
+    }
+    solve(mid+1,r);
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    int ncase=0;
+    while(~scanf("%d",&n)){
+        init();
+        printf("Case #%d:\n",++ncase);
+        solve(1,num);
+        for(int i=1;i<=m;i++)printf("%d\n",ans[i]);
+    }
+    return 0;
+}
