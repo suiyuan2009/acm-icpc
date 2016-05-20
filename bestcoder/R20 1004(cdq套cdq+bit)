@@ -1,0 +1,139 @@
+/*
+题意：两种操作，加三维的点，询问一个长方体范围内点的个数
+相当于三维点再加一维时间变成四维
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+#include<bitset>
+using namespace std;
+typedef long long ll;
+const int maxn = 100005;
+const int maxm = maxn*4;
+const int inf =0x3fffffff;
+
+int n,m,ans[maxn];
+struct P{
+    int x,y,z,z2,t,id;
+    P(){}
+    P(int x,int y,int z,int z2,int t,int id):x(x),y(y),z(z),z2(z2),t(t),id(id){}
+}p[maxm];
+bool cmp(const P&a,const P&b){
+    return a.x==b.x?a.t==0:a.x<b.x;
+}
+bool cmp2(const P&a,const P&b){
+    return a.y<b.y;
+}
+
+struct BIT{
+    int c[maxm];
+    void add(int x,int y){
+        for(;x<maxm;x+=x&(-x))c[x]+=y;
+    }
+    int sum(int x){
+        int ret=0;
+        for(;x>0;x-=x&(-x))ret+=c[x];
+        return ret;
+    }
+}bit;
+
+vector<int>vis;
+void init(){
+    scanf("%d",&n);
+    m=0;
+    vis.clear();
+    for(int i=1;i<=n;i++){
+        ans[i]=-inf;
+        int x,y,z,x2,y2,z2,w;
+        scanf("%d",&w);
+        if(w==1){
+            scanf("%d%d%d",&x,&y,&z);
+            vis.push_back(z);
+            p[++m]=P(x,y,z,0,0,i);
+        }else{
+            scanf("%d%d%d%d%d%d",&x,&y,&z,&x2,&y2,&z2);
+            z--;
+            vis.push_back(z);
+            vis.push_back(z2);
+            p[++m]=P(x2,y2,z,z2,1,i);
+            p[++m]=P(x2,y-1,z,z2,-1,i);
+            p[++m]=P(x-1,y2,z,z2,-1,i);
+            p[++m]=P(x-1,y-1,z,z2,1,i);
+        }
+    }
+    sort(vis.begin(),vis.end());
+    vis.erase(unique(vis.begin(),vis.end()),vis.end());
+    for(int i=1;i<=m;i++){
+        p[i].z=lower_bound(vis.begin(),vis.end(),p[i].z)-vis.begin()+1;
+        if(p[i].t!=0)p[i].z2=lower_bound(vis.begin(),vis.end(),p[i].z2)-vis.begin()+1;
+    }
+}
+
+void pd(int &ret,int val){
+    if(ret==-inf)ret=0;
+    ret+=val;
+}
+
+P q[maxm],L[maxm],R[maxm];
+int cq,cl,cr;
+queue<int>que;
+void solve2(int l,int r){
+    if(l==r)return;
+    int mid=(l+r)>>1;
+    solve2(l,mid);
+    cl=cr=0;
+    for(int i=l;i<=r;i++){
+        if(q[i].t==0&&i<=mid)L[++cl]=q[i];
+        else if(q[i].t!=0&&i>mid)R[++cr]=q[i];
+    }
+    sort(L+1,L+cl+1,cmp2);
+    sort(R+1,R+cr+1,cmp2);
+    int to=0;
+    for(int i=1;i<=cr;i++){
+        while(to+1<=cl&&L[to+1].y<=R[i].y){
+            to++;
+            que.push(L[to].z);
+            bit.add(L[to].z,1);
+        }
+        pd(ans[R[i].id],R[i].t*(bit.sum(R[i].z2)-bit.sum(R[i].z)));
+    }
+    while(!que.empty()){
+        int u=que.front();
+        que.pop();
+        bit.add(u,-1);
+    }
+    solve2(mid+1,r);
+}
+void solve(int l,int r){
+    if(l==r)return;
+    int mid=(l+r)>>1;
+    solve(l,mid);
+    cq=0;
+    for(int i=l;i<=r;i++)
+        if((i<=mid&&p[i].t==0)||(i>mid&&p[i].t!=0))q[++cq]=p[i];
+    if(cq){
+        sort(q+1,q+cq+1,cmp);
+        solve2(1,cq);
+    }
+    solve(mid+1,r);
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        init();
+        solve(1,m);
+        for(int i=1;i<=n;i++)
+            if(ans[i]!=-inf)printf("%d\n",ans[i]);
+    }
+    return 0;
+}

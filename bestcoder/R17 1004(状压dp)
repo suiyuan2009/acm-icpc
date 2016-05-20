@@ -1,0 +1,73 @@
+/*
+题意：n个点的有根树，点i为根的子树的size在Li到Ri之间，求方案数
+s[i][0]为mask为i的所有有根数的方案，s[i][1]为mask为i的所有森林的方案，每次枚举根以及最左的子树，
+指定最小编号节点在最左子树
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef __int64 ll;
+const int maxn = 14;
+const int mod = 1000000007;
+
+int n, L[maxn], R[maxn];
+ll s[1 << maxn][2];
+int c[1 << maxn], d[1 << maxn][2];
+
+void pd(ll&ret, ll val) {
+    ret += val;
+    if(ret >= mod)ret -= mod;
+}
+
+void init() {
+    for(int i = 0; i < (1 << maxn); i++)
+        for(int j = 0; j < maxn; j++)
+            if(i & (1 << j)) {
+                if(c[i] < 2)d[i][c[i]] = j;
+                c[i]++;
+            }
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    init();
+    int T;
+    scanf("%d", &T);
+    while(T--) {
+        scanf("%d", &n);
+        for(int i=0;i<(1<<n);i++)s[i][0]=s[i][1]=0;
+        for(int i = 0; i < n; i++)scanf("%d%d", &L[i], &R[i]);
+        s[0][0]=s[0][1]=1;
+        for(int i = 1; i < (1 << n); i++){
+            ll f=0;
+            for(int j = 0; j < n; j++)
+                if((i & (1 << j)) && (L[j] <= c[i] && c[i] <= R[j])) {
+                    if(i!=(1<<j)){
+                        f=0;
+                        int low = (d[i][0] == j ? d[i][1] : d[i][0]);
+                        int tt = i - (1 << j) - (1 << low);
+                        for(int k = tt;k; k = (k - 1)&tt) {
+                            pd(f, s[i-k-(1<<j)][0]*s[k][1] % mod);
+                        } 
+                    }
+                    pd(f,s[i-(1<<j)][0]);
+                    pd(s[i][0], f);
+                }
+            int tt=i-(1<<d[i][0]);
+            for(int k=tt;;k=(k-1)&tt){
+                pd(s[i][1],s[k|(1<<d[i][0])][0]*s[i-(k|(1<<d[i][0]))][1]%mod);
+                if(!k)break;
+            }
+        }
+        printf("%I64d\n", s[(1 << n) - 1][0]);
+    }
+    return 0;
+}

@@ -1,0 +1,101 @@
+/*
+每个节点维护一个2*2的矩阵，代表这段区间从i开始到j结束的方案数量
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+using namespace std;
+typedef __int64 ll;
+const int maxn = 50005;
+const int mod = 1000000007;
+
+int n;
+struct ST{
+    int l,r;
+    ll a[2][2];
+}st[maxn*4];
+void up(int id){
+    for(int i=0;i<2;i++)
+        for(int j=0;j<2;j++){
+            st[id].a[i][j]=0;
+            for(int k=0;k<2;k++)
+                st[id].a[i][j]=(st[id].a[i][j]+st[id<<1].a[i][k]*st[id<<1|1].a[k][j])%mod;
+        }
+}
+void build(int id,int l,int r){
+    st[id].l=l,st[id].r=r;
+    if(l+1>=r){
+        for(int i=0;i<2;i++)
+            for(int j=0;j<2;j++)
+                st[id].a[i][j]=1;
+        return;
+    }
+    int m=(l+r)>>1;
+    build(id<<1,l,m),build(id<<1|1,m,r);
+    up(id);
+}
+void upd(int id,int x,int y,int z){
+    if(st[id].l==x&&st[id].l+1==st[id].r){
+        st[id].a[y][z]=1-st[id].a[y][z];
+        return;
+    }
+    int m=(st[id].l+st[id].r)>>1;
+    if(x+1<=m)upd(id<<1,x,y,z);
+    else upd(id<<1|1,x,y,z);
+    up(id);
+}
+ll ans[2][2],t[2][2];
+void query(int id,int l,int r){
+    if(st[id].l==l&&st[id].r==r){
+        for(int i=0;i<2;i++)
+            for(int j=0;j<2;j++){
+                t[i][j]=0;
+                for(int k=0;k<2;k++)
+                    t[i][j]=(t[i][j]+ans[i][k]*st[id].a[k][j])%mod;
+            }
+        for(int i=0;i<2;i++)
+            for(int j=0;j<2;j++)
+                ans[i][j]=t[i][j];
+        return;
+    }
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)query(id<<1,l,r);
+    else if(l>=m)query(id<<1|1,l,r);
+    else query(id<<1,l,m),query(id<<1|1,m,r);
+}
+
+int main(){
+    //freopen("ACM/in.in", "r", stdin);
+    int m;
+    while(~scanf("%d%d",&n,&m)){
+        build(1,1,n);
+        int op;
+        while(m--){
+            scanf("%d",&op);
+            if(op){
+                int x,y,z;
+                scanf("%d%d%d",&x,&y,&z);
+                y--,z--;
+                upd(1,x,y,z);
+            }else{
+                int x,y;
+                scanf("%d%d",&x,&y);
+                for(int i=0;i<2;i++)
+                    for(int j=0;j<2;j++)
+                        ans[i][j]=(i==j);
+                query(1,x,y);
+                ll ret=0;
+                for(int i=0;i<2;i++)
+                    for(int j=0;j<2;j++)
+                        ret=(ret+ans[i][j])%mod;
+                printf("%I64d\n",ret);
+            }
+        }
+    }
+    return 0;
+}

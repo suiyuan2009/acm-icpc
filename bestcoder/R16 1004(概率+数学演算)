@@ -1,0 +1,68 @@
+/*
+题意：给出解出每个题的概率pi，从中选k个题，要求解出其中k-1个题的概率最大，输出方案
+如果概率是排好序的，那么答案就是概率最大的x个加最小的k-x个
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+using namespace std;
+typedef long long ll;
+const int maxn = 55;
+const int mod=1000000007;
+const double eps=1e-8;
+
+int n,m;
+double a[maxn];
+vector<int>ans;
+vector<double>v;
+
+double cal(vector<double>a){
+    double ret0=a[0],ret1=1-a[0];
+    for(int i=1;i<m;i++){
+        ret1=ret1*a[i]+ret0*(1-a[i]);
+        ret0=ret0*a[i];
+    }
+    return ret1;
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        scanf("%d%d",&n,&m);
+        for(int i=0;i<n;i++){
+            scanf("%lf",&a[i]);
+            a[i]/=100;
+        }
+        double ret=-100;
+        ans.clear();
+        for(int i=m;i>=0;i--){
+            v.clear();
+            for(int j=0;j<i;j++)v.push_back(a[j]);
+            for(int j=n-(m-i);j<n;j++)v.push_back(a[j]);
+            double tt=cal(v); 
+            if(tt>ret+eps){
+                ret=tt;
+                ans.clear();
+                for(int j=0;j<i;j++)ans.push_back(j);
+                for(int j=n-(m-i);j<n;j++)ans.push_back(j);
+                int cur=i-1;
+                for(int j=i;j<m;j++){
+                    int tt=ans[j];
+                    while(tt-1>cur&&fabs(a[tt-1]-a[tt])<eps)tt--;
+                    ans[j]=tt;
+                    cur=tt;
+                }
+            }
+        }
+        for(int i=0;i<m;i++)printf("%d%c",ans[i]+1,i==m-1?'\n':' ');
+    }
+    return 0;
+}

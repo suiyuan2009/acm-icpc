@@ -1,0 +1,67 @@
+/*
+题意：给若干个正整数，和最大是2^22，问最长非严格递增序列并且相邻差非严格递增的长度
+
+去重后只有2^11个数，dp并且利用单调性优化转移
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+using namespace std;
+typedef long long ll;
+const int maxn=2105;
+
+int n,m,a[(1<<22)+5],c[maxn],num;
+int f[maxn][maxn];
+
+void init(){
+    scanf("%d%d",&n,&m);
+    for(int i=1;i<=n;i++)scanf("%d",&a[i]);
+    sort(a+1,a+n+1);
+    num=1,c[1]=1;
+    for(int i=2;i<=n;i++){
+        if(a[i]==a[num])c[num]++;
+        else{
+            a[++num]=a[i];
+            c[num]=1;
+        }
+    }
+    memset(f,-1,sizeof(f));
+    for(int i=1;i<=num;i++)f[i][i]=c[i];
+}
+
+void pd(int &ret,int val){
+    if(ret<val)ret=val;
+}
+
+int main(){
+    //freopen("ACM/in.in","r",stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        init();
+       // for(int i=1;i<=num;i++)
+         //   printf("%d: %d %d\n",i,a[i],c[i]);
+        for(int i=1;i<=num;i++){
+            int l=i+1,mx=-1;
+            for(int j=i+1;j<=num;j++){
+                while(l-1>=1&&a[i]-a[l-1]<=a[j]-a[i]){
+                    l--;
+                    pd(mx,f[l][i]);
+                }
+                if(mx!=-1)pd(f[i][j],mx+1);
+            }
+        }
+      //  printf("** %d\n",f[4][5]);
+        int ret=0;
+        for(int i=1;i<=num;i++)
+            for(int j=i;j<=num;j++)
+                pd(ret,f[i][j]);
+        printf("%d\n",ret);
+    }
+    return 0;
+}

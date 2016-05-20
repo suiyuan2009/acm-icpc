@@ -1,0 +1,93 @@
+/*
+题意：用不交叉的线段覆盖点，点被覆盖当且仅当点在线段端点上，线段长度相同，求最大长度
+
+答案为前后点距离或者前后点距离的一半，不能二分
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+using namespace std;
+typedef long long ll;
+const int maxn=55;
+const int mod=1000000007;
+const double eps=1e-6;
+
+int a[maxn];
+int n;
+
+int main(){
+   // freopen("ACM/in.in","r",stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%d",&n);
+        for(int i=0;i<n;i++)scanf("%d",&a[i]);
+        sort(a,a+n);
+        double ret=0;
+        for(int i=0;i<n-1;i++)
+        {
+            double tt=a[i+1]-a[i];
+            bool sign=0;
+            double pre=a[0];
+            for(int j=1;j<n;j++)
+            {
+                if(fabs(a[j]-pre)<eps*10)
+                {
+                    pre=a[j];
+                    continue;
+                }
+                else if(a[j]-tt+eps>pre)
+                {
+                    pre=a[j];
+                    continue;
+                }
+                else if(j==n-1||a[j]+tt<a[j+1]+eps)
+                {
+                    pre=a[j]+tt;
+                    continue;
+                }
+                sign=1;
+                break;
+            }
+            if(!sign)
+            {
+                ret=max(ret,tt);
+            }
+            tt/=2;
+            sign=0;
+            pre=a[0];
+            for(int j=1;j<n;j++)
+            {
+                if(a[j]-tt+eps>pre)
+                {
+                    pre=a[j];
+                    continue;
+                }
+                else if(fabs(a[j]-pre)<eps*10)
+                {
+                    pre=a[j];
+                    continue;
+                }
+                else if(j==n-1||a[j]+tt<a[j+1]+eps)
+                {
+                    pre=a[j]+tt;
+                    continue;
+                }
+                sign=1;
+                break;
+            }
+            if(!sign)
+            {
+                ret=max(ret,tt);
+            }
+        }
+        printf("%.3f\n",ret);
+    }
+    return 0;
+}

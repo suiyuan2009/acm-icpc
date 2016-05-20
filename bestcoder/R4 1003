@@ -1,0 +1,119 @@
+/*
+http://acm.hdu.edu.cn/showproblem.php?pid=4933
+
+数位dp时，由于只关注当前位之前是否有非零位，以及当前位的奇偶性，所有012三个数就能表示，不需要记位数
+*/
+import java.math.BigInteger;
+import java.util.Scanner;
+
+public class Main {
+	 static BigInteger [][][][]f=new BigInteger[1005][3][2][2];
+	 static boolean [][][]g=new boolean[1005][3][2];
+	 static int m;
+	 static String a;
+	 
+	 static void dfs(int x,int y,int z)
+	 {
+		   if(g[x][y][z]==true)return;
+		   g[x][y][z]=true;
+		    if(x==m)
+		    {
+		    	 if(y==0)f[x][y][z][0]=BigInteger.ZERO;
+		    	  f[x][y][z][0]=BigInteger.ONE;
+		    	   f[x][y][z][1]=BigInteger.ZERO;
+		    	   return;
+		    }
+		    f[x][y][z][0]=BigInteger.ZERO;
+		    f[x][y][z][1]=BigInteger.ZERO;
+		    BigInteger ret0=BigInteger.ZERO;
+		    BigInteger ret1=BigInteger.ZERO;
+		    int lim=a.charAt(x)-'0';
+		    if(z==1)lim=9;
+		    for(int i=0;i<=lim;i++)
+		    {
+		    	 int tt=0;
+		    	 if(z==1||i<lim)tt=1;
+		    	 if(y==0&&i==0){
+		    		 dfs(x+1,y,tt);
+		    		 f[x][y][z][0]= f[x][y][z][0].add(f[x+1][y][tt][0]);
+		    		 f[x][y][z][1]= f[x][y][z][1].add(f[x+1][y][tt][1]);
+		    	 }
+		    	 else {
+		    		 int ty=y+1;
+		    		 if(ty==3)ty=1;
+		    		 dfs(x+1,ty,tt);
+		    	 f[x][y][z][0]= f[x][y][z][0].add(f[x+1][ty][tt][0]);
+		    	 f[x][y][z][1]= f[x][y][z][1].add(f[x+1][ty][tt][1]);
+		      	 if(y%2==0) f[x][y][z][1]= f[x][y][z][1].add(f[x+1][ty][tt][0].multiply(BigInteger.valueOf(i)));
+		    	 else  f[x][y][z][1]= f[x][y][z][1].subtract(f[x+1][ty][tt][0].multiply(BigInteger.valueOf(i)));
+		    	 }
+		    }
+	 }
+	 
+	 static BigInteger solve(BigInteger n)
+	 {		
+		
+	     BigInteger ret=BigInteger.ZERO;
+	     a=n.toString();
+	     m=a.length();
+	     for(int i=0;i<=m;i++)
+				for(int j=0;j<3;j++)
+					for(int k=0;k<2;k++)
+						 g[i][j][k]=false;
+	     dfs(0,0,0);
+		 return f[0][0][0][1];
+	 }
+	 
+	 static int cal(BigInteger n)
+	    {
+	           int ret=0;
+	           if(n.compareTo(BigInteger.ZERO)<0)
+	           {
+	               BigInteger m=BigInteger.ZERO.subtract(n);
+	               m=m.add(BigInteger.valueOf(9)).divide(BigInteger.valueOf(9));
+	               n=n.add(m.multiply(BigInteger.valueOf(9)));
+	           }
+	           a=n.toString();
+	           for(int i=0;i<a.length();i++)
+	               ret+=a.charAt(i)-'0';
+	           while(ret>9)
+	           {
+	        	   int tt=0;
+	        	   while(ret>0)
+	        	   {
+	        		   tt+=ret%10;
+	        		   ret/=10;
+	        	   }
+	        	   ret=tt;
+	           }
+	        return ret;
+	    }
+	
+	public static void main(String[] args) {
+		for(int i=0;i<105;i++)
+			for(int j=0;j<3;j++)
+				for(int k=0;k<2;k++)
+				{
+					 g[i][j][k]=false;
+					 for(int r=0;r<2;r++)
+						 f[i][j][k][r]=BigInteger.ZERO;
+				}
+		Scanner cin = new Scanner(System.in);
+		int T=cin.nextInt();
+		for(int cas=1;cas<=T;cas++)
+		{
+			  BigInteger ret=BigInteger.ZERO;
+               BigInteger L=cin.nextBigInteger();
+               BigInteger R=cin.nextBigInteger();
+              ret=solve(R);
+                if(L.compareTo(BigInteger.ZERO)>0)
+            	  ret=ret.subtract(solve(L.subtract(BigInteger.ONE)));
+      // System.out.println(ret);
+                
+         //  int tt=ret.mod(BigInteger.valueOf(9)).add(BigInteger.valueOf(9)).mod(BigInteger.valueOf(9)).intValue();
+                int tt=cal(ret);
+           if(tt==0)System.out.println("Error!");
+           else System.out.println(ret.mod(BigInteger.valueOf(tt)).add(BigInteger.valueOf(tt)).mod(BigInteger.valueOf(tt)));
+		}
+	}
+}

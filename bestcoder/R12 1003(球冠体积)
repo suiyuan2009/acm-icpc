@@ -1,0 +1,60 @@
+/*
+PI*(3*R-H)*H*H/3
+R是球半径，H是球缺高度
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+using namespace std;
+//typedef long long ll;
+const int maxn=405;
+//const ll limit=(1LL<<40);
+const double eps=1e-8;
+const double PI=acos(-1.0);
+
+int R,HR,HZ;
+
+double f(double R,double H){
+    return PI*(3*R-H)*H*H/3;
+}
+
+int main()
+{
+    //freopen("ACM/in.in","r",stdin);
+    //freopen("ACM/out.out","w",stdout);
+    while(~scanf("%d%d%d",&R,&HR,&HZ)){
+        double v1=4*PI*R*R*R/3,v2=PI*HR*HR*HZ*2;
+        if(R<=HR){
+            if(R<=HZ){
+                printf("%.6f\n",v1/v2);
+            }else{
+                double tt=f(R,R-HZ);
+                printf("%.6f\n",(v1-tt*2)/(v2+tt*2));
+            }
+        }else{
+            if(HZ<R){
+                if(HR*HR+HZ*HZ<=R*R){
+                    printf("%.6f\n",v2/v1);
+                }else{
+                    double h=sqrt(R*R-HR*HR);
+                    double tt=f(R,R-h);
+                    double tt2=tt-f(R,R-HZ);
+                    double all=(tt2+HR*HR*PI*h)*2;
+                    printf("%.6f\n",all/(v1+v2-all));
+                }
+            }else{ 
+                double h=sqrt(R*R-HR*HR);
+                double tt=f(R,R-h);
+                double all=(tt+HR*HR*PI*h)*2;
+                printf("%.6f\n",all/(v1+v2-all));
+               // printf("**\n");
+            }
+        }
+    }
+    return 0;
+}

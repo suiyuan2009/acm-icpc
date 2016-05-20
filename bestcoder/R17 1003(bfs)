@@ -1,0 +1,82 @@
+/*
+题意：给出无权值树，问长度前k小的路径的长度和
+直接按距离为1,2,3...bfs，每次队列中是{父亲节点，儿子节点，到初始节点的距离}
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef __int64 ll;
+const int maxn = 100005;
+const int maxm = maxn+maxn;
+
+int n,head[maxn],ev[maxm],nxt[maxm],num;
+int m;
+struct P{
+    int f,u,d;
+    P(int f,int u,int d):f(f),u(u),d(d){}
+};
+queue<P>q;
+
+void addedge(int u,int v){
+    nxt[++num]=head[u];
+    head[u]=num,ev[num]=v;
+}
+
+void init(){
+    scanf("%d%d",&n,&m);
+    num=0;
+    memset(head,0,sizeof(head));
+    for(int i=1;i<n;i++){
+        int u,v;
+        scanf("%d%d",&u,&v);
+        addedge(u,v),addedge(v,u);
+    }
+    while(!q.empty())q.pop();
+}
+
+ll solve(){
+    ll ret=0;
+    m*=2;
+    for(int i=1;i<=n;i++)
+        for(int j=head[i];j;j=nxt[j]){
+            if(!m)return ret;
+            int v=ev[j];
+            m--,ret++;
+         //   printf("** %d %d %d\n",i,v,1);
+            q.push(P(i,v,1));
+        }
+    while(!q.empty()){
+        P now=q.front();
+        q.pop();
+        int u=now.u;
+        for(int i=head[u];i;i=nxt[i]){
+            if(!m)return ret;
+            int v=ev[i];
+            if(v==now.f)continue;
+            ret+=now.d+1;
+            m--;
+            q.push(P(u,v,now.d+1));
+      //      printf("** %d %d %d\n",u,v,now.d+1);
+        }
+    }
+    return ret;
+}
+
+int main() {
+    //freopen("ACM/in.in", "r", stdin);
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        init();
+        printf("%I64d\n",solve()/2);
+    }
+    return 0;
+}

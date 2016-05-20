@@ -1,0 +1,133 @@
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+#include<map>
+#include<stack>
+using namespace std;
+typedef long long ll;
+const int maxn = 30005;
+
+int n,m;
+struct P{
+    int x,y,h,id;
+    P(){}
+    P(int x,int y,int h,int id):x(x),y(y),h(h),id(id){}
+    bool operator<(const P&a)const{
+        if(x==a.x)return y<a.y;
+        return x<a.x;
+    }
+}p[maxn],q[maxn];
+struct ST{
+    int l,r;
+    int v[10],c;
+}st[maxn*8];
+void build(int id,int l,int r){
+    st[id].l=l,st[id].r=r,st[id].c=0;
+    if(l==r)return;
+    int m=(l+r)>>1;
+    build(id<<1,l,m),build(id<<1|1,m+1,r);
+}
+int tmp[20],ctmp;
+void upd(int id,int pos,int val){
+    ctmp=0;
+    bool sign=1;
+    for(int i=0;i<st[id].c;i++){
+        if(sign&&st[id].v[i]>val){
+            sign=0;
+            tmp[ctmp++]=val;
+        }
+        tmp[ctmp++]=st[id].v[i];
+    }
+    if(sign)tmp[ctmp++]=val;
+    st[id].c=0;
+    for(int i=0;i<min(10,ctmp);i++){
+        st[id].v[i]=tmp[i];
+        st[id].c=i+1;
+    }
+    if(st[id].l==st[id].r)return;
+    int m=(st[id].l+st[id].r)>>1;
+    if(pos<=m)upd(id<<1,pos,val);
+    else upd(id<<1|1,pos,val);
+}
+int ret[10],cret;
+void query(int id,int l,int r){
+    if(st[id].l==l&&st[id].r==r){
+        ctmp=0;
+        int r=0;
+        for(int i=0;i<cret;i++){
+            while(r<st[id].c&&st[id].v[r]<=ret[i]){
+                tmp[ctmp++]=st[id].v[r];
+                r++;
+            }
+            tmp[ctmp++]=ret[i];
+        }
+        while(r<st[id].c){
+            tmp[ctmp++]=st[id].v[r];
+            r++;
+        }
+        cret=0;
+        for(int i=0;i<min(10,ctmp);i++){
+            ret[i]=tmp[i];
+            cret=i+1;
+        }
+        return;
+    }
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)query(id<<1,l,r);
+    else if(l>m)query(id<<1|1,l,r);
+    else{
+        query(id<<1,l,m);
+        query(id<<1|1,m+1,r);
+    }
+}
+
+int ans[maxn];
+vector<int>vis;
+
+void init(){
+    vis.clear();
+    for(int i=1;i<=n;i++){
+        int x,y,h;
+        scanf("%d%d%d",&x,&y,&h);
+        p[i]=P(x,y,h,i);
+        vis.push_back(y);
+    }
+    for(int i=1;i<=m;i++){
+        int x,y,h;
+        scanf("%d%d%d",&x,&y,&h);
+        q[i]=P(x,y,h,i);
+        vis.push_back(y);
+    }
+    sort(vis.begin(),vis.end());
+    vis.erase(unique(vis.begin(),vis.end()),vis.end());
+    for(int i=1;i<=n;i++)p[i].y=lower_bound(vis.begin(),vis.end(),p[i].y)-vis.begin()+1;
+    for(int i=1;i<=m;i++)q[i].y=lower_bound(vis.begin(),vis.end(),q[i].y)-vis.begin()+1;
+    build(1,1,vis.size());
+    sort(p+1,p+n+1);
+    sort(q+1,q+m+1);
+}
+
+int main() {
+  //freopen("ACM/in.in", "r", stdin);
+    while(~scanf("%d%d",&n,&m)){
+        init();
+        int r=1;
+        for(int i=1;i<=m;i++){
+            while(r<=n&&p[r].x<=q[i].x){
+                upd(1,p[r].y,p[r].h);
+                r++;
+            }
+            cret=0;
+            query(1,1,q[i].y);
+            if(cret<q[i].h)ans[q[i].id]=-1;
+            else ans[q[i].id]=ret[q[i].h-1];
+        }
+        for(int i=1;i<=m;i++)printf("%d\n",ans[i]);
+    }
+    return 0;
+}

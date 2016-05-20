@@ -1,0 +1,67 @@
+/*
+题意：找k个不同的数，和为n，存在k-1个数，和为平方数
+
+找最大的tt，s=tt*tt<n，记q=k*(k-1)/2，如果n-s>k-1，那么如果可以加1减1调整就行，
+否则，如果去掉n-s，加上一个大于k-1的数就行。
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<stack>
+#include<cmath>
+#include<map>
+using namespace std;
+const int maxn=105;
+const int maxm=1005;
+
+int n,k;
+
+int main(){
+   // freopen("ACM/in.in","r",stdin);
+    //freopen("ACM/out.out","w",stdout);
+    while(~scanf("%d%d",&n,&k)){
+        bool sign=0;
+       // for(int tt=1;tt*tt<n;tt++){
+       int tt=(int)sqrt(n-1);
+            int s=tt*tt,q=(k-1)*k/2;
+            if(q<=s){
+                int t=n-s;
+                if(t>k-1){
+                   /* int l=s-q+k-1;
+                    int r=t-(s-q);
+                    if(l!=r&&r>k-2)sign=1;*/
+                    if(k-1+s-q!=t)sign=1;
+                    if(s-q>1)sign=1;
+                }
+                else{
+                    /*int l=s-q+k-1;
+                    if(l+t>=k-2+1+k-2+2)sign=1;*/
+                    if(q-t+k<=s)sign=1;
+                }
+            }
+        /*
+           for(int tt=1;tt*tt<n;tt++){
+           int s=tt*tt,s2=(k-2)*(k-1)/2;
+           if(s2<s&&s-s2>k-2){
+           int tt2=s-s2;
+           if(n-s!=tt2&&n-s>k-2)sign=1;
+           else{
+           if(n-s==tt2){
+           if(tt2-1>k-2+1)sign=1;
+           }
+           else{
+           int s3=s2-(n-s);
+           if(s3>=k-2+2+k-2+1)sign=1;
+           }
+           }
+           }
+           }*/
+        if(sign)puts("YES");
+        else puts("NO");
+    }
+    return 0;
+}

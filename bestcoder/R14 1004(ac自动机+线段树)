@@ -1,0 +1,188 @@
+/*
+题意：给出n个串，多次询问(a,b)，a的后缀和b的前缀最长相同长度
+建ac自动机，从root到fail[i]的串一定是从root到i的串的后缀，
+对于相同的b，在线段树上维护每个点的最大后缀长度，通过fail指针形成的树的dfs序列，区间修改点查询。
+*/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<vector>
+#include<string>
+#include<iostream>
+#include<queue>
+#include<cmath>
+using namespace std;
+typedef long long ll;
+const int maxn = 100005;
+const int mod = 1000000007;
+
+int next[maxn][4],fail[maxn],ps[maxn],dep[maxn];
+int root,L;
+int change(char ch)
+{
+    if(ch=='A')return 0;
+    if(ch=='T')return 1;
+    if(ch=='C')return 2;
+    return 3;
+}
+int newnode()
+{
+    for(int i=0; i<4; i++)
+        next[L][i]=-1;
+    L++;
+    return L-1;
+}
+void init()
+{
+    L=0;
+    root=newnode();
+}
+void insert(string&s,int id)
+{
+    int len=s.size();
+    int now=root;
+    for(int i=0; i<len; i++)
+    {
+        if(next[now][change(s[i])]==-1)
+            next[now][change(s[i])]=newnode();
+        int tt=now;
+        now=next[now][change(s[i])];
+        dep[now]=dep[tt]+1;
+    }
+    ps[id]=now;
+}
+
+vector<int>e[maxn];
+void build()
+{
+    queue<int>Q;
+    fail[root]=root;
+    for(int i=0; i<4; i++)
+    {
+        if(next[root][i]==-1)
+            next[root][i]=root;
+        else
+        {
+            fail[next[root][i]]=root;
+            Q.push(next[root][i]);
+        }
+    }
+    while(!Q.empty())
+    {
+        int now=Q.front();
+        Q.pop();
+        for(int i=0; i<4; i++)
+        {
+            if(next[now][i]==-1)
+                next[now][i]=next[fail[now]][i];
+            else
+            {
+                fail[next[now][i]]=next[fail[now]][i];
+                Q.push(next[now][i]);
+            }
+        }
+    }
+    for(int i=0;i<L;i++)e[i].clear();
+    //for(int i=1;i<L;i++)printf("** %d %d\n",i,fail[i]);
+    for(int i=1;i<L;i++)e[fail[i]].push_back(i);
+   // printf("** %d\n",L-1);
+}
+
+int Lt[maxn],Rt[maxn],num;
+void dfs(int u){
+    // printf("** %d\n",u);
+    Lt[u]=++num;
+    for(int i=0;i<e[u].size();i++)dfs(e[u][i]);
+    Rt[u]=num;
+}
+
+struct ST{
+    int l,r,val;
+}st[maxn*4];
+void build(int id,int l,int r){
+    st[id].l=l,st[id].r=r,st[id].val=0;
+    if(l==r)return;
+    int m=(l+r)>>1;
+    build(id<<1,l,m),build(id<<1|1,m+1,r);
+}
+void pd(int id,int l,int r,int val){
+    //printf("** %d\n",val);
+    if(st[id].l==l&&st[id].r==r){
+        if(!val)st[id].val=0;
+        else st[id].val=max(st[id].val,val);
+        return;
+    }
+    int m=(st[id].l+st[id].r)>>1;
+    if(r<=m)pd(id<<1,l,r,val);
+    else if(l>m)pd(id<<1|1,l,r,val);
+    else pd(id<<1,l,m,val),pd(id<<1|1,m+1,r,val);
+  //  st[id].val=max(st[id<<1].val,st[id<<1|1].val);
+}
+int query(int id,int pos){
+    if(st[id].l==st[id].r)return st[id].val;
+    int m=(st[id].l+st[id].r)>>1;
+    if(pos<=m)return max(st[id].val,query(id<<1,pos));
+    return max(st[id].val,query(id<<1|1,pos));
+}
+
+void fill(string&s,int val){
+    int len=s.size();
+    int now=root;
+    for(int i=0; i<len; i++)
+    {
+        now=next[now][change(s[i])];
+      //  printf("** %d %d: %d\n",Lt[now],Rt[now],dep[now]);
+        pd(1,Lt[now],Rt[now],val?dep[now]:0);
+    }
+}
+
+int n,m;
+string a[maxn];
+int ans[maxn];
+struct Q{
+    int id,x,y;
+    Q(){}
+    Q(int id,int x,int y):id(id),x(x),y(y){}
+    bool operator<(const Q&a)const{
+        return y==a.y?x<a.x:y<a.y;
+    }
+}q[maxn];
+
+int main(){
+  //  freopen("ACM/in.in","r",stdin);
+  //  freopen("ACM/out.out","w",stdout);
+    while(~scanf("%d%d",&n,&m)){
+        init();
+        for(int i=1;i<=n;i++){
+            cin>>a[i];
+            insert(a[i],i);
+        }
+        build();
+        for(int i=1;i<=m;i++){
+            int x,y;
+            scanf("%d%d",&x,&y);
+            q[i]=Q(i,x,y);
+        }
+        sort(q+1,q+m+1);
+        num=0;
+        dfs(0);
+        // for(int i=0;i<L;i++)
+        //   printf("%d: %d %d\n",i,Lt[i],Rt[i]);
+        build(1,1,num);
+        for(int i=1;i<=m;i++){
+            fill(a[q[i].y],1);
+            int pos=i;
+            for(int j=i;j<=m;j++){
+                if(q[j].y!=q[i].y)break;
+                pos=j;
+                // printf("** %d\n",Lt[ps[q[j].x]i]);
+              //  printf("** %d\n",ps[q[j].x]);
+                ans[q[j].id]=query(1,Lt[ps[q[j].x]]);
+            }
+            fill(a[q[i].y],0);
+            i=pos;
+        }
+        for(int i=1;i<=m;i++)printf("%d\n",ans[i]);
+    }
+    return 0;
+}
