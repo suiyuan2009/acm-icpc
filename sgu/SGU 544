@@ -1,0 +1,116 @@
+/*
+题意：两队各n个人比赛，每个人的能力都不同，问多少种方案使得第一个队比第二个队多赢k场
+记f[i][j][k]为到第i个人且第一个队赢了j场第二个队赢了k场的方案数
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+const int maxn=1001;
+const int maxm=501;
+const int mod=1000000009;
+
+struct P
+{
+    int id,val;
+    bool operator<(const P&a)const
+    {
+        return val<a.val;
+    }
+} p[maxn];
+int n,m;
+//int f[maxn][maxm][maxm];
+int f[2][maxm][maxm];
+int cntx[maxn],cnty[maxn];
+
+void pd(int &ret,int val)
+{
+    if(ret==-1)ret=val;
+    else ret=(ret+val)%mod;
+}
+
+int main()
+{
+   // freopen("in.cpp","r",stdin);
+    scanf("%d%d",&n,&m);
+    for(int i=1; i<=n; i++)
+    {
+        int x;
+        scanf("%d",&x);
+        p[i].id=1;
+        p[i].val=x;
+    }
+    for(int i=n+1; i<=n+n; i++)
+    {
+        int x;
+        scanf("%d",&x);
+        p[i].id=2;
+        p[i].val=x;
+    }
+    sort(p+1,p+n+n+1);
+
+    //for(int i=1;i<=n+n;i++)
+    // printf("%d ",p[i].val);
+    // printf("\n");
+
+    for(int i=1; i<=n+n; i++)
+    {
+        cntx[i]=cntx[i-1];
+        cnty[i]=cnty[i-1];
+        if(p[i].id==1)cntx[i]++;
+        else cnty[i]++;
+    }
+
+    //for(int i=1;i<=n+n;i++)
+    // printf("%d:%d %d\n",i,cntx[i],cnty[i]);
+
+
+    memset(f,-1,sizeof(f));
+    f[0][0][0]=1;
+    for(int i=0; i<n+n; i++)
+    {
+        int now=(i&1);
+        int nxt=((i+1)&1);
+        for(int j=0; j<=n; j++)
+            for(int k=0; k<=n; k++)
+                f[nxt][j][k]=-1;
+        for(int j=0; j<=n; j++)
+            for(int k=0; k<=n; k++)
+            {
+                if(f[now][j][k]==-1)continue;
+                // printf("**** %d\n",f[i][j][k]);
+                pd(f[nxt][j][k],f[now][j][k]);
+                if(p[i+1].id==1)
+                {
+                    int cnt=cnty[i]-(j+k);
+                    if(cnt>0)pd(f[nxt][j+1][k],(f[now][j][k]*(ll)cnt)%mod);
+                }
+                else
+                {
+                    int cnt=cntx[i]-(j+k);
+                    if(cnt>0)pd(f[nxt][j][k+1],(f[now][j][k]*(ll)cnt)%mod);
+                }
+            }
+    }
+    //printf("** %d\n",f[n+n][3][1]);
+
+    int ret=0;
+    int now=((n+n)&1);
+    for(int i=m; i<=n; i++)
+        if(f[now][i][i-m]!=-1&&i+i-m==n)
+            pd(ret,f[now][i][i-m]);
+    printf("%d\n",ret);
+    return 0;
+}

@@ -1,0 +1,157 @@
+/*
+题意：一个串中字母被数字替代，相同字符相同数字，不同字符不同数字，
+问总能整除这个串的数是哪些
+如果不同的字符有10个，那么只需每个数字代表的|Ai-Aj|的最小公倍数的约数
+否则，需要所有Ai的最小公倍数的约数
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef __int64 ll;
+typedef double ldb;
+const int inf=0x3f3f3f3f;
+const int maxn=1005;
+const int maxm=10000005;
+const int mod=1000000007;
+
+char str[maxn];
+ll gcd(ll x,ll y)
+{
+    if(y==0)return x;
+    return gcd(y,x%y);
+}
+ll a[maxn],b[maxn];
+int cnt_a,cnt_b;
+bool notp[maxm];
+int p[maxm/10],cp;
+vector<ll>ans;
+
+int fac[maxm/10],cnt_fac;
+int cfac[maxm/10];
+
+void init()
+{
+    for(int i=2; i<maxm; i++)
+        if(!notp[i])
+        {
+            p[cp++]=i;
+            for(int j=i+i; j<maxm; j+=i)
+                notp[j]=1;
+        }
+}
+
+void fen(ll x)
+{
+    for(int i=0; i<cp; i++)
+    {
+        if(x==1)break;
+        if(x%p[i]==0)
+        {
+            int cnt=0;
+            while(x%p[i]==0)
+            {
+                cnt++;
+                x/=p[i];
+            }
+            fac[cnt_fac]=p[i];
+            cfac[cnt_fac]=cnt;
+            cnt_fac++;
+        }
+    }
+    if(x!=1)
+    {
+        fac[cnt_fac]=x;
+        cfac[cnt_fac]=1;
+        cnt_fac++;
+    }
+}
+
+void dfs(int cnt,ll cur,ll lim)
+{
+    if(cur>lim)return;
+    ans.push_back(cur);
+    if(cnt==cnt_fac)return;
+    ll tmp=cur;
+    for(int i=0; i<=cfac[cnt]; i++)
+    {
+        dfs(cnt+1,tmp,lim);
+        tmp*=fac[cnt];
+        if(tmp>lim)break;
+    }
+}
+
+int main()
+{
+    init();
+    //freopen("in.cpp","r",stdin);
+    int T,ncase=0;
+    scanf("%d",&T);
+    while(T--)
+    {
+        ans.clear();
+        cnt_a=cnt_b=0;
+        cnt_fac=0;
+        scanf("%s",str);
+        int len=strlen(str);
+        for(int i=0; i<26; i++)
+        {
+            ll x=0;
+            bool sign=0;
+            for(int j=0; j<len; j++)
+            {
+                x*=10;
+                if(str[j]=='a'+i)
+                {
+                    x++;
+                    sign=1;
+                }
+            }
+            if(sign)a[cnt_a++]=x;
+        }
+        if(cnt_a==10)
+        {
+            for(int i=0; i<cnt_a; i++)
+                for(int j=i+1; j<cnt_a; j++)
+                    b[cnt_b++]=abs(a[j]-a[i]);
+            for(int i=0; i<cnt_b; i++)
+                a[i]=b[i];
+            cnt_a=cnt_b;
+        }
+
+        //printf("** %d\n",cnt_a);
+
+        int pos=cnt_a-1;
+        while(pos>=1)
+        {
+            ll x=gcd(a[pos],a[pos-1]);
+            a[pos-1]=x;
+            pos--;
+        }
+        fen(a[0]);
+
+        /*printf("** %I64d %d\n",a[0],cnt_fac);
+        for(int i=0;i<cnt_fac;i++)
+            printf("%d ",fac[i]);
+        printf("\n");*/
+
+        dfs(0,1,a[0]);
+        sort(ans.begin(),ans.end());
+        ans.erase(unique(ans.begin(),ans.end()),ans.end());
+        printf("Case %d:",++ncase);
+        for(int i=0; i<ans.size(); i++)
+            printf(" %I64d",ans[i]);
+        printf("\n");
+    }
+    return 0;
+}

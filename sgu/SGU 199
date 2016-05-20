@@ -1,0 +1,143 @@
+/*
+最长上升子序列，不能出现xi==xj
+*/
+#include <stdio.h>
+#include <string>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+#include <math.h>
+#include <queue>
+#include <map>
+#include <stack>
+#include <iostream>
+using namespace std;
+typedef __int64 ll;
+const double eps = 1e-8;
+const double PI = acos(-1);
+const int maxn = 200005;
+const int inf = 0x3fffffff;
+const int mod = 1000000007;
+
+int n;
+struct P
+{
+    int x,y,id;
+    bool operator<(const P&a)const
+    {
+        if(x==a.x)return y>a.y;
+        return x<a.x;
+    }
+} p[maxn];
+
+struct BIT
+{
+    pair<int,int>c[maxn];
+    void init()
+    {
+        for(int i=0; i<maxn; i++)
+            c[i].first=c[i].second=0;
+    }
+    int lowbit(int x)
+    {
+        return x&(-x);
+    }
+    void add(int x,int val,int idx)
+    {
+        while(x<maxn)
+        {
+            if(c[x].first<val)
+            {
+                c[x].first=val;
+                c[x].second=idx;
+            }
+            x+=lowbit(x);
+        }
+    }
+    pair<int,int>query(int x)
+    {
+        pair<int,int>ret=make_pair(0,0);
+        while(x>0)
+        {
+            if(c[x].first>ret.first)
+                ret=c[x];
+            x-=lowbit(x);
+        }
+        return ret;
+    }
+} bit;
+int f[maxn],pnt[maxn],a[maxn],id[maxn];
+int bs(int x)
+{
+    int ret=0;
+    int l=0,r=n;
+    while(l<=r)
+    {
+        int m=(l+r)/2;
+        if(a[m]<x)
+        {
+            ret=m;
+            l=m+1;
+        }
+        else r=m-1;
+    }
+    return ret;
+}
+vector<int>vis,ans;
+int main()
+{
+    //freopen("D-large.in","r",stdin);
+    //freopen("out.out","w",stdout);
+    scanf("%d",&n);
+    for(int i=1; i<=n; i++)
+    {
+        scanf("%d%d",&p[i].x,&p[i].y);
+        p[i].id=i;
+        vis.push_back(p[i].x);
+        vis.push_back(p[i].y);
+    }
+    sort(vis.begin(),vis.end());
+    vis.erase(unique(vis.begin(),vis.end()),vis.end());
+    for(int i=1; i<=n; i++)
+    {
+        p[i].x=lower_bound(vis.begin(),vis.end(),p[i].x)-vis.begin()+1;
+        p[i].y=lower_bound(vis.begin(),vis.end(),p[i].y)-vis.begin()+1;
+    }
+    sort(p+1,p+n+1);
+    for(int i=1; i<=n; i++)
+    {
+        pair<int,int>tt=bit.query(p[i].y-1);
+        f[i]=tt.first+1;
+        pnt[i]=tt.second;
+        bit.add(p[i].y,f[i],i);
+    }
+    /*for(int i=1; i<maxn; i++)a[i]=inf;
+    for(int i=1; i<=n; i++)
+    {
+        int tt=bs(p[i].y);
+        pnt[i]=id[tt];
+        f[i]=a[tt]+1;
+        if(a[f[i]]>p[i].y)
+        {
+            a[f[i]]=p[i].y;
+            id[f[i]]=i;
+        }
+    }*/
+    int ret=0,idx=0;
+    for(int i=1; i<=n; i++)
+        if(f[i]>ret)
+        {
+            ret=f[i];
+            idx=i;
+        }
+    while(idx)
+    {
+        ans.push_back(p[idx].id);
+        idx=pnt[idx];
+    }
+    printf("%d\n",ans.size());
+    for(int i=0; i<ans.size()-1; i++)
+        printf("%d ",ans[i]);
+    printf("%d\n",ans[ans.size()-1]);
+    return 0;
+}

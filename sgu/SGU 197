@@ -1,0 +1,113 @@
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+const int maxn=32;
+
+char s[105];
+int mod,m,a[105];
+
+void sub() {
+    //puts(s);
+    int len=strlen(s);
+    for(int i=0; i<len; i++)
+        a[i]=s[i]-'0';
+    a[len-1]--;
+    for(int i=len-1; i>=0; i--) {
+        if(a[i]<0) {
+            a[i]+=10;
+            a[i-1]--;
+        }
+        s[i]=a[i]+'0';
+    }
+   // puts(s);
+}
+
+struct Mat {
+    int a[maxn][maxn];
+    int n,m;
+    Mat() {}
+    Mat(int _n,int _m,bool flag) {
+        n=_n,m=_m;
+        for(int i=0; i<n; i++)
+            for(int j=0; j<m; j++)
+                a[i][j]=(i==j&&flag);
+    }
+    Mat operator*(Mat &tt) {
+        Mat ret=Mat(n,tt.m,0);
+        for(int i=0; i<n; i++)
+            for(int j=0; j<tt.m; j++)
+                for(int k=0; k<m; k++) {
+                    ret.a[i][j]+=a[i][k]*tt.a[k][j];
+                    ret.a[i][j]%=mod;
+                }
+        return ret;
+    }
+    void pd() {
+        for(int i=0; i<n; i++) {
+            for(int j=0; j<m; j++)
+                printf("%d ",a[i][j]);
+            printf("\n");
+        }
+    }
+};
+
+bool test2(int i,int k) {
+    return i&(1<<k);
+}
+bool test(int i,int j) {
+    for(int k=1; k<m; k++) {
+        if(!test2(i,k)&&!test2(i,k-1)&&!test2(j,k)&&!test2(j,k-1))return 0;
+        if(test2(j,k)&&test2(j,k-1)&&test2(i,k)&&test2(i,k-1))return 0;
+    }
+    return 1;
+}
+
+int main() {
+    //freopen("in.cpp","r",stdin);
+    scanf("%s%d%d",s,&m,&mod);
+    sub();
+    Mat ret=Mat(1<<m,1,0);
+    for(int i=0; i<(1<<m); i++)ret.a[i][0]=1%mod;
+    Mat mul=Mat(1<<m,1<<m,0);
+    for(int i=0; i<(1<<m); i++)
+        for(int j=0; j<(1<<m); j++) {
+            mul.a[i][j]=test(i,j);
+        }
+    // mul.pd();
+
+    Mat tt=Mat(1<<m,1<<m,1);
+    int len=strlen(s);
+    for(int i=len-1; i>=0; i--) {
+        int cnt=s[i]-'0';
+        for(int j=0; j<cnt; j++)
+            tt=tt*mul;
+        Mat tmp=mul;
+        for(int j=1; j<10; j++)
+            mul=mul*tmp;
+    }
+    // tt.pd();
+    ret=tt*ret;
+    int ans=0;
+    // ret.pd();
+    //for(int i=0; i<(1<<m); i++)
+    //     printf("%d ",ret.a[i][0]);
+    // printf("\n");
+
+    for(int i=0; i<(1<<m); i++)
+        ans=(ans+ret.a[i][0])%mod;
+    printf("%d\n",ans);
+    return 0;
+}

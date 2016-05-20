@@ -1,0 +1,238 @@
+/*
+题意：带权树，最少花费修改边权，使得直径减小，给出每条边置边权为0的花费
+1.不存在两条不相交的直径，
+2.存在一个点，使得以这个点为根的子树中不存在直径，
+所以只需要减少到这个点的最长链的长度，
+如果有2条最长链，说明所有到这个点的最长的链都是相同长度的，去掉一个花费最大的
+PS:
+1.反证法，如果存在，那么记连接两个直径的链为(u,v)，其中u在第一条直径上，
+v在第二条直径上，那么由于dist(u,v)>0，一定存在比两直径还长的链，得证，
+2.这个点是直径上的几何中心点，如果在边上就取两端点，
+如果在子树中存在一条直径，那么如果对应于这条中心点的直径不经过这条直径，矛盾，
+如果经过，那么根据中心点可知一定存在更长的直径，
+假如中心正好在点上，那么一定矛盾，如果不是，那么也可以找出比那条直径更长的链，
+画图得证。
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef __int64 ll;
+typedef double ldb;
+const int inf=0x3f3f3f3f;
+const int maxn=100005;
+const int maxm=maxn+maxn;
+const int mod=1000000007;
+
+int n;
+int head[maxn],next[maxm],ev[maxm],ew[maxm],ep[maxm],num,pnt[maxn],eid[maxm];
+int d[maxn],f[maxn];
+int pntw[maxn],pntid[maxn];
+
+vector<int>choose;
+
+void add_edge(int u,int v,int w,int p,int id)
+{
+    next[++num]=head[u];
+    head[u]=num;
+    ev[num]=v,ew[num]=w,ep[num]=p,eid[num]=id;
+}
+
+void dfs(int u,int fa)
+{
+    d[u]=0,f[u]=inf;
+    for(int i=head[u]; i; i=next[i])
+    {
+        int v=ev[i];
+        if(v==fa)continue;
+        dfs(v,u);
+        d[u]=max(d[u],d[v]+ew[i]);
+    }
+    for(int i=head[u]; i; i=next[i])
+    {
+        int v=ev[i];
+        if(v==fa)continue;
+        if(d[v]+ew[i]==d[u])
+        {
+            if(f[u]==inf)f[u]=min(f[v],ep[i]);
+            else f[u]+=min(f[v],ep[i]);
+        }
+    }
+}
+
+queue<int>que;
+int get_far(int start)
+{
+    int maxx=0,idx=start;
+    while(!que.empty())que.pop();
+    for(int i=1; i<=n; i++)d[i]=inf;
+    d[start]=0;
+    que.push(start);
+    while(!que.empty())
+    {
+        int u=que.front();
+        if(d[u]>maxx)
+        {
+            maxx=d[u];
+            idx=u;
+        }
+        que.pop();
+        for(int i=head[u]; i; i=next[i])
+        {
+            int v=ev[i];
+            if(d[v]>d[u]+ew[i])
+            {
+                d[v]=d[u]+ew[i];
+                pnt[v]=u;
+                pntid[v]=eid[i];
+                pntw[v]=ep[i];
+                que.push(v);
+            }
+        }
+    }
+    return idx;
+}
+
+void dfs_2(int u,int fa)
+{
+    for(int i=head[u]; i; i=next[i])
+    {
+        int v=ev[i];
+        if(v==fa)continue;
+        if(d[u]==d[v]+ew[i])
+        {
+            if(ep[i]<f[v])choose.push_back(eid[i]);
+            else dfs_2(v,u);
+        }
+    }
+}
+
+struct E
+{
+    int v,w,id,eid;
+    bool operator<(const E &a)const
+    {
+        return w<a.w;
+    }
+} e[maxn];
+int cnt_e;
+
+int main()
+{
+    // freopen("in.cpp","r",stdin);
+    scanf("%d",&n);
+    for(int i=1; i<n; i++)
+    {
+        int u,v,w,p;
+        scanf("%d%d%d%d",&u,&v,&w,&p);
+        add_edge(u,v,w,p,i);
+        add_edge(v,u,w,p,i);
+    }
+    int l=get_far(1);
+    int r=get_far(l);
+    int root1=-1,root2=-1;
+    for(int i=r; i!=l; i=pnt[i])
+    {
+        if(d[i]*2==d[r])
+        {
+            root1=i;
+            break;
+        }
+        if(d[i]*2>d[r]&&d[pnt[i]]*2<d[r])
+        {
+            root1=i;
+            root2=pnt[i];
+            break;
+        }
+    }
+
+    //  printf("** %d %d\n",root1,root2);
+
+    dfs(root1,0);
+    for(int i=head[root1]; i; i=next[i])
+    {
+        int v=ev[i];
+        if(d[root1]==d[v]+ew[i])
+        {
+            E tt;
+            tt.v=v,tt.w=min(f[v],ep[i]);
+            tt.id=eid[i];
+            tt.eid=i;
+            e[cnt_e++]=tt;
+        }
+    }
+    sort(e,e+cnt_e);
+    int ret=0;
+    for(int i=0; i<max(1,cnt_e-1); i++)
+    {
+        ret+=e[i].w;
+        if(f[e[i].v]>ep[e[i].eid])choose.push_back(e[i].id);
+        else
+            dfs_2(e[i].v,root1);
+    }
+    //printf("** %d\n",choose.size());
+    if(root2!=-1)
+    {
+        //printf("********\n");
+        dfs(root2,0);
+        int tmpret=0;
+        cnt_e=0;
+        for(int i=head[root2]; i; i=next[i])
+        {
+            int v=ev[i];
+            if(d[root2]==d[v]+ew[i])
+            {
+                E tt;
+                tt.id=eid[i];
+                tt.v=v,tt.w=min(f[v],ep[i]);
+                tt.eid=i;
+                e[cnt_e++]=tt;
+            }
+        }
+        //printf("** %d\n",cnt_e);
+        // printf("******* %d\n",e[0].v);
+        sort(e,e+cnt_e);
+        for(int i=0; i<max(1,cnt_e-1); i++)
+            tmpret+=e[i].w;
+
+        //printf("****  %d %d\n",ret,tmpret);
+        // printf("** %d\n",choose.size());
+        if(tmpret<ret)
+        {
+            //printf("**\n");
+            choose.clear();
+            ret=tmpret;
+            for(int i=0; i<max(1,cnt_e-1); i++)
+            {
+                if(f[e[i].v]>ep[e[i].eid])
+                {
+                    choose.push_back(e[i].id);
+                    //printf("** %d\n",e[i].id);
+                }
+                else dfs_2(e[i].v,root2);
+            }
+        }
+    }
+    sort(choose.begin(),choose.end());
+    printf("%d\n",ret);
+    printf("%d\n",choose.size());
+    bool sign=0;
+    for(int i=0; i<choose.size(); i++)
+    {
+        if(sign)printf(" ");
+        else sign=1;
+        printf("%d",choose[i]);
+    }
+    printf("\n");
+    return 0;
+}

@@ -1,0 +1,162 @@
+/*
+题意：给n个数，每次可以选择几对数交换，每一次中不能重复选择数
+经典的置换题，在黑书246页，
+如果数有相同的，先要看能不能一次交换完，如果不能，离散化成不同的数处理，
+看能不能一次交换完，先sort一边，看原数组和sort数组是不是可以两两对应。
+*/
+//#pragma comment(linker, "/STACK:102400000,102400000")
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+#include<iostream>
+#include<vector>
+#include<cmath>
+#include<map>
+#include<queue>
+#include<stack>
+#include<iomanip>
+using namespace std;
+#define eps 1e-8
+typedef __int64 ll;
+const int inf=0x3f3f3f3f;
+const int maxn=100005;
+const int mod=1000000007;
+
+struct P {
+    int x,ps;
+    bool operator<(const P &a)const {
+        if(a.x==x)return ps<a.ps;
+        return x<a.x;
+    }
+} p[maxn];
+int a[maxn],b[maxn],n;
+
+vector<pair<int,int> >ans[maxn];
+int max_d=-1;
+void dfs(vector<int>e,int dep) {
+    if(e.size()==1)return;
+    max_d=max(max_d,dep);
+    if(e.size()==2) {
+        ans[dep].push_back(make_pair(e[0],e[1]));
+        return;
+    }
+    vector<int>a,b;
+    a.clear(),b.clear();
+    ans[dep].push_back(make_pair(e[0],e[e.size()-2]));
+    a.push_back(e[0]);
+    a.push_back(e[e.size()-1]);
+    for(int i=1; i<e.size()-1; i++)b.push_back(e[i]);
+    e.clear();
+    dfs(a,dep+1),dfs(b,dep+(b.size()==2));
+}
+
+bool vis[maxn];
+vector<int>e;
+//int c[maxn][2],cnt_c;
+//int cc[maxn][2],cnt_cc;
+//bool yes;
+
+/*void dfs(int pos,int cnt_c) {
+    if(yes)return;
+    if(pos>n)return;
+    bool sign=0;
+    for(int i=2; i<=n; i++)
+        if(b[i]<b[i-1]) {
+            sign=1;
+            break;
+        }
+    if(!sign) {
+        memcpy(cc,c,sizeof(c));
+        cnt_cc=cnt_c;
+        yes=1;
+        return;
+    }
+    // dfs(pos+1,cnt_c);
+    for(int i=pos; i<=pos; i++) {
+        if(vis[i])continue;
+        for(int j=i+1; j<=n; j++) {
+            if(vis[j])continue;
+            if(b[i]>b[j]) {
+                vis[i]=vis[j]=1;
+  }                c[cnt_c+1][0]=i;
+                c[cnt_c+1][1]=j;
+                int p=b[i],q=b[j];
+                b[i]=q,b[j]=p;
+                dfs(pos+1,cnt_c+1);
+                b[i]=p,b[j]=q;
+                vis[i]=vis[j]=0;
+            }
+        }
+
+}*/
+int c[maxn];
+vector<pair<int,int> >ans2;
+
+int main() {
+    // freopen("in.cpp","r",stdin);
+    scanf("%d",&n);
+    for(int i=1; i<=n; i++) {
+        scanf("%d",&p[i].x);
+        p[i].ps=i;
+        b[i]=p[i].x;
+    }
+    sort(p+1,p+n+1);
+    for(int i=1; i<=n; i++)a[p[i].ps]=i;
+    for(int i=1; i<=n; i++) {
+        if(vis[i])continue;
+        e.clear();
+        int cur=i;
+        while(!vis[cur]) {
+            vis[cur]=1;
+            e.push_back(cur);
+            cur=a[cur];
+        }
+        dfs(e,0);
+    }
+    if(max_d<=0) {
+        printf("%d\n",max_d+1);
+        for(int i=0; i<=max_d; i++) {
+            printf("%d",ans[i].size());
+            for(int j=0; j<ans[i].size(); j++)
+                printf(" %d %d",ans[i][j].first,ans[i][j].second);
+            printf("\n");
+        }
+    } else {
+        bool yes=1;
+        memset(vis,0,sizeof(vis));
+        //printf("**\n");
+        // dfs(1,0);
+        for(int i=1; i<=n; i++)c[i]=b[i];
+        sort(c+1,c+n+1);
+        for(int i=1; i<=n; i++)
+            if(b[i]>c[i]) {
+                for(int j=i+1; j<=n; j++)
+                    if(!vis[j]&&b[j]==c[i]&&c[j]==b[i]) {
+                        vis[i]=vis[j]=1;
+                        ans2.push_back(make_pair(i,j));
+                        break;
+                    }
+            }
+        for(int i=1; i<=n; i++)
+            if(!vis[i]&&b[i]>c[i]) {
+                yes=0;
+                break;
+            }
+        if(yes) {
+            printf("1\n%d",ans2.size());
+            for(int i=0; i<ans2.size(); i++)
+                printf(" %d %d",ans2[i].first,ans2[i].second);
+            printf("\n");
+        } else {
+            printf("%d\n",max_d+1);
+            for(int i=0; i<=max_d; i++) {
+                printf("%d",ans[i].size());
+                for(int j=0; j<ans[i].size(); j++)
+                    printf(" %d %d",ans[i][j].first,ans[i][j].second);
+                printf("\n");
+            }
+        }
+    }
+    return 0;
+}
