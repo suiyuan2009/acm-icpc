@@ -1,1 +1,1 @@
-# memory of acm-icpc when I was a college student
+# acm-icpc when I was a college student
